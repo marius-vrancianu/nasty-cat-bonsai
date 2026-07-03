@@ -2,10 +2,6 @@
    Nasty Cat Bonsai — design tokens
    ========================================================================== */
 :root {
-  /* The washi-paper design is light-only: opt out of browser auto-darkening,
-     which inverts the palette and turns shadows into glows. */
-  color-scheme: only light;
-
   --washi: #f2ece0;          /* warm paper background */
   --ink: #222222;            /* primary text */
   --rust: #9a2104;           /* headings, icons (from the hero title) */
@@ -108,7 +104,7 @@ a { color: inherit; }
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: clamp(30px, 9vh, 110px);
+  gap: clamp(15px, 4.5vh, 55px);
   padding: 0 clamp(16px, 4vh, 44px);
 }
 
