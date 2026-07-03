@@ -316,6 +316,17 @@ a { color: inherit; }
   line-height: 1.5;
 }
 
+.comments { margin-top: 48px; }
+
+.comments-title {
+  font-size: clamp(24px, 3.5vw, 30px);
+  font-weight: 400;
+  color: var(--rust);
+  margin: 0 0 18px;
+  padding-top: 24px;
+  border-top: 1px solid var(--hairline);
+}
+
 .comments-placeholder {
   margin-top: 40px;
   padding: 24px;

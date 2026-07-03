@@ -12,6 +12,12 @@ export default {
     linkedin: "https://www.linkedin.com/in/marius-vrancianu",
     github: "https://github.com/marius-vrancianu",
   },
+  comments: {
+    // Cusdis (https://cusdis.com) — anonymous nickname + comment widget.
+    // Paste the App ID from Dashboard → your website → Settings.
+    // Comments stay hidden on posts until this is filled in.
+    cusdisAppId: "",
+  },
   images: {
     // Manifest listing ONLY the images that belong in the gallery
     // (raw.githubusercontent.com updates within minutes of a push).
