@@ -149,7 +149,14 @@ a { color: inherit; }
     flex-direction: column;
   }
 
-  .home-pines { display: none; }
+  /* Pines stay, subtly: anchored bottom-right, reaching up to the framed
+     hero's bottom edge (frame height ≈ 112.19vw, see .hero-frame math). */
+  .home-pines {
+    top: calc(100vw * 1.1219);
+    bottom: 0;
+    height: auto;
+    opacity: 0.3;
+  }
 
   /* Full-width frame: stroke = 5% of image width with the frame spanning
      100vw → stroke = 0.05 · (100vw − 2·stroke) ≈ 4.545vw. */
@@ -166,17 +173,21 @@ a { color: inherit; }
   }
 
   .home-nav {
-    position: static;
+    /* relative (not static) so it stacks above the pines backdrop */
+    position: relative;
+    z-index: 1;
+    left: auto;
+    top: auto;
     transform: none;
     align-items: center;
     text-align: center;
-    gap: 8px;
-    padding: 24px 16px 40px;
+    gap: 4px;
+    padding: 20px 16px 36px;
   }
 
   .home-nav > a {
     font-size: 34px;
-    padding: 14px 24px; /* large tap targets */
+    padding: 7px 24px; /* still a ~48px-tall tap target */
   }
 
   .home-social {

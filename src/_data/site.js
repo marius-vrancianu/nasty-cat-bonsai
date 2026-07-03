@@ -16,7 +16,7 @@ export default {
     // Cusdis (https://cusdis.com) — anonymous nickname + comment widget.
     // Paste the App ID from Dashboard → your website → Settings.
     // Comments stay hidden on posts until this is filled in.
-    cusdisAppId: "",
+    cusdisAppId: "4927068f-179e-4068-9d69-47919a85cb36",
   },
   images: {
     // Manifest listing ONLY the images that belong in the gallery
