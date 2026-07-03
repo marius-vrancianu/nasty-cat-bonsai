@@ -29,6 +29,12 @@ export default function (eleventyConfig) {
 </figure>`;
   });
 
+  // Responsive, privacy-friendly YouTube embed for posts:
+  //   {% youtube "dQw4w9WgXcQ", "Optional accessible title" %}
+  eleventyConfig.addShortcode("youtube", function (id, title) {
+    return `<div class="video-embed"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="${title || "YouTube video"}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
+  });
+
   eleventyConfig.addCollection("posts", (api) =>
     api.getFilteredByGlob("src/posts/*.md").sort((a, b) => b.date - a.date)
   );

@@ -4,6 +4,10 @@ A small, static personal site about bonsai — gallery, blog, and about page —
 built with [Eleventy](https://www.11ty.dev/) and served by GitHub Pages at
 **https://marius-vrancianu.github.io/nasty-cat-bonsai/**.
 
+> 📖 **New here? Read [GUIDE.md](GUIDE.md)** — the full owner's manual:
+> adding gallery photos, writing posts, embedding images/videos, deploying,
+> undoing mistakes. This README is just the quick reference.
+
 ## How it fits together
 
 - **This repo** holds the site source (`src/`) and builds to static HTML.
@@ -42,7 +46,7 @@ thumb: blog/my-post-thumb.webp   # path inside bonsai-images (optional)
 ---
 Body text in Markdown.
 
-{% raw %}{% cdnimg "blog/my-photo.webp", "Alt text", "Optional caption" %}{% endraw %}
+{% cdnimg "blog/my-photo.webp", "Alt text", "Optional caption" %}
 ```
 
 The blog index, post page, and RSS feed update automatically at build time.
