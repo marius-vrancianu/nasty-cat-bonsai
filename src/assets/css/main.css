@@ -2,9 +2,11 @@
    Nasty Cat Bonsai — design tokens
    ========================================================================== */
 :root {
-  /* Both schemes are hand-designed; declaring them stops browsers from
-     force-inverting the palette on their own. */
-  color-scheme: light dark;
+  /* Light is the one and only default, regardless of the device's dark
+     mode ("only" also stops browsers force-inverting the palette).
+     Dark is strictly opt-in via the on-site toggle (theme.js), which
+     sets data-theme="dark" on <html>. */
+  color-scheme: only light;
 
   --washi: #f2ece0;          /* warm paper background */
   --ink: #222222;            /* primary text */
@@ -18,16 +20,15 @@
   --pad-x: clamp(20px, 5vw, 56px);
 }
 
-/* Dark scheme: lamplit version of the same paper — rust and teal accents
-   stay put, paper darkens to a warm near-black, ink lightens to a washi
-   tone. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --washi: #222222;
-    --ink: #d7cab0;
-    --hairline: rgba(215, 202, 176, 0.16);
-    --hairline-strong: rgba(215, 202, 176, 0.28);
-  }
+/* Dark scheme: paper and ink swap — paper takes the light theme's ink
+   color, ink lightens to a washi tone, rust and teal accents stay put. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --washi: #222222;
+  --ink: #d7cab0;
+  --hairline: rgba(215, 202, 176, 0.16);
+  --hairline-strong: rgba(215, 202, 176, 0.28);
 }
 
 * { box-sizing: border-box; }
@@ -89,19 +90,17 @@ a { color: inherit; }
   transform-origin: bottom right;
 }
 
-@media (prefers-color-scheme: dark) {
-  .home-pines {
-    background-image: none;
-    background-color: var(--ink);
-    -webkit-mask-image: url("../img/pine-trees.svg");
-    mask-image: url("../img/pine-trees.svg");
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    -webkit-mask-position: bottom right;
-    mask-position: bottom right;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-  }
+[data-theme="dark"] .home-pines {
+  background-image: none;
+  background-color: var(--ink);
+  -webkit-mask-image: url("../img/pine-trees.svg");
+  mask-image: url("../img/pine-trees.svg");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: bottom right;
+  mask-position: bottom right;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
 /* Washi-colored mat around the hero. Stroke width = 5% of the displayed
@@ -257,7 +256,35 @@ a { color: inherit; }
 .site-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 20px var(--pad-x);
+}
+
+/* Sun/moon theme toggle: moon shown in light mode (click for dark),
+   sun shown in dark mode. Hidden entirely without JS. */
+.theme-toggle {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--rust);
+  display: inline-flex;
+  transition: color 0.2s ease;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible { color: var(--teal); }
+
+.theme-toggle .icon-sun { display: none; }
+
+[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+.home > .theme-toggle {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 3;
 }
 
 .back-link {

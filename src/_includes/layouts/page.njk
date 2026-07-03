@@ -4,6 +4,7 @@ layout: layouts/base.njk
 <div class="page">
   <header class="site-header">
     <a class="back-link" href="/">&larr; {{ site.name }}</a>
+    {% include "partials/theme-toggle.njk" %}
   </header>
   <main class="page-main">
     {{ content | safe }}

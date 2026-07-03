@@ -4,6 +4,7 @@ layout: layouts/base.njk
 <div class="page">
   <header class="site-header">
     <a class="back-link" href="/blog/">&larr; Blog</a>
+    {% include "partials/theme-toggle.njk" %}
   </header>
   <main class="page-main">
     <article class="post">
@@ -19,7 +20,7 @@ layout: layouts/base.njk
       <section class="comments" aria-label="Comments">
         <h2 class="comments-title">Comments</h2>
         <div id="cusdis_thread"
-             data-theme="auto"
+             data-theme="light"
              data-host="https://cusdis.com"
              data-app-id="{{ site.comments.cusdisAppId }}"
              data-page-id="{{ page.url }}"
