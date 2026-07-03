@@ -2,6 +2,10 @@
    Nasty Cat Bonsai — design tokens
    ========================================================================== */
 :root {
+  /* Both schemes are hand-designed; declaring them stops browsers from
+     force-inverting the palette on their own. */
+  color-scheme: light dark;
+
   --washi: #f2ece0;          /* warm paper background */
   --ink: #222222;            /* primary text */
   --rust: #9a2104;           /* headings, icons (from the hero title) */
@@ -12,6 +16,18 @@
   --font: "Proza Libre", Georgia, serif;
   --measure: 680px;          /* comfortable reading width */
   --pad-x: clamp(20px, 5vw, 56px);
+}
+
+/* Dark scheme: lamplit version of the same paper — rust and teal accents
+   stay put, paper darkens to a warm near-black, ink lightens to a washi
+   tone. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --washi: #26201c;
+    --ink: #d7cab0;
+    --hairline: rgba(215, 202, 176, 0.16);
+    --hairline-strong: rgba(215, 202, 176, 0.28);
+  }
 }
 
 * { box-sizing: border-box; }
@@ -104,7 +120,7 @@ a { color: inherit; }
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: clamp(15px, 4.5vh, 55px);
+  gap: clamp(8px, 2.25vh, 28px);
   padding: 0 clamp(16px, 4vh, 44px);
 }
 
