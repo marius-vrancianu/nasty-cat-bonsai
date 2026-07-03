@@ -1,0 +1,26 @@
+---
+title: Blog
+layout: layouts/page.njk
+permalink: /blog/
+---
+<div class="blog-index">
+  <h1 class="page-title">Blog</h1>
+
+  <div class="post-list">
+    {% for post in collections.posts %}
+    <a class="post-card" href="{{ post.url }}">
+      <div class="post-card-thumb cdn-frame">
+        {% if post.data.thumb %}
+        <img src="{{ site.images.cdn }}{{ post.data.thumb }}" alt="" loading="lazy" decoding="async"
+             onerror="this.parentElement.classList.add('missing');this.parentElement.setAttribute('data-file','{{ post.data.thumb }}')">
+        {% endif %}
+      </div>
+      <div class="post-card-body">
+        <div class="post-card-date">{{ post.date | readableDate }}</div>
+        <div class="post-card-title">{{ post.data.title }}</div>
+        <div class="post-card-excerpt">{{ post.data.excerpt }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>

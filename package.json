@@ -1,0 +1,14 @@
+{
+  "name": "nasty-cat-bonsai",
+  "version": "1.0.0",
+  "description": "Nasty Cat Bonsai — a small personal site about bonsai",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "eleventy",
+    "start": "eleventy --serve"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.0.0"
+  }
+}

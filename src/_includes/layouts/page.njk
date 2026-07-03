@@ -1,0 +1,12 @@
+---
+layout: layouts/base.njk
+---
+<div class="page">
+  <header class="site-header">
+    <a class="back-link" href="/">&larr; {{ site.name }}</a>
+  </header>
+  <main class="page-main">
+    {{ content | safe }}
+  </main>
+  {% include "partials/footer.njk" %}
+</div>

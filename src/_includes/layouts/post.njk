@@ -1,0 +1,26 @@
+---
+layout: layouts/base.njk
+---
+<div class="page">
+  <header class="site-header">
+    <a class="back-link" href="/blog/">&larr; Blog</a>
+  </header>
+  <main class="page-main">
+    <article class="post">
+      <div class="post-date">{{ page.date | readableDate }}</div>
+      <h1 class="post-title">{{ title }}</h1>
+      {{ content | safe }}
+
+      {# Giscus (GitHub Discussions comments) mounts here.
+         Setup, once per site:
+           1. Make the nasty-cat-bonsai repo public and enable Discussions
+              (repo Settings → General → Features → Discussions).
+           2. Install the giscus app: https://github.com/apps/giscus
+           3. Generate the script tag at https://giscus.app (pick the repo,
+              an "Announcements"-type category, mapping: pathname) and paste
+              it below, replacing the placeholder <div>. #}
+      <div class="giscus comments-placeholder">Comments (Giscus) load here once configured — see README.</div>
+    </article>
+  </main>
+  {% include "partials/footer.njk" %}
+</div>
