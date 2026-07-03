@@ -2,6 +2,10 @@
    Nasty Cat Bonsai — design tokens
    ========================================================================== */
 :root {
+  /* The washi-paper design is light-only: opt out of browser auto-darkening,
+     which inverts the palette and turns shadows into glows. */
+  color-scheme: only light;
+
   --washi: #f2ece0;          /* warm paper background */
   --ink: #222222;            /* primary text */
   --rust: #9a2104;           /* headings, icons (from the hero title) */
@@ -61,6 +65,8 @@ a { color: inherit; }
   max-width: none;
   z-index: 0;
   pointer-events: none;
+  transform: rotate(-10deg);
+  transform-origin: bottom right;
 }
 
 /* Washi-colored mat around the hero. Stroke width = 5% of the displayed
@@ -87,19 +93,23 @@ a { color: inherit; }
 }
 
 /* The nav sits just past the framed hero's right edge (≈ 89.14dvh, see
-   .hero-frame), vertically centered against it. */
+   .hero-frame). It spans exactly the hero's content edges (inside the
+   stroke): links start at the image's top edge, the social row is pushed
+   to its bottom edge. */
 .home-nav {
   position: absolute;
-  top: 50%;
+  top: calc(100vh * 0.04052);
+  top: calc(100dvh * 0.04052);
+  bottom: calc(100vh * 0.04052);
+  bottom: calc(100dvh * 0.04052);
   left: calc(100vh * 0.8914);
   left: calc(100dvh * 0.8914);
-  transform: translateY(-50%);
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: clamp(30px, 9vh, 110px);
-  padding: clamp(16px, 4vh, 44px);
+  padding: 0 clamp(16px, 4vh, 44px);
 }
 
 .home-nav > a {
@@ -107,9 +117,8 @@ a { color: inherit; }
   color: var(--ink);
   font-size: clamp(28px, 6.5vh, 72px);
   letter-spacing: 0.01em;
-  padding: 0.7vh 1.2vh;
+  padding: 0 1.2vh;
   transition: color 0.2s ease;
-  text-shadow: 0 1px 14px var(--washi), 0 1px 3px var(--washi);
 }
 
 .home-nav > a:hover,
@@ -118,15 +127,15 @@ a { color: inherit; }
 .home-social {
   display: flex;
   align-items: center;
-  gap: 2vh;
-  padding: 0.7vh 1.2vh;
+  gap: 4vh;
+  padding: 0 1.2vh;
+  margin-top: auto; /* pin to the hero's bottom edge */
 }
 
 .home-social a {
   color: var(--rust);
   display: inline-flex;
   transition: color 0.2s ease;
-  filter: drop-shadow(0 1px 6px var(--washi));
 }
 
 .home-social a:hover,
@@ -156,6 +165,7 @@ a { color: inherit; }
     bottom: 0;
     height: auto;
     opacity: 0.3;
+    transform: none;
   }
 
   /* Full-width frame: stroke = 5% of image width with the frame spanning
@@ -178,6 +188,7 @@ a { color: inherit; }
     z-index: 1;
     left: auto;
     top: auto;
+    bottom: auto;
     transform: none;
     align-items: center;
     text-align: center;
@@ -328,6 +339,16 @@ a { color: inherit; }
 }
 
 .comments { margin-top: 48px; }
+
+/* The Cusdis widget lives in a cross-origin iframe that starts small and
+   scrolls internally until its auto-resize message arrives. Give it a
+   solid floor so the form + typical thread sit in the page flow; the
+   widget still grows the iframe for longer threads. */
+#cusdis_thread iframe {
+  width: 100%;
+  border: 0;
+  min-height: 480px;
+}
 
 .comments-title {
   font-size: clamp(24px, 3.5vw, 30px);
