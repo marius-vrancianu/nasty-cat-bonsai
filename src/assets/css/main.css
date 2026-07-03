@@ -21,12 +21,15 @@
 }
 
 /* Dark scheme: paper and ink swap — paper takes the light theme's ink
-   color, ink lightens to a washi tone, rust and teal accents stay put. */
+   color, ink lightens to a washi tone, and the rust accent becomes a
+   soft plant-y teal (the light theme keeps its rust). */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
   --washi: #222222;
   --ink: #d7cab0;
+  --rust: #156952;
+  --rust-hover: #1d8a6b;
   --hairline: rgba(215, 202, 176, 0.16);
   --hairline-strong: rgba(215, 202, 176, 0.28);
 }
