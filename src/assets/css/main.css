@@ -63,24 +63,36 @@ a { color: inherit; }
   pointer-events: none;
 }
 
-.home-hero {
+/* Washi-colored mat around the hero. Stroke width = 5% of the displayed
+   image width; with the 1134x1286 image (ratio r=0.8818) and the frame
+   filling the full viewport height, solving
+     stroke = 0.05 · r · (100dvh − 2·stroke)
+   gives stroke ≈ 4.052dvh, and a total frame width of ≈ 89.14dvh. */
+.hero-frame {
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
-  width: auto;
-  max-width: none;
-  display: block;
+  padding: calc(100vh * 0.04052);
+  padding: calc(100dvh * 0.04052);
+  background: var(--washi);
   z-index: 1;
 }
 
-/* The hero image is 1134x1286 → width = 88.18% of its height. The nav sits
-   just past its right edge, vertically centered against it. */
+.home-hero {
+  height: 100%;
+  width: auto;
+  max-width: none;
+  display: block;
+}
+
+/* The nav sits just past the framed hero's right edge (≈ 89.14dvh, see
+   .hero-frame), vertically centered against it. */
 .home-nav {
   position: absolute;
   top: 50%;
-  left: calc(100vh * 0.8818);
-  left: calc(100dvh * 0.8818);
+  left: calc(100vh * 0.8914);
+  left: calc(100dvh * 0.8914);
   transform: translateY(-50%);
   z-index: 2;
   display: flex;
@@ -139,8 +151,16 @@ a { color: inherit; }
 
   .home-pines { display: none; }
 
-  .home-hero {
+  /* Full-width frame: stroke = 5% of image width with the frame spanning
+     100vw → stroke = 0.05 · (100vw − 2·stroke) ≈ 4.545vw. */
+  .hero-frame {
     position: static;
+    height: auto;
+    width: 100%;
+    padding: calc(100vw * 0.04545);
+  }
+
+  .home-hero {
     width: 100%;
     height: auto;
   }

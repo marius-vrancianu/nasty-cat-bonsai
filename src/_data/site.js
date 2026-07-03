@@ -5,12 +5,11 @@ export default {
   description:
     "A small collection of bonsai, a gallery of the trees, and a running log of what works — and what the cat undoes.",
   author: "Marius Vrancianu",
-  // TODO: replace placeholders with real profiles / email.
-  email: "hello@example.com",
+  email: "marius.v.vrancianu@gmail.com",
   social: {
-    facebook: "#",
-    instagram: "#",
-    linkedin: "#",
+    facebook: "https://www.facebook.com/nasty.cat.bonsai",
+    instagram: "https://www.instagram.com/nasty.cat.bonsai",
+    linkedin: "https://www.linkedin.com/in/marius-vrancianu",
     github: "https://github.com/marius-vrancianu",
   },
   images: {
