@@ -23,7 +23,7 @@
    tone. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --washi: #26201c;
+    --washi: #222222;
     --ink: #d7cab0;
     --hairline: rgba(215, 202, 176, 0.16);
     --hairline-strong: rgba(215, 202, 176, 0.28);
@@ -68,17 +68,40 @@ a { color: inherit; }
   user-select: none;
 }
 
+/* Pine backdrop. A background-image in light mode; in dark mode the same
+   SVG becomes an alpha mask over the ink color, recoloring the #222222
+   strokes to washi ink while keeping every stroke's transparency.
+   (The SVG's viewBox is 900x1000, hence the aspect ratio.) */
 .home-pines {
   position: absolute;
   bottom: 0;
   right: 0;
   height: 100vh;
-  width: auto;
-  max-width: none;
+  height: 100dvh;
+  aspect-ratio: 900 / 1000;
+  background-image: url("../img/pine-trees.svg");
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
   z-index: 0;
   pointer-events: none;
   transform: rotate(-10deg);
   transform-origin: bottom right;
+}
+
+@media (prefers-color-scheme: dark) {
+  .home-pines {
+    background-image: none;
+    background-color: var(--ink);
+    -webkit-mask-image: url("../img/pine-trees.svg");
+    mask-image: url("../img/pine-trees.svg");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-position: bottom right;
+    mask-position: bottom right;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
 }
 
 /* Washi-colored mat around the hero. Stroke width = 5% of the displayed
