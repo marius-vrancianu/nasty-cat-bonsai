@@ -101,21 +101,51 @@
     return isFinite(r) && r > 0 ? r : 0.75;
   }
 
-  // Size the image+caption unit so the WHOLE of it spans the viewport
-  // height minus a 5% margin top and bottom, with the caption exactly as
-  // wide as the photo. Caption height depends on its width and vice
-  // versa, so start from the widest allowed width and shrink until it
-  // settles — starting wide means the caption can only grow as the width
-  // comes down, so the loop converges and can never collapse (unlike
-  // measuring at the initial, possibly zero-width, layout).
+  // Preferred layout: the photo sits on the left, stretched to the full
+  // viewport height minus a margin of 5% of its longest side, which is
+  // also the gap to the browser edges and to the caption block that sits
+  // at the photo's lower right. When the viewport is too narrow for
+  // that arrangement (portrait phones), fall back to a stacked card:
+  // photo above caption, the whole unit fitted to the viewport height.
   function fit() {
     if (current === null) return;
     var f = body.firstChild;
     var cap = body.lastChild;
     var r = ratioOf(items[current]);
-    var maxW = Math.min(window.innerWidth * 0.94, 1100);
-    var totalH = window.innerHeight * 0.9;
-    var minImgH = window.innerHeight * 0.25; // photo never smaller than this
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+
+    box.classList.remove("lb-side");
+    box.style.padding = "";
+    body.style.width = "";
+    body.style.gap = "";
+    f.style.width = "";
+    f.style.height = "";
+    cap.style.width = "";
+    cap.style.maxHeight = "";
+
+    // Side-by-side: solve H + 2·(5% of longest side) = viewport height.
+    var H = vh / (r < 1 ? 1.1 : 1 + 0.1 * r);
+    var W = H * r;
+    var m = 0.05 * Math.max(W, H);
+    var capW = Math.min(420, vw - W - 3 * m);
+    if (capW >= 240) {
+      box.classList.add("lb-side");
+      box.style.padding = m + "px";
+      body.style.gap = m + "px";
+      f.style.width = W + "px";
+      f.style.height = H + "px";
+      cap.style.width = capW + "px";
+      cap.style.maxHeight = H + "px";
+      return;
+    }
+
+    // Stacked card. Start from the widest allowed width and shrink until
+    // the caption height settles — starting wide means the loop always
+    // converges and can never collapse.
+    var maxW = Math.min(vw * 0.94, 1100);
+    var totalH = vh * 0.9;
+    var minImgH = vh * 0.25; // photo never smaller than this
     var w = maxW;
     var imgH;
     for (var pass = 0; pass < 4; pass++) {

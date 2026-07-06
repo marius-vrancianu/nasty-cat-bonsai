@@ -672,6 +672,29 @@ a { color: inherit; }
   padding: 18px 22px;
 }
 
+/* Side-by-side lightbox layout (gallery.js adds .lb-side when the photo,
+   at full viewport height, leaves room for the caption beside it):
+   photo anchored left, caption block bottom-aligned at its lower right. */
+.lightbox.lb-side {
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.lb-side .lightbox-body {
+  width: auto;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.lb-side .lightbox-caption {
+  width: auto;
+  min-width: 0;
+  overflow: auto;
+}
+
 .lightbox-species { color: var(--rust); font-size: 20px; }
 .lightbox-meta    { font-size: 14px; margin-top: 4px; }
 .lightbox-notes   { font-size: 15px; margin-top: 10px; line-height: 1.6; }
