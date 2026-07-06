@@ -676,7 +676,7 @@ a { color: inherit; }
    at full viewport height, leaves room for the caption beside it):
    photo anchored left, caption block bottom-aligned at its lower right. */
 .lightbox.lb-side {
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
 }
 
