@@ -104,7 +104,10 @@
   // Size the image+caption unit so the WHOLE of it spans the viewport
   // height minus a 5% margin top and bottom, with the caption exactly as
   // wide as the photo. Caption height depends on its width and vice
-  // versa, so measure and settle over a couple of passes.
+  // versa, so start from the widest allowed width and shrink until it
+  // settles — starting wide means the caption can only grow as the width
+  // comes down, so the loop converges and can never collapse (unlike
+  // measuring at the initial, possibly zero-width, layout).
   function fit() {
     if (current === null) return;
     var f = body.firstChild;
@@ -112,14 +115,21 @@
     var r = ratioOf(items[current]);
     var maxW = Math.min(window.innerWidth * 0.94, 1100);
     var totalH = window.innerHeight * 0.9;
-    var w = Math.max(Math.min((totalH - cap.offsetHeight) * r, maxW), 120);
-    for (var pass = 0; pass < 3; pass++) {
+    var minImgH = window.innerHeight * 0.25; // photo never smaller than this
+    var w = maxW;
+    var imgH;
+    for (var pass = 0; pass < 4; pass++) {
       body.style.width = w + "px";
-      var next = Math.max(Math.min((totalH - cap.offsetHeight) * r, maxW), 120);
-      if (Math.abs(next - w) < 1) break;
+      imgH = Math.max(totalH - cap.offsetHeight, minImgH);
+      var next = Math.min(imgH * r, maxW);
+      if (Math.abs(next - w) < 1) { w = next; break; }
       w = next;
     }
-    f.style.height = body.offsetWidth / r + "px";
+    // On extreme viewports keep the card at a readable width; the body
+    // scrolls internally if the caption doesn't fit.
+    w = Math.max(w, Math.min(320, maxW));
+    body.style.width = w + "px";
+    f.style.height = Math.min(w / r, imgH) + "px";
   }
 
   function show(i) {
