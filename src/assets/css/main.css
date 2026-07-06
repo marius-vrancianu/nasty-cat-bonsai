@@ -633,27 +633,39 @@ a { color: inherit; }
 .lightbox-prev  { left: clamp(2px, 3vw, 32px); top: 50%; transform: translateY(-50%); font-size: 40px; }
 .lightbox-next  { right: clamp(2px, 3vw, 32px); top: 50%; transform: translateY(-50%); font-size: 40px; }
 
+/* The image+caption unit always spans the viewport height minus a 5vh
+   margin top and bottom. The photo drives the width: the frame's
+   aspect-ratio (set per image from the manifest) turns the flexed height
+   into a width, `fit-content` makes the unit hug it, and the caption's
+   width:0/min-width:100% trick stretches it to match without letting
+   long text widen the unit. */
 .lightbox-body {
-  max-width: min(90vw, 880px);
-  max-height: 88vh;
+  width: fit-content;
+  max-width: min(94vw, 1100px);
+  max-height: 90vh;
+  max-height: 90dvh;
   display: flex;
   flex-direction: column;
-  overflow: auto;
 }
 
 .lightbox-body .cdn-frame {
-  max-height: 62vh;
-  min-height: 200px;
+  flex: 0 1 auto;
+  min-height: 0;
+  width: 100%;
+  border: none;
+  background: none; /* no placeholder texture behind lightbox photos */
 }
 
 .lightbox-body .cdn-frame img {
-  max-height: 62vh;
   width: 100%;
+  height: 100%;
   object-fit: contain;
-  background: rgba(20, 18, 15, 0.4);
 }
 
 .lightbox-caption {
+  flex: 0 0 auto;
+  width: 0;
+  min-width: 100%;
   background: var(--washi);
   padding: 18px 22px;
 }

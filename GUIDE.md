@@ -105,9 +105,9 @@ What each field does on the site:
 To **add** a photo: copy an existing entry (from `{` to `}`), paste it after
 another entry, edit the values. **Watch the commas**: every entry is
 separated from the next by a comma, but the *last* entry has no comma after
-it. This is the #1 way to break the file — if the gallery ever shows
-"sample layout" after an edit, you have a stray/missing comma. Paste the
-file's content into <https://jsonlint.com> to find the exact spot.
+it. This is the #1 way to break the file — if the gallery shows a
+"couldn't load" message after an edit, you have a stray/missing comma.
+Paste the file's content into <https://jsonlint.com> to find the exact spot.
 
 - **Reorder** the gallery = reorder the entries.
 - **Remove** a photo from the gallery = delete its entry (the file can stay).

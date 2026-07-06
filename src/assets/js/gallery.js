@@ -21,21 +21,6 @@
   var MANIFEST_URL = grid.dataset.manifest;
   var CDN_BASE = grid.dataset.cdn;
 
-  // Shown if the manifest isn't reachable yet (e.g. the bonsai-images repo
-  // doesn't exist or has no gallery.json) so the page still demonstrates
-  // the layout with patterned placeholders.
-  var SAMPLE_ITEMS = [
-    { species: "Japanese Maple", style: "Informal upright", date: "Mar 2024", ratio: "3/4", file: "gallery/tree-01.webp", notes: "Repotted this spring into a slightly shallower pot; canopy still filling back in after a hard prune last fall." },
-    { species: "Trident Maple", style: "Broom", date: "Nov 2023", ratio: "4/3", file: "gallery/tree-02.webp", notes: "Grown from a cutting six years ago. Ramification is finally starting to read as a broom from a distance." },
-    { species: "Shimpaku Juniper", style: "Slant", date: "Jan 2024", ratio: "3/4", file: "gallery/tree-03.webp", notes: "First wiring pass on the main trunk line. Still deciding on final apex placement." },
-    { species: "Trident Maple", style: "Informal upright", date: "Jun 2023", ratio: "1/1", file: "gallery/tree-04.webp", notes: "Summer defoliation to encourage finer ramification going into next season." },
-    { species: "Japanese Black Pine", style: "Formal upright", date: "Aug 2023", ratio: "3/5", file: "gallery/tree-05.webp", notes: "Candle-pinched in early summer. Needles should thin out nicely by fall." },
-    { species: "Chinese Elm", style: "Broom", date: "Feb 2024", ratio: "4/3", file: "gallery/tree-06.webp", notes: "Nebari is coming along after a root-spread repot two years ago." },
-    { species: "Japanese Maple", style: "Cascade", date: "Oct 2023", ratio: "3/5", file: "gallery/tree-07.webp", notes: "The tree that ended up on the floor. Recovering well, all things considered." },
-    { species: "Satsuki Azalea", style: "Informal upright", date: "May 2023", ratio: "1/1", file: "gallery/tree-08.webp", notes: "Bloomed for the first time since I acquired it. Colors ran truer than expected." },
-    { species: "Trident Maple", style: "Twin trunk", date: "Dec 2023", ratio: "4/3", file: "gallery/tree-09.webp", notes: "Working on balancing canopy weight between the two trunks." }
-  ];
-
   var items = [];
   var current = null;
   var lastFocused = null;
@@ -109,17 +94,50 @@
   box.appendChild(nextBtn);
   document.body.appendChild(box);
 
+  // Parse a manifest ratio like "3/4" or "1592/2000" into width/height.
+  function ratioOf(item) {
+    var parts = String(item.ratio || "3/4").split("/");
+    var r = parseFloat(parts[0]) / parseFloat(parts[1]);
+    return isFinite(r) && r > 0 ? r : 0.75;
+  }
+
+  // Size the image+caption unit so the WHOLE of it spans the viewport
+  // height minus a 5% margin top and bottom, with the caption exactly as
+  // wide as the photo. Caption height depends on its width and vice
+  // versa, so measure and settle over a couple of passes.
+  function fit() {
+    if (current === null) return;
+    var f = body.firstChild;
+    var cap = body.lastChild;
+    var r = ratioOf(items[current]);
+    var maxW = Math.min(window.innerWidth * 0.94, 1100);
+    var totalH = window.innerHeight * 0.9;
+    var w = Math.max(Math.min((totalH - cap.offsetHeight) * r, maxW), 120);
+    for (var pass = 0; pass < 3; pass++) {
+      body.style.width = w + "px";
+      var next = Math.max(Math.min((totalH - cap.offsetHeight) * r, maxW), 120);
+      if (Math.abs(next - w) < 1) break;
+      w = next;
+    }
+    f.style.height = body.offsetWidth / r + "px";
+  }
+
   function show(i) {
     current = i;
     var item = items[i];
     body.textContent = "";
-    body.appendChild(frame(item, false));
+    var f = frame(item, false);
+    f.style.aspectRatio = ""; // the lightbox sizes explicitly via fit()
+    body.appendChild(f);
     var cap = el("div", "lightbox-caption");
     cap.appendChild(el("div", "lightbox-species", item.species));
     cap.appendChild(el("div", "lightbox-meta", (item.style || "") + " · " + (item.date || "")));
     if (item.notes) cap.appendChild(el("div", "lightbox-notes", item.notes));
     body.appendChild(cap);
+    fit();
   }
+
+  window.addEventListener("resize", fit);
 
   function open(i) {
     lastFocused = document.activeElement;
@@ -176,6 +194,9 @@
       render(list);
     })
     .catch(function () {
-      render(SAMPLE_ITEMS, "Showing sample layout — the gallery manifest (gallery.json in the bonsai-images repo) isn’t available yet.");
+      grid.parentElement.insertBefore(
+        el("p", "gallery-status", "The gallery couldn’t load right now — please refresh in a minute. (If you just edited gallery.json, check it for a stray comma.)"),
+        grid
+      );
     });
 })();
