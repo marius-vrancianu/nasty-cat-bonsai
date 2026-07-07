@@ -107,6 +107,22 @@
   // at the photo's lower right. When the viewport is too narrow for
   // that arrangement (portrait phones), fall back to a stacked card:
   // photo above caption, the whole unit fitted to the viewport height.
+  // Float the close button just above the photo's top-right corner.
+  function positionClose() {
+    var f = body.firstChild;
+    if (!f || box.hidden) return;
+    var fr = f.getBoundingClientRect();
+    var br = closeBtn.getBoundingClientRect();
+    var top = Math.max(fr.top - br.height, 2);
+    var left = Math.min(Math.max(fr.right - br.width, 2), window.innerWidth - br.width - 2);
+    closeBtn.style.top = top + "px";
+    closeBtn.style.left = left + "px";
+    closeBtn.style.right = "auto";
+  }
+
+  var lastVW = 0;
+  var lastVH = 0;
+
   function fit() {
     if (current === null) return;
     var f = body.firstChild;
@@ -114,6 +130,8 @@
     var r = ratioOf(items[current]);
     var vw = window.innerWidth;
     var vh = window.innerHeight;
+    lastVW = vw;
+    lastVH = vh;
 
     box.classList.remove("lb-side");
     box.style.padding = "";
@@ -137,6 +155,7 @@
       f.style.height = H + "px";
       cap.style.width = capW + "px";
       cap.style.maxHeight = H + "px";
+      requestAnimationFrame(positionClose);
       return;
     }
 
@@ -160,6 +179,7 @@
     w = Math.max(w, Math.min(320, maxW));
     body.style.width = w + "px";
     f.style.height = Math.min(w / r, imgH) + "px";
+    requestAnimationFrame(positionClose);
   }
 
   function show(i) {
@@ -177,10 +197,21 @@
     fit();
   }
 
-  window.addEventListener("resize", fit);
+  // Refit only on real viewport changes (rotation, window resize) — mobile
+  // browsers fire small innerHeight jitters when their URL bar animates,
+  // which must not resize the open lightbox.
+  window.addEventListener("resize", function () {
+    if (box.hidden) return;
+    if (window.innerWidth !== lastVW || Math.abs(window.innerHeight - lastVH) > 150) {
+      fit();
+    } else {
+      requestAnimationFrame(positionClose);
+    }
+  });
 
   function open(i) {
     lastFocused = document.activeElement;
+    document.documentElement.classList.add("lightbox-open");
     box.hidden = false;
     show(i);
     closeBtn.focus();
@@ -188,6 +219,7 @@
 
   function close() {
     box.hidden = true;
+    document.documentElement.classList.remove("lightbox-open");
     current = null;
     if (lastFocused) lastFocused.focus();
   }

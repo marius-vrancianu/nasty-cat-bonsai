@@ -616,10 +616,18 @@ a { color: inherit; }
 
 .lightbox[hidden] { display: none; }
 
+/* Background page must not scroll while the lightbox is open (on mobile
+   it also keeps the URL bar — and so the viewport height — stable). */
+html.lightbox-open,
+html.lightbox-open body {
+  overflow: hidden;
+}
+
 .lightbox-close,
 .lightbox-prev,
 .lightbox-next {
   position: absolute;
+  z-index: 1; /* always in front of the photo+caption card */
   background: none;
   border: none;
   color: var(--washi);
@@ -627,9 +635,10 @@ a { color: inherit; }
   font-family: var(--font);
   line-height: 1;
   padding: 12px;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.7));
 }
 
-.lightbox-close { top: 14px; right: 18px; font-size: 32px; }
+.lightbox-close { top: 14px; right: 18px; font-size: 26px; padding: 6px 10px; }
 .lightbox-prev  { left: clamp(2px, 3vw, 32px); top: 50%; transform: translateY(-50%); font-size: 40px; }
 .lightbox-next  { right: clamp(2px, 3vw, 32px); top: 50%; transform: translateY(-50%); font-size: 40px; }
 
