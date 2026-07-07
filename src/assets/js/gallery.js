@@ -159,26 +159,17 @@
       return;
     }
 
-    // Stacked card. Start from the widest allowed width and shrink until
-    // the caption height settles — starting wide means the loop always
-    // converges and can never collapse.
+    // Stacked card, photo-first: the photo always takes its maximum
+    // width-limited size; the caption gets whatever height remains and
+    // scrolls internally when the text is longer.
     var maxW = Math.min(vw * 0.94, 1100);
     var totalH = vh * 0.9;
-    var minImgH = vh * 0.25; // photo never smaller than this
-    var w = maxW;
-    var imgH;
-    for (var pass = 0; pass < 4; pass++) {
-      body.style.width = w + "px";
-      imgH = Math.max(totalH - cap.offsetHeight, minImgH);
-      var next = Math.min(imgH * r, maxW);
-      if (Math.abs(next - w) < 1) { w = next; break; }
-      w = next;
-    }
-    // On extreme viewports keep the card at a readable width; the body
-    // scrolls internally if the caption doesn't fit.
-    w = Math.max(w, Math.min(320, maxW));
+    var minCapH = 90; // always leave room for at least title + subtitle
+    var imgH = Math.min(maxW / r, totalH - minCapH);
+    var w = Math.max(imgH * r, Math.min(320, maxW)); // readable card width
     body.style.width = w + "px";
-    f.style.height = Math.min(w / r, imgH) + "px";
+    f.style.height = imgH + "px";
+    cap.style.maxHeight = (totalH - imgH) + "px";
     requestAnimationFrame(positionClose);
   }
 

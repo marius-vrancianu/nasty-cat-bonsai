@@ -679,6 +679,7 @@ html.lightbox-open body {
   min-width: 100%;
   background: var(--washi);
   padding: 18px 22px;
+  overflow-y: auto; /* long descriptions scroll inside the caption box */
 }
 
 /* Side-by-side lightbox layout (gallery.js adds .lb-side when the photo,
