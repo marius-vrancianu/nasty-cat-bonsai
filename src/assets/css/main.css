@@ -630,7 +630,9 @@ html.lightbox-open body {
   z-index: 1; /* always in front of the photo+caption card */
   background: none;
   border: none;
-  color: var(--washi);
+  /* fixed light color: the overlay behind is dark in BOTH themes, so the
+     controls must not follow the theme tokens */
+  color: #f2ece0;
   cursor: pointer;
   font-family: var(--font);
   line-height: 1;
