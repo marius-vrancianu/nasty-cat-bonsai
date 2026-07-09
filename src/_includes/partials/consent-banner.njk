@@ -1,0 +1,13 @@
+{% if site.analytics.gaMeasurementId %}
+<div class="consent-banner" role="dialog" aria-label="Cookie consent" data-measurement-id="{{ site.analytics.gaMeasurementId }}" hidden>
+  <p class="consent-text">
+    May I count your visit? Accepting loads Google Analytics, which sets a
+    couple of cookies. Declining loads nothing — the site works the same
+    either way.
+  </p>
+  <div class="consent-actions">
+    <button class="consent-accept" type="button">Accept</button>
+    <button class="consent-decline" type="button">Decline</button>
+  </div>
+</div>
+{% endif %}

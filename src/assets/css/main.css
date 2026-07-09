@@ -710,3 +710,74 @@ html.lightbox-open body {
 .lightbox-species { color: var(--rust); font-size: 20px; }
 .lightbox-meta    { font-size: 14px; margin-top: 4px; }
 .lightbox-notes   { font-size: 15px; margin-top: 10px; line-height: 1.6; }
+
+/* ==========================================================================
+   Analytics consent banner
+   ========================================================================== */
+.consent-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 60;
+  width: min(calc(100% - 32px), 560px);
+  padding: 16px 20px;
+  background: var(--washi);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(28, 26, 23, 0.18);
+}
+
+.consent-text {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.consent-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.consent-actions button {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.consent-accept {
+  background: var(--rust);
+  color: var(--washi);
+  border: 1px solid var(--rust);
+}
+
+.consent-accept:hover,
+.consent-accept:focus-visible { background: var(--rust-hover); border-color: var(--rust-hover); }
+
+.consent-decline {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--hairline-strong);
+}
+
+.consent-decline:hover,
+.consent-decline:focus-visible { color: var(--teal); border-color: var(--teal); }
+
+.cookie-settings {
+  font: inherit;
+  font-size: 13px;
+  background: none;
+  border: none;
+  padding: 6px;
+  color: var(--rust);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+
+.cookie-settings:hover,
+.cookie-settings:focus-visible { color: var(--teal); }
