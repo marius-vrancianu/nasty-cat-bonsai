@@ -9,8 +9,6 @@ export default {
   social: {
     facebook: "https://www.facebook.com/nasty.cat.bonsai",
     instagram: "https://www.instagram.com/nasty.cat.bonsai",
-    linkedin: "https://www.linkedin.com/in/marius-vrancianu",
-    github: "https://github.com/marius-vrancianu",
   },
   analytics: {
     // Google Analytics 4 measurement ID (Admin → Data streams → your stream).
