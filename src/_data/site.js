@@ -12,6 +12,11 @@ export default {
     linkedin: "https://www.linkedin.com/in/marius-vrancianu",
     github: "https://github.com/marius-vrancianu",
   },
+  analytics: {
+    // Google Analytics 4 measurement ID (Admin → Data streams → your stream).
+    // The gtag snippet is only rendered when this is filled in.
+    gaMeasurementId: "G-DPMW9G3Q5P",
+  },
   comments: {
     // Cusdis (https://cusdis.com) — anonymous nickname + comment widget.
     // Paste the App ID from Dashboard → your website → Settings.
