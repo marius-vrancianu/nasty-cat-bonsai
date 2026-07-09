@@ -781,3 +781,14 @@ html.lightbox-open body {
 
 .cookie-settings:hover,
 .cookie-settings:focus-visible { color: var(--teal); }
+
+.consent-text a { color: var(--rust); }
+.consent-text a:hover,
+.consent-text a:focus-visible { color: var(--teal); }
+
+.footer-text-link {
+  font-size: 13px;
+  padding: 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
