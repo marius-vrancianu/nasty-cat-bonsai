@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Nasty Cat Bonsai favicon: red maple, brown trunk, teal pot -->
+  <!-- foliage: overlapping maple pads filling the top half -->
+  <g fill="#9a2104">
+    <circle cx="30" cy="30" r="22"/>
+    <circle cx="62" cy="20" r="20"/>
+    <circle cx="78" cy="42" r="16"/>
+    <circle cx="52" cy="38" r="20"/>
+  </g>
+  <!-- trunk: thick moyogi curve with a low branch -->
+  <path d="M40 74
+           C 39 62, 33 56, 36 46
+           C 39 36, 50 34, 53 24
+           L 66 28
+           C 61 42, 50 44, 48 52
+           C 46 59, 52 62, 54 74 Z"
+        fill="#4a3426"/>
+  <path d="M40 62 C 30 56, 24 48, 22 38 L 32 34 C 34 43, 39 50, 47 54 Z"
+        fill="#4a3426"/>
+  <!-- pot: wide shallow trapezoid with feet -->
+  <path d="M12 74 L 88 74 L 81 92 L 19 92 Z" fill="#2e6b6b"/>
+  <rect x="24" y="92" width="11" height="6" fill="#2e6b6b"/>
+  <rect x="65" y="92" width="11" height="6" fill="#2e6b6b"/>
+</svg>
