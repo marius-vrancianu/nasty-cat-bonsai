@@ -19,7 +19,7 @@ This is a personal, non-commercial website. I collect as little data as possible
 
 **Comments.** Posting a comment sends your nickname, optional email address, comment text, and time of posting to Cusdis (an open-source comment service, hosted on US infrastructure — [Cusdis privacy policy](https://cusdis.com/privacy-policy)). Your data is displayed with your comment and kept until you ask me to delete it. No account and no cookies are involved. Legal basis: your request to publish a comment (Art. 6(1)(b) GDPR).
 
-**Images.** Gallery and post images are delivered by the jsDelivr CDN and GitHub's raw content servers, which receive your IP address to send you the files. Legal basis: legitimate interest (Art. 6(1)(f) GDPR).
+**Images.** Gallery and post images are delivered by the jsDelivr CDN, which receives your IP address to send you the files. Legal basis: legitimate interest (Art. 6(1)(f) GDPR).
 
 **Embedded videos.** Some posts embed YouTube videos in privacy-enhanced mode (youtube-nocookie.com). YouTube (Google) receives data about you only if you play a video.
 

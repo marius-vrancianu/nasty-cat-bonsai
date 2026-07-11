@@ -5,11 +5,30 @@ permalink: /gallery/
 ---
 <h1 class="page-title">Gallery</h1>
 
-<div id="gallery"
-     class="gallery-grid"
-     data-manifest="{{ site.images.manifest }}"
-     data-cdn="{{ site.images.cdn }}">
-  <noscript><p>The gallery needs JavaScript to load its images.</p></noscript>
+{% if gallery.length %}
+<div id="gallery" class="gallery-grid">
+  {%- for item in gallery %}
+  <a class="gallery-card" href="{{ site.images.cdn }}{{ item.file }}">
+    <div class="cdn-frame" style="aspect-ratio: {{ item.ratio or "3/4" }}">
+      <img src="{{ site.images.cdn }}{{ item.file }}"
+           alt="{{ item.alt or (item.species + " bonsai, " + ((item.style or "") | lower) + " style") }}"
+           loading="lazy" decoding="async"
+           onerror="this.parentElement.classList.add('missing');this.parentElement.setAttribute('data-file','{{ item.file }}')">
+    </div>
+    <div class="gallery-card-caption">
+      <div class="gallery-card-species">{{ item.species }}</div>
+      <div class="gallery-card-meta">{{ item.style }} · {{ item.date }}</div>
+    </div>
+  </a>
+  {%- endfor %}
 </div>
 
+{# Item metadata (ratio, notes, …) for the lightbox, so gallery.js never
+   has to re-fetch the manifest. "</" is escaped so notes text can never
+   close this script block. #}
+<script type="application/json" id="gallery-data">{{ gallery | dump | replace("</", "<\\/") | safe }}</script>
 <script src="/assets/js/gallery.js" defer></script>
+{% else %}
+<p class="gallery-status">The gallery couldn’t be loaded when this version
+of the site was built — it will be back with the next deploy.</p>
+{% endif %}

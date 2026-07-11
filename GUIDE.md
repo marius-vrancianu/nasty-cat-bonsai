@@ -22,9 +22,10 @@ Two golden rules:
    <https://marius-vrancianu.github.io/nasty-cat-bonsai/> only changes when
    you run the deploy workflow (section 5). Commit as much as you like —
    nothing goes live until you press the button.
-   - *The one exception:* photos and `gallery.json` in `bonsai-images` are
-     read live by the browser, so those appear **without** a deploy (after a
-     short cache delay — see section 1.4).
+   - This includes the gallery: the photo list (`gallery.json` in
+     `bonsai-images`) is read once, **during the deploy**, and baked into
+     the page — so gallery edits also go live via the deploy button
+     (details in section 1.4).
 2. **Every change is reversible.** Git keeps full history; section 6.3 shows
    the two-click undo.
 
@@ -105,24 +106,29 @@ What each field does on the site:
 To **add** a photo: copy an existing entry (from `{` to `}`), paste it after
 another entry, edit the values. **Watch the commas**: every entry is
 separated from the next by a comma, but the *last* entry has no comma after
-it. This is the #1 way to break the file — if the gallery shows a
-"couldn't load" message after an edit, you have a stray/missing comma.
+it. This is the #1 way to break the file — if the deploy workflow fails
+with an error mentioning the gallery manifest, you have a stray/missing
+comma (the live site stays untouched until you fix it and deploy again).
 Paste the file's content into <https://jsonlint.com> to find the exact spot.
 
 - **Reorder** the gallery = reorder the entries.
 - **Remove** a photo from the gallery = delete its entry (the file can stay).
 - **Change titles/captions** any time = just edit the entry.
 
-### 1.4 When will I see it? (cache rules)
+### 1.4 When will I see it? (deploy + cache rules)
 
-- `gallery.json` changes: **~5 minutes**.
-- **New** image files: minutes.
+- `gallery.json` changes (add/remove/reorder photos, edit captions):
+  **after the next deploy** — the photo list is baked into the site while
+  it's being built, so run the deploy workflow (section 5) when you're done
+  editing. (This is what makes the gallery load reliably everywhere and be
+  indexable by search engines.)
+- **New** image files: on the CDN within minutes, so they show as soon as
+  the deploy that lists them is live.
 - **Replacing an existing file under the same name: up to 7 days** (the CDN
   caches aggressively). This is why you never overwrite — upload the fixed
   photo under a new name (`maple-repot-2026-b.webp`) and update `file` in
   `gallery.json` instead.
-- No deploy needed for any of this. Hard-refresh your browser
-  (**Ctrl+F5**) when checking.
+- Hard-refresh your browser (**Ctrl+F5**) when checking.
 
 ---
 
@@ -250,7 +256,10 @@ and deploy.
 ## 5. Deploying (publishing) the site
 
 Any change in the **`nasty-cat-bonsai`** repo — posts, About, CSS, templates
-— needs a deploy to go live. (Photo changes in `bonsai-images` don't.)
+— needs a deploy to go live, and so does the gallery list (`gallery.json`
+in `bonsai-images`): each deploy bakes the current photo list into the
+site. Merely uploading image files doesn't need one — they only appear
+once `gallery.json` lists them and that change is deployed.
 
 1. Open <https://github.com/marius-vrancianu/nasty-cat-bonsai>.
 2. Click the **Actions** tab (top of the page).
@@ -265,8 +274,9 @@ the last lines. If it says **"Deployment failed, try again later"**, that's
 a temporary GitHub hiccup — it happens now and then; just run the workflow
 again (it has never failed twice in a row here). Any other error: it will
 almost always be a typo in a file you just edited (a broken front-matter
-`---` block is the usual suspect) — recheck your last commit, or see 6.3 to
-undo it.
+`---` block, or a stray comma in `gallery.json` — the error message names
+the gallery manifest in that case) — recheck your last commit, or see 6.3
+to undo it.
 
 The GitHub mobile app can also trigger this workflow, so you can publish
 from the couch.
@@ -339,7 +349,8 @@ maintain; it just works.
 ### 6.7 What not to touch (unless you mean it)
 
 - `eleventy.config.js`, `package.json`, `package-lock.json`,
-  `.github/workflows/deploy.yml` — the build machinery.
+  `src/_data/gallery.js`, `.github/workflows/deploy.yml` — the build
+  machinery.
 - `src/_includes/` — page templates (HTML skeletons). Editable, but a typo
   here breaks every page at once, so change one thing at a time and deploy
   after each.
