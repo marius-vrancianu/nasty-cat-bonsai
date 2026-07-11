@@ -1,27 +1,25 @@
-/* Gallery: renders the photo grid from the bonsai-images repo manifest
-   (gallery.json) and provides a keyboard-navigable lightbox.
-
-   Manifest format — an array of items, gallery images only:
-   [
-     { "file": "gallery/tree-01.webp",   // path inside bonsai-images repo
-       "species": "Japanese Maple",
-       "style": "Informal upright",
-       "date": "Mar 2024",
-       "ratio": "3/4",                   // aspect ratio of the photo
-       "alt": "optional alt text",
-       "notes": "optional longer caption for the lightbox" }
-   ]
-*/
+/* Gallery lightbox. The photo grid itself is rendered at build time from
+   the bonsai-images manifest (see src/_data/gallery.js); each card is a
+   plain link to the full image, so the gallery works — and is indexable —
+   without JavaScript. This script upgrades those links into a
+   keyboard-navigable lightbox, reading item metadata (ratio, species,
+   notes) from the inline JSON blob rendered next to the grid. */
 (function () {
   "use strict";
 
   var grid = document.getElementById("gallery");
-  if (!grid) return;
+  var dataEl = document.getElementById("gallery-data");
+  if (!grid || !dataEl) return;
 
-  var MANIFEST_URL = grid.dataset.manifest;
-  var CDN_BASE = grid.dataset.cdn;
+  var items;
+  try {
+    items = JSON.parse(dataEl.textContent);
+  } catch (e) {
+    return; // leave the cards as plain links
+  }
+  var cards = Array.prototype.slice.call(grid.querySelectorAll(".gallery-card"));
+  if (!Array.isArray(items) || items.length !== cards.length) return;
 
-  var items = [];
   var current = null;
   var lastFocused = null;
 
@@ -32,13 +30,14 @@
     return node;
   }
 
-  function frame(item, lazy) {
+  // Full-size photo for the lightbox; src and alt are taken from the
+  // card's grid image, which the build already pointed at the CDN.
+  function frame(item, card) {
     var f = el("div", "cdn-frame");
-    f.style.aspectRatio = item.ratio || "3/4";
+    var gridImg = card.querySelector("img");
     var img = el("img");
-    img.src = CDN_BASE + item.file;
-    img.alt = item.alt || (item.species + " bonsai, " + (item.style || "").toLowerCase() + " style");
-    if (lazy) img.loading = "lazy";
+    img.src = card.href;
+    img.alt = gridImg ? gridImg.alt : item.species;
     img.decoding = "async";
     img.addEventListener("error", function () {
       f.classList.add("missing");
@@ -46,27 +45,6 @@
     });
     f.appendChild(img);
     return f;
-  }
-
-  function render(list, note) {
-    items = list;
-    grid.textContent = "";
-    if (note) {
-      var status = el("p", "gallery-status", note);
-      grid.parentElement.insertBefore(status, grid);
-    }
-    list.forEach(function (item, i) {
-      var card = el("button", "gallery-card");
-      card.type = "button";
-      card.setAttribute("aria-haspopup", "dialog");
-      card.appendChild(frame(item, true));
-      var cap = el("div", "gallery-card-caption");
-      cap.appendChild(el("div", "gallery-card-species", item.species));
-      cap.appendChild(el("div", "gallery-card-meta", (item.style || "") + " · " + (item.date || "")));
-      card.appendChild(cap);
-      card.addEventListener("click", function () { open(i); });
-      grid.appendChild(card);
-    });
   }
 
   /* ---- Lightbox ---------------------------------------------------- */
@@ -177,9 +155,7 @@
     current = i;
     var item = items[i];
     body.textContent = "";
-    var f = frame(item, false);
-    f.style.aspectRatio = ""; // the lightbox sizes explicitly via fit()
-    body.appendChild(f);
+    body.appendChild(frame(item, cards[i]));
     var cap = el("div", "lightbox-caption");
     cap.appendChild(el("div", "lightbox-species", item.species));
     cap.appendChild(el("div", "lightbox-meta", (item.style || "") + " · " + (item.date || "")));
@@ -244,22 +220,11 @@
     }
   });
 
-  /* ---- Load manifest ------------------------------------------------ */
-
-  fetch(MANIFEST_URL)
-    .then(function (r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
-    })
-    .then(function (data) {
-      var list = Array.isArray(data) ? data : data.items;
-      if (!Array.isArray(list) || list.length === 0) throw new Error("empty manifest");
-      render(list);
-    })
-    .catch(function () {
-      grid.parentElement.insertBefore(
-        el("p", "gallery-status", "The gallery couldn’t load right now — please refresh in a minute. (If you just edited gallery.json, check it for a stray comma.)"),
-        grid
-      );
+  cards.forEach(function (card, i) {
+    card.setAttribute("aria-haspopup", "dialog");
+    card.addEventListener("click", function (e) {
+      e.preventDefault();
+      open(i);
     });
+  });
 })();

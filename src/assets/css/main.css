@@ -560,6 +560,8 @@ a { color: inherit; }
   column-gap: 20px;
 }
 
+/* Each card is a link to the full-size image; gallery.js upgrades the
+   click into the lightbox. */
 .gallery-card {
   display: block;
   width: 100%;
@@ -569,9 +571,9 @@ a { color: inherit; }
   cursor: pointer;
   border: 1px solid var(--hairline);
   background: var(--washi);
-  font-family: inherit;
   color: inherit;
   text-align: left;
+  text-decoration: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
