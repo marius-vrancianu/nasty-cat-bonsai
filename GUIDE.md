@@ -84,7 +84,7 @@ The file is a list of entries between `[` and `]`; each entry looks like:
 {
   "file": "gallery/maple-repot-2026.webp",
   "species": "Japanese Maple",
-  "tree": "Acer palmatum, ANNO CVLTO 2024",
+  "tree": "Acer palmatum, anno culto 2024",
   "style": "Informal upright",
   "date": "Jul 2026",
   "ratio": "3/4",
