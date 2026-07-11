@@ -31,6 +31,12 @@
     return node;
   }
 
+  // `tree` in the manifest is a string for single-tree photos or an array
+  // for photos with several trees in frame; normalize to an array.
+  function treesOf(item) {
+    return Array.isArray(item.tree) ? item.tree : item.tree ? [item.tree] : [];
+  }
+
   // Full-size photo for the lightbox; src and alt are taken from the
   // card's grid image, which the build already pointed at the CDN.
   function frame(item, card) {
@@ -160,7 +166,9 @@
     var cap = el("div", "lightbox-caption");
     cap.appendChild(el("div", "lightbox-species", item.species));
     cap.appendChild(el("div", "lightbox-meta", (item.style || "") + " · " + (item.date || "")));
-    if (item.tree) cap.appendChild(el("div", "lightbox-tree", item.tree));
+    treesOf(item).forEach(function (t) {
+      cap.appendChild(el("div", "lightbox-tree", t));
+    });
     if (item.notes) cap.appendChild(el("div", "lightbox-notes", item.notes));
     body.appendChild(cap);
     fit();
@@ -236,18 +244,21 @@
 
   /* ---- Per-tree progression filter ---------------------------------- */
   // Entries sharing the same `tree` string in gallery.json are photos of
-  // one tree over the years. The dropdown shows each unique value (in
-  // manifest order); picking one hides every other card and mirrors the
-  // choice into the URL hash (#tree=...) so a tree's view is linkable
-  // and the back button undoes the filter.
+  // one tree over the years; `tree` may also be an array for photos with
+  // several trees in frame (exhibitions, group shots), which then appear
+  // under each listed tree. The dropdown shows each unique value; picking
+  // one hides every card not featuring that tree and mirrors the choice
+  // into the URL hash (#tree=...) so a tree's view is linkable and the
+  // back button undoes the filter.
 
   var select = document.getElementById("tree-filter");
   var trees = [];
   var counts = {};
   items.forEach(function (it) {
-    if (!it.tree) return;
-    if (trees.indexOf(it.tree) === -1) trees.push(it.tree);
-    counts[it.tree] = (counts[it.tree] || 0) + 1;
+    treesOf(it).forEach(function (t) {
+      if (trees.indexOf(t) === -1) trees.push(t);
+      counts[t] = (counts[t] || 0) + 1;
+    });
   });
   // Alphabetical, with "+"-marked (lost) trees grouped at the end.
   trees.sort(function (a, b) {
@@ -261,7 +272,7 @@
     var active = trees.indexOf(tree) !== -1 ? tree : "";
     visible = [];
     cards.forEach(function (card, i) {
-      var shown = !active || items[i].tree === active;
+      var shown = !active || treesOf(items[i]).indexOf(active) !== -1;
       card.hidden = !shown;
       if (shown) visible.push(i);
     });
