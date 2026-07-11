@@ -122,6 +122,10 @@ a { color: inherit; }
   z-index: 1;
 }
 
+/* The <picture> wrapper must not create its own box, so .home-hero keeps
+   resolving its percentage height against .hero-frame. */
+.hero-frame picture { display: contents; }
+
 .home-hero {
   height: 100%;
   width: auto;

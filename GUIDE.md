@@ -333,12 +333,22 @@ deploy. Homepage and all footers update together.
 
 ### 6.5 Changing the homepage hero image
 
-Replace `src/assets/img/hero.jpg` (move B into `src/assets/img/`, upload a
-file named exactly `hero.jpg` — GitHub will overwrite). **Important:** the
-homepage geometry (the mat/stroke and the position of the nav) is computed
-from this image's exact proportions (1134×1286). A same-proportioned image
-drops right in; a different shape needs three constants updated in
-`main.css` (search for `0.8818` — the comments there show the math).
+The hero is served as **five files** in `src/assets/img/`: the original
+`hero.jpg` plus four compressed copies the browser prefers when it can
+(`hero.avif`, `hero.webp`, and 800px-wide `hero-800.avif` /
+`hero-800.webp` for phones). To swap the hero, replace **all five** (move
+B into `src/assets/img/`, same names — GitHub will overwrite). Make the
+compressed copies for free at <https://squoosh.app>: drag the new image
+in, export once as AVIF (quality ~60) and once as WebP (quality ~80),
+then repeat with the width resized to 800 px. Replacing only `hero.jpg`
+would leave most visitors seeing the old picture.
+
+**Important:** the homepage geometry (the mat/stroke and the position of
+the nav) is computed from this image's exact proportions (1134×1286). A
+same-proportioned image drops right in; a different shape needs three
+constants updated in `main.css` (search for `0.8818` — the comments there
+show the math) and the `width`/`height`/`sizes` values on the homepage
+`<picture>` in `src/index.njk`.
 
 ### 6.6 Theme toggle
 
