@@ -18,6 +18,14 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addFilter("rfc3339", (date) => new Date(date).toISOString());
 
+  // Feed-only: root-relative href/src (as authored, before HtmlBasePlugin)
+  // become absolute using the deployed base URL, which already carries the
+  // /nasty-cat-bonsai path prefix — mirroring what HtmlBasePlugin does for
+  // on-site pages. Protocol-relative "//host" URLs are left alone.
+  eleventyConfig.addFilter("absoluteHtml", (html, base) =>
+    String(html).replace(/(href|src)="\/(?!\/)/g, `$1="${base}/`)
+  );
+
   // Inline image served from the bonsai-images CDN repo, for use in posts:
   //   {% cdnimg "blog/repot-01.webp", "Roots after combing out", "Optional caption" %}
   eleventyConfig.addShortcode("cdnimg", function (file, alt, caption) {
