@@ -31,10 +31,11 @@
     return node;
   }
 
-  // `tree` in the manifest is a string for single-tree photos or an array
-  // for photos with several trees in frame; normalize to an array.
+  // `trees` in the manifest is always an array — one string for most
+  // photos, several for group/exhibition shots. Tolerate a bare string
+  // (a likely hand-editing slip) by wrapping it.
   function treesOf(item) {
-    return Array.isArray(item.tree) ? item.tree : item.tree ? [item.tree] : [];
+    return Array.isArray(item.trees) ? item.trees : item.trees ? [item.trees] : [];
   }
 
   // Full-size photo for the lightbox; src and alt are taken from the
@@ -243,13 +244,13 @@
   });
 
   /* ---- Per-tree progression filter ---------------------------------- */
-  // Entries sharing the same `tree` string in gallery.json are photos of
-  // one tree over the years; `tree` may also be an array for photos with
-  // several trees in frame (exhibitions, group shots), which then appear
-  // under each listed tree. The dropdown shows each unique value; picking
-  // one hides every card not featuring that tree and mirrors the choice
-  // into the URL hash (#tree=...) so a tree's view is linkable and the
-  // back button undoes the filter.
+  // Entries listing the same string in their `trees` array are photos of
+  // one tree over the years; photos with several trees in frame
+  // (exhibitions, group shots) list them all and appear under each. The
+  // dropdown shows each unique value; picking one hides every card not
+  // featuring that tree and mirrors the choice into the URL hash
+  // (#tree=...) so a tree's view is linkable and the back button undoes
+  // the filter.
 
   var select = document.getElementById("tree-filter");
   var trees = [];

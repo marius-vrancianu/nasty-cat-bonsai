@@ -7,7 +7,7 @@ permalink: /gallery/
 
 {% if gallery.length %}
 {#- Per-tree progression filter. gallery.js fills the options from the
-    manifest's `tree` fields and unhides the control; with no `tree`
+    manifest's `trees` arrays and unhides the control; with no `trees`
     values (or without JS) the full gallery just shows as-is. #}
 <div class="gallery-filter" hidden>
   <select id="tree-filter" aria-label="Filter photos by tree"></select>
