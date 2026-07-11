@@ -99,7 +99,7 @@ What each field does on the site:
 | --- | --- | --- |
 | `file` | — | Path of the image inside the repo. Must match exactly. |
 | `species` | **Title** — teal/rust heading on the card and lightbox | |
-| `tree` | **Tree identity** — powers the "one tree over the years" dropdown at the top of the Gallery | Optional. Every photo of the same tree must carry the *exact same* string (copy-paste it) |
+| `tree` | **Tree identity** — powers the "one tree over the years" dropdown at the top of the Gallery | Optional. Every photo of the same tree must carry the *exact same* string (copy-paste it). For a photo with several trees in frame (exhibitions, group shots), use a list: `"tree": ["Ficus benjamina, anno culto 2012", "Murraya paniculata, anno culto 2021"]` — the photo then shows up under each listed tree |
 | `style` + `date` | **Subtitle** — the small "Informal upright · Jul 2026" line | |
 | `notes` | **Description** — longer text, shown only in the lightbox (after clicking) | Optional |
 | `ratio` | Shape of the card: `"3/4"` = portrait, `"4/3"` = landscape, `"1/1"` = square | Match your photo's orientation |
