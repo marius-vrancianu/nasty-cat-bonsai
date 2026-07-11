@@ -396,6 +396,13 @@ at the root URL `marius-vrancianu.github.io`, that's where it goes.
 - New posts get `…/nasty-cat-bonsai/blog/<file-name>/` automatically.
 - RSS feed: `…/nasty-cat-bonsai/feed.xml` (the footer's RSS icon) — updates
   itself from your posts on every deploy.
+- Search engines get a `sitemap.xml` and `robots.txt`, both generated on
+  every deploy — nothing to maintain. (Optional: submit the sitemap once
+  at <https://search.google.com/search-console> to see what people search
+  for to find you.)
+- Sharing a link (Facebook, WhatsApp, etc.) shows a preview card: posts
+  use their `thumb:` image and `excerpt:`, everything else the hero. Set
+  both in a post's front matter to control how it looks when shared.
 - The browser-tab icon is a 🐈 emoji, set in
   `src/_includes/layouts/base.njk` (searchable as `favicon`) — swap the
   emoji there if the cat ever calms down.
