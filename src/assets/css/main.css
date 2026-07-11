@@ -559,6 +559,27 @@ a { color: inherit; }
 /* ==========================================================================
    Gallery
    ========================================================================== */
+/* Per-tree progression dropdown, under the page title. */
+.gallery-filter {
+  margin: -12px 0 28px;
+}
+
+#tree-filter {
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--washi);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 4px;
+  padding: 8px 12px;
+  max-width: 100%;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+#tree-filter:hover,
+#tree-filter:focus-visible { border-color: var(--rust); }
+
 .gallery-grid {
   columns: 280px;
   column-gap: 20px;
@@ -586,6 +607,9 @@ a { color: inherit; }
   transform: translateY(-3px);
   box-shadow: 0 14px 28px -18px rgba(28, 26, 23, 0.4);
 }
+
+/* filtered out by the tree dropdown (must beat display: block above) */
+.gallery-card[hidden] { display: none; }
 
 .gallery-card .cdn-frame { border: none; }
 
@@ -714,6 +738,7 @@ html.lightbox-open body {
 
 .lightbox-species { color: var(--rust); font-size: 20px; }
 .lightbox-meta    { font-size: 14px; margin-top: 4px; }
+.lightbox-tree    { font-size: 13px; margin-top: 6px; color: var(--teal); font-style: italic; }
 .lightbox-notes   { font-size: 15px; margin-top: 10px; line-height: 1.6; }
 
 /* ==========================================================================

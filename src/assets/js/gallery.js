@@ -22,6 +22,7 @@
 
   var current = null;
   var lastFocused = null;
+  var visible = items.map(function (_, i) { return i; });
 
   function el(tag, className, text) {
     var node = document.createElement(tag);
@@ -159,6 +160,7 @@
     var cap = el("div", "lightbox-caption");
     cap.appendChild(el("div", "lightbox-species", item.species));
     cap.appendChild(el("div", "lightbox-meta", (item.style || "") + " · " + (item.date || "")));
+    if (item.tree) cap.appendChild(el("div", "lightbox-tree", item.tree));
     if (item.notes) cap.appendChild(el("div", "lightbox-notes", item.notes));
     body.appendChild(cap);
     fit();
@@ -191,9 +193,13 @@
     if (lastFocused) lastFocused.focus();
   }
 
+  // Arrows move through the filtered set only, so browsing one tree's
+  // progression never jumps to another tree.
   function step(delta) {
-    if (current === null) return;
-    show((current + delta + items.length) % items.length);
+    if (current === null || !visible.length) return;
+    var pos = visible.indexOf(current);
+    if (pos === -1) pos = 0;
+    show(visible[(pos + delta + visible.length) % visible.length]);
   }
 
   closeBtn.addEventListener("click", close);
@@ -227,4 +233,64 @@
       open(i);
     });
   });
+
+  /* ---- Per-tree progression filter ---------------------------------- */
+  // Entries sharing the same `tree` string in gallery.json are photos of
+  // one tree over the years. The dropdown shows each unique value (in
+  // manifest order); picking one hides every other card and mirrors the
+  // choice into the URL hash (#tree=...) so a tree's view is linkable
+  // and the back button undoes the filter.
+
+  var select = document.getElementById("tree-filter");
+  var trees = [];
+  var counts = {};
+  items.forEach(function (it) {
+    if (!it.tree) return;
+    if (trees.indexOf(it.tree) === -1) trees.push(it.tree);
+    counts[it.tree] = (counts[it.tree] || 0) + 1;
+  });
+
+  function applyFilter(tree) {
+    var active = trees.indexOf(tree) !== -1 ? tree : "";
+    visible = [];
+    cards.forEach(function (card, i) {
+      var shown = !active || items[i].tree === active;
+      card.hidden = !shown;
+      if (shown) visible.push(i);
+    });
+    if (select) select.value = active;
+    return active;
+  }
+
+  function treeFromHash() {
+    var m = location.hash.match(/^#tree=(.+)$/);
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+
+  if (select && trees.length) {
+    var all = el("option", null, "All trees");
+    all.value = "";
+    select.appendChild(all);
+    trees.forEach(function (t) {
+      var o = el("option", null, t + " (" + counts[t] + ")");
+      o.value = t;
+      select.appendChild(o);
+    });
+
+    select.addEventListener("change", function () {
+      var active = applyFilter(select.value);
+      if (active) {
+        location.hash = "tree=" + encodeURIComponent(active);
+      } else if (location.hash) {
+        // strip the hash without leaving a dangling "#"
+        history.pushState("", "", location.pathname + location.search);
+      }
+    });
+    // Covers load-with-hash, back/forward, and hand-edited hashes.
+    window.addEventListener("hashchange", function () { applyFilter(treeFromHash()); });
+    window.addEventListener("popstate", function () { applyFilter(treeFromHash()); });
+    applyFilter(treeFromHash());
+
+    select.parentElement.hidden = false;
+  }
 })();
