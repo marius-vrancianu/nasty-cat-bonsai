@@ -22,14 +22,17 @@
 
 /* Dark scheme: paper and ink swap — paper takes the light theme's ink
    color, ink lightens to a washi tone, and the rust accent becomes a
-   soft plant-y teal (the light theme keeps its rust). */
+   soft plant-y teal (the light theme keeps its rust). Both teals are
+   tuned to sit just past WCAG AA (≥ 4.5:1) against the #222222 paper —
+   don't darken them without rechecking contrast. */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
   --washi: #222222;
   --ink: #d7cab0;
-  --rust: #156952;
-  --rust-hover: #1d8a6b;
+  --rust: #2d9c7c;       /* 4.67:1 on #222222 */
+  --rust-hover: #36ac88; /* 5.62:1 */
+  --teal: #449c9c;       /* 4.91:1 — captions, quotes, hovers */
   --hairline: rgba(215, 202, 176, 0.16);
   --hairline-strong: rgba(215, 202, 176, 0.28);
 }
