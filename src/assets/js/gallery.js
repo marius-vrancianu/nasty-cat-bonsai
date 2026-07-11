@@ -249,6 +249,13 @@
     if (trees.indexOf(it.tree) === -1) trees.push(it.tree);
     counts[it.tree] = (counts[it.tree] || 0) + 1;
   });
+  // Alphabetical, with "+"-marked (lost) trees grouped at the end.
+  trees.sort(function (a, b) {
+    var aLost = a.charAt(0) === "+";
+    var bLost = b.charAt(0) === "+";
+    if (aLost !== bLost) return aLost ? 1 : -1;
+    return a.replace(/^\+/, "").localeCompare(b.replace(/^\+/, ""));
+  });
 
   function applyFilter(tree) {
     var active = trees.indexOf(tree) !== -1 ? tree : "";
@@ -272,7 +279,8 @@
     all.value = "";
     select.appendChild(all);
     trees.forEach(function (t) {
-      var o = el("option", null, t + " (" + counts[t] + ")");
+      var n = counts[t];
+      var o = el("option", null, t + " (" + n + " progression photo" + (n === 1 ? "" : "s") + ")");
       o.value = t;
       select.appendChild(o);
     });
