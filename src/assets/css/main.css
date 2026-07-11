@@ -567,17 +567,28 @@ a { color: inherit; }
   margin: -12px 0 28px;
 }
 
+/* Custom chevron (the native one can't be positioned): inset 12px from
+   the right, matching the text's 12px inset on the left. Redeclared in
+   the dark theme below because data-URIs can't reference --ink. */
 #tree-filter {
+  appearance: none;
+  -webkit-appearance: none;
   font: inherit;
   font-size: 15px;
   color: var(--ink);
-  background: var(--washi);
+  background: var(--washi)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23222222' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
   border: 1px solid var(--hairline-strong);
   border-radius: 4px;
-  padding: 8px 12px;
+  padding: 8px 34px 8px 12px; /* right padding keeps text clear of the chevron */
   max-width: 100%;
   cursor: pointer;
   transition: border-color 0.2s ease;
+}
+
+[data-theme="dark"] #tree-filter {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23d7cab0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
 #tree-filter:hover,
