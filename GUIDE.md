@@ -405,7 +405,9 @@ at the root URL `marius-vrancianu.github.io`, that's where it goes.
 
 - New posts get `…/nasty-cat-bonsai/blog/<file-name>/` automatically.
 - RSS feed: `…/nasty-cat-bonsai/feed.xml` (the footer's RSS icon) — updates
-  itself from your posts on every deploy.
+  itself from your posts on every deploy, and carries the full article
+  text (with images) so subscribers can read entirely in their feed
+  reader.
 - Search engines get a `sitemap.xml` and `robots.txt`, both generated on
   every deploy — nothing to maintain. (Optional: submit the sitemap once
   at <https://search.google.com/search-console> to see what people search

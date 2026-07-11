@@ -18,6 +18,7 @@ eleventyExcludeFromCollections: true
     <updated>{{ post.date | rfc3339 }}</updated>
     <id>{{ site.url }}{{ post.url }}</id>
     <summary>{{ post.data.excerpt }}</summary>
+    <content type="html">{{ post.templateContent | absoluteHtml(site.url) }}</content>
   </entry>
   {%- endfor %}
 </feed>
