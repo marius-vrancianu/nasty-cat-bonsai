@@ -5,9 +5,22 @@ bodyClass: home-body
 <div class="home">
   {% include "partials/theme-toggle.njk" %}
   <div class="home-pines" aria-hidden="true"></div>
+  {# AVIF → WebP → JPEG, largest-first per format; phones (which display
+     the hero at ~100vw ≈ 390–430 CSS px) get the 800px encodes. The
+     desktop `sizes` value is the image's rendered width: 91.9dvh tall
+     (see .hero-frame) × the 1134/1286 aspect ratio ≈ 81vh. #}
   <div class="hero-frame">
-    <img class="home-hero" src="/assets/img/hero.jpg"
-         alt="Ukiyo-e style illustration of a cat perched above a knocked-over red maple bonsai, with the artist's name in katakana">
+    <picture>
+      <source type="image/avif"
+              srcset="/assets/img/hero-800.avif 800w, /assets/img/hero.avif 1134w"
+              sizes="(max-width: 767px) 100vw, 81vh">
+      <source type="image/webp"
+              srcset="/assets/img/hero-800.webp 800w, /assets/img/hero.webp 1134w"
+              sizes="(max-width: 767px) 100vw, 81vh">
+      <img class="home-hero" src="/assets/img/hero.jpg"
+           width="1134" height="1286" fetchpriority="high"
+           alt="Ukiyo-e style illustration of a cat perched above a knocked-over red maple bonsai, with the artist's name in katakana">
+    </picture>
   </div>
   <nav class="home-nav" aria-label="Main">
     <a href="/about/">about</a>
