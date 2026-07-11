@@ -84,6 +84,7 @@ The file is a list of entries between `[` and `]`; each entry looks like:
 {
   "file": "gallery/maple-repot-2026.webp",
   "species": "Japanese Maple",
+  "tree": "Acer palmatum, ANNO CVLTO 2024",
   "style": "Informal upright",
   "date": "Jul 2026",
   "ratio": "3/4",
@@ -98,10 +99,19 @@ What each field does on the site:
 | --- | --- | --- |
 | `file` | — | Path of the image inside the repo. Must match exactly. |
 | `species` | **Title** — teal/rust heading on the card and lightbox | |
+| `tree` | **Tree identity** — powers the "one tree over the years" dropdown at the top of the Gallery | Optional. Every photo of the same tree must carry the *exact same* string (copy-paste it) |
 | `style` + `date` | **Subtitle** — the small "Informal upright · Jul 2026" line | |
 | `notes` | **Description** — longer text, shown only in the lightbox (after clicking) | Optional |
 | `ratio` | Shape of the card: `"3/4"` = portrait, `"4/3"` = landscape, `"1/1"` = square | Match your photo's orientation |
-| `alt` | Screen-reader / SEO description | Optional but good practice |
+| `alt` | Screen-reader / SEO description of what's *in* the photo | Optional but good practice |
+
+**The progression dropdown.** Each unique `tree` value becomes an option in
+the Gallery's dropdown (with its photo count); picking one shows only that
+tree's photos, in the same order they have in this file, and the lightbox
+arrows stay within that tree. The choice is reflected in the URL
+(`…/gallery/#tree=…`), so you can share a link straight to one tree's
+history. Photos without a `tree` field simply never match a dropdown
+option — fine while you're catching up on tagging.
 
 To **add** a photo: copy an existing entry (from `{` to `}`), paste it after
 another entry, edit the values. **Watch the commas**: every entry is

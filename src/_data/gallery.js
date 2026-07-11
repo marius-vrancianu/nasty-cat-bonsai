@@ -3,15 +3,20 @@
    static HTML: no runtime dependency on raw.githubusercontent.com (which
    some corporate networks block) and the photo list is indexable by
    search engines. The manifest format is documented in GUIDE.md §1. */
+import fs from "node:fs";
 import Fetch from "@11ty/eleventy-fetch";
 import site from "./site.js";
 
 export default async function () {
   try {
-    const data = await Fetch(site.images.manifest, {
-      duration: "1h", // local rebuilds within the hour reuse .cache/
-      type: "json",
-    });
+    // Local preview of a manifest edit before pushing it to bonsai-images:
+    //   GALLERY_MANIFEST=path/to/gallery.json npm run build
+    const data = process.env.GALLERY_MANIFEST
+      ? JSON.parse(fs.readFileSync(process.env.GALLERY_MANIFEST, "utf8"))
+      : await Fetch(site.images.manifest, {
+          duration: "1h", // local rebuilds within the hour reuse .cache/
+          type: "json",
+        });
     const list = Array.isArray(data) ? data : data && data.items;
     if (!Array.isArray(list) || list.length === 0) {
       throw new Error("manifest did not parse to a non-empty array");
