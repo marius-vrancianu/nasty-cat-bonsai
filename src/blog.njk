@@ -6,21 +6,41 @@ permalink: /blog/
 <div class="blog-index">
   <h1 class="page-title">Blog</h1>
 
+  {#- Full-text search over the posts. blog.js unhides the box and lazily
+      fetches /search.json on the first keystroke; without JS the list
+      simply shows every post. The hidden anchor exists so the script can
+      read the index's URL with the path prefix already applied. #}
+  <div class="blog-search" hidden>
+    <input id="post-search" type="search" placeholder="Search posts…" aria-label="Search posts">
+    <a id="search-index-url" href="/search.json" hidden aria-hidden="true" tabindex="-1"></a>
+  </div>
+  <p class="blog-filter-status" hidden></p>
+
   <div class="post-list">
     {% for post in collections.posts %}
-    <a class="post-card" href="{{ post.url }}">
-      <div class="post-card-thumb cdn-frame">
+    {%- set ptags = post.data.tags | displayTags %}
+    <article class="post-card" data-tags="{{ ptags | join('||') }}">
+      <a class="post-card-thumb cdn-frame" href="{{ post.url }}" tabindex="-1" aria-hidden="true">
         {% if post.data.thumb %}
         <img src="{{ site.images.cdn }}{{ post.data.thumb }}" alt="" loading="lazy" decoding="async"
              onerror="this.parentElement.classList.add('missing');this.parentElement.setAttribute('data-file','{{ post.data.thumb }}')">
         {% endif %}
-      </div>
+      </a>
       <div class="post-card-body">
         <div class="post-card-date">{{ post.date | readableDate }}</div>
-        <div class="post-card-title">{{ post.data.title }}</div>
+        <a class="post-card-title" href="{{ post.url }}">{{ post.data.title }}</a>
         <div class="post-card-excerpt">{{ post.data.excerpt }}</div>
+        {%- if ptags.length %}
+        <div class="post-card-tags">
+          {%- for t in ptags %}
+          <a class="tag-chip" href="/blog/#tag={{ t | urlencode }}">{{ t }}</a>
+          {%- endfor %}
+        </div>
+        {%- endif %}
       </div>
-    </a>
+    </article>
     {% endfor %}
   </div>
 </div>
+
+<script src="/assets/js/blog.js" defer></script>

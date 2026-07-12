@@ -3,6 +3,7 @@ title: What the Cat Taught Me About Placement
 date: 2023-11-09
 excerpt: Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.
 thumb: blog/post-05-thumb.webp
+tags: [placement, the-cat]
 ---
 Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
 

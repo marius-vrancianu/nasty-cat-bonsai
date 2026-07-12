@@ -184,6 +184,7 @@ title: My First Repotting
 date: 2026-07-15
 excerpt: One or two sentences shown on the blog index and in the RSS feed.
 thumb: blog/my-first-repotting-thumb.webp
+tags: [repotting, maples]
 ---
 The article text starts here, in Markdown.
 
@@ -195,6 +196,14 @@ More text. **Bold**, *italic*, [a link](https://example.com).
 - `date` must be `YYYY-MM-DD`. The blog index sorts newest-first by this
   date automatically — you never edit the index page itself. The RSS feed
   updates automatically too.
+- `tags` is optional: short lowercase labels shown as clickable chips on
+  the blog index and under the post title. Clicking one filters the blog
+  to that tag (the URL becomes `…/blog/#tag=repotting`, so a tag view is
+  shareable). Reuse the same spellings across posts so tags stay useful.
+  **Never use the tag `posts`** — that name is reserved by the site's
+  machinery.
+- The blog's search box needs no maintenance: it searches the full text
+  of every post and its index is rebuilt automatically on each deploy.
 - Don't post-date into the future expecting it to self-publish — the site
   only changes when you deploy.
 

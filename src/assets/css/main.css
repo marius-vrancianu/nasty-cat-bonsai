@@ -507,14 +507,46 @@ a { color: inherit; }
   gap: 36px;
 }
 
+/* Search box above the list, styled like the gallery's tree filter. */
+.blog-search { margin: -12px 0 28px; }
+
+#post-search {
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--washi);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 4px;
+  padding: 8px 12px;
+  width: min(100%, 340px);
+  transition: border-color 0.2s ease;
+}
+
+#post-search:hover,
+#post-search:focus-visible { border-color: var(--rust); outline: none; }
+
+#post-search::placeholder { color: var(--ink); opacity: 0.55; }
+
+.blog-filter-status {
+  font-size: 15px;
+  color: var(--teal);
+  margin: -12px 0 28px;
+}
+
+.blog-filter-status a { color: var(--rust); }
+.blog-filter-status a:hover,
+.blog-filter-status a:focus-visible { color: var(--rust-hover); }
+
 .post-card {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  text-decoration: none;
   padding-bottom: 36px;
   border-bottom: 1px solid var(--hairline);
 }
+
+/* filtered out by tag/search (must beat display: flex above) */
+.post-card[hidden] { display: none; }
 
 .post-card-thumb {
   flex: 0 0 200px;
@@ -541,19 +573,48 @@ a { color: inherit; }
 }
 
 .post-card-title {
+  display: inline-block;
   font-size: 24px;
   color: var(--rust);
   line-height: 1.25;
   margin-bottom: 10px;
+  text-decoration: none;
   transition: color 0.2s ease;
 }
 
-.post-card:hover .post-card-title { color: var(--rust-hover); }
+.post-card-title:hover,
+.post-card-title:focus-visible { color: var(--rust-hover); }
 
 .post-card-excerpt {
   font-size: 16px;
   line-height: 1.6;
 }
+
+/* Tag chips — on blog cards and under post titles. Plain links to
+   /blog/#tag=..., which blog.js turns into an instant filter. */
+.post-card-tags,
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.post-card-tags { margin-top: 12px; }
+.post-tags { margin: -16px 0 28px; }
+
+.tag-chip {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--rust);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 999px;
+  padding: 3px 12px;
+  text-decoration: none;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.tag-chip:hover,
+.tag-chip:focus-visible { color: var(--teal); border-color: var(--teal); }
 
 @media (max-width: 520px) {
   .post-card-thumb { flex-basis: 100%; width: 100%; }
