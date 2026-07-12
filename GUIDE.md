@@ -70,15 +70,35 @@ never appears, no matter where it's uploaded. That's the whole system.
 - **Name:** lowercase, no spaces, descriptive: `maple-repot-2026.webp`,
   `tree-10.webp`. **Never reuse a name that already exists** (see 1.4 why).
 
-### 1.2 Upload it
+### 1.2 Upload it — step by step
 
-Use move **B** to upload the file into the `gallery/` folder of the
-**`bonsai-images`** repo.
+1. Open <https://github.com/marius-vrancianu/bonsai-images>.
+2. Click the **`gallery`** folder.
+3. Click **Add file** (top right) → **Upload files**.
+4. Drag the photo(s) in (or click "choose your files").
+5. Write a short commit message (e.g. `Add maple repot photo`) → green
+   **Commit changes**.
 
-### 1.3 List it (title, subtitle, description)
+The photo is now *stored*, but **not yet in the gallery** — that's the
+next step.
 
-Use move **A** to edit `gallery.json` (it's in the root of `bonsai-images`).
-The file is a list of entries between `[` and `]`; each entry looks like:
+### 1.3 List it in gallery.json — step by step
+
+1. Back at the top of `bonsai-images`, click **`gallery.json`** (in the
+   file list at the repo root, below the folders).
+2. Click the **pencil icon** (✏️, top-right of the file view).
+3. Decide where the photo goes: the first entry is the first card on the
+   Gallery page, and so on. Newest-first has been the habit.
+4. Copy an existing entry — everything from its `{` to its `}` — and
+   paste it in that spot. **Mind the commas** (rules below).
+5. Edit its fields; what each one does is in the table below.
+6. Green **Commit changes...** → **Commit changes**.
+7. **Wait about 5 minutes**, then deploy (section 5). The wait matters:
+   GitHub serves this file through a cache, and deploying immediately can
+   bake the *previous* version into the site. (It bit us once — the tree
+   dropdown vanished until the next deploy.)
+
+Each entry looks like:
 
 ```json
 {
@@ -99,11 +119,11 @@ What each field does on the site:
 | --- | --- | --- |
 | `file` | — | Path of the image inside the repo. Must match exactly. |
 | `species` | **Title** — teal/rust heading on the card and lightbox | |
-| `trees` | **Tree identity** — powers the "one tree over the years" dropdown at the top of the Gallery | Optional. Always a list, even for one tree: `"trees": ["Ficus benjamina, anno culto 2012"]`. Every photo of the same tree must carry the *exact same* string (copy-paste it). A photo with several trees in frame (exhibitions, group shots) lists them all and shows up under each |
+| `trees` | **Tree identity** — powers the "one tree over the years" dropdown at the top of the Gallery | Optional. Always a list, even for one tree: `"trees": ["Ficus benjamina, anno culto 2012"]`. Every photo of the same tree must carry the *exact same* string — **copy-paste it from another of its photos**, never retype. The convention is `Species, anno culto <year training started>`, with a leading `+` for trees no longer in the collection (shown as typed). A photo with several trees in frame (exhibitions, group shots) lists them all — `"trees": ["Ficus benjamina, anno culto 2012", "Murraya paniculata, anno culto 2021"]` — and shows up under each |
 | `style` + `date` | **Subtitle** — the small "Informal upright · Jul 2026" line | |
 | `notes` | **Description** — longer text, shown only in the lightbox (after clicking) | Optional |
 | `ratio` | Shape of the card: `"3/4"` = portrait, `"4/3"` = landscape, `"1/1"` = square | Match your photo's orientation |
-| `alt` | Screen-reader / SEO description of what's *in* the photo | Optional but good practice |
+| `alt` | Screen-reader / SEO description of what's *in* the photo | Optional but good practice. One plain sentence describing the visible scene ("Weeping fig with exposed roots in a green oval pot, against black") — not a keyword list |
 
 **The progression dropdown.** Each unique string across the `trees` lists
 becomes an option in the Gallery's dropdown (with its photo count);
@@ -138,6 +158,8 @@ Paste the file's content into <https://jsonlint.com> to find the exact spot.
   caches aggressively). This is why you never overwrite — upload the fixed
   photo under a new name (`maple-repot-2026-b.webp`) and update `file` in
   `gallery.json` instead.
+- **Wait ~5 minutes between committing `gallery.json` and deploying** —
+  see step 7 in 1.3.
 - Hard-refresh your browser (**Ctrl+F5**) when checking.
 
 ---
@@ -146,7 +168,7 @@ Paste the file's content into <https://jsonlint.com> to find the exact spot.
 
 The text lives in the **`nasty-cat-bonsai`** repo at `src/about.md`.
 Use move **A** to edit it. It's Markdown — plain text with light formatting
-(cheat sheet in section 3.3).
+(cheat sheet in section 3.4).
 
 **Embedding a photo:** upload the image to the `blog/` folder of
 `bonsai-images` (move B — yes, the `blog/` folder is the home for *all*
@@ -168,12 +190,21 @@ After editing, **deploy** (section 5) to publish.
 
 ## 3. Blog posts
 
-### 3.1 Creating a post
+### 3.1 Creating a post — step by step
 
-Use move **C** in the `nasty-cat-bonsai` repo: create a new file inside
-`src/posts/`. The **file name becomes the URL**:
-`my-first-repotting.md` → `.../blog/my-first-repotting/`.
-Use lowercase-with-dashes, end in `.md`.
+1. If the post uses photos, upload them **first** to the `blog/` folder
+   of `bonsai-images` (move B; the thumbnail too — see 3.3).
+2. Open <https://github.com/marius-vrancianu/nasty-cat-bonsai> and click
+   into **`src`** → **`posts`**.
+3. Click **Add file** (top right) → **Create new file**.
+4. Type the file name at the top: lowercase-with-dashes, ending in `.md`.
+   The **file name becomes the URL**:
+   `my-first-repotting.md` → `…/blog/my-first-repotting/`.
+5. Paste the skeleton below into the big text box and replace its
+   contents with yours.
+6. Green **Commit changes...** → **Commit changes**.
+7. Deploy (section 5) — the post, its RSS entry, its tags, and the
+   search index all publish together.
 
 Every post starts with a header block ("front matter") between `---` lines,
 then the article text:
@@ -196,25 +227,40 @@ More text. **Bold**, *italic*, [a link](https://example.com).
 - `date` must be `YYYY-MM-DD`. The blog index sorts newest-first by this
   date automatically — you never edit the index page itself. The RSS feed
   updates automatically too.
-- `tags` is optional: short lowercase labels shown as clickable chips on
-  the blog index and under the post title. Clicking one filters the blog
-  to that tag (the URL becomes `…/blog/#tag=repotting`, so a tag view is
-  shareable). Reuse the same spellings across posts so tags stay useful.
-  **Never use the tag `posts`** — that name is reserved by the site's
-  machinery.
-- The blog's search box needs no maintenance: it searches the full text
-  of every post and its index is rebuilt automatically on each deploy.
 - Don't post-date into the future expecting it to self-publish — the site
   only changes when you deploy.
 
-### 3.2 Thumbnails
+### 3.2 Tags (and the blog's search box)
+
+Tags are the `tags: [repotting, maples]` line in the front matter —
+that one line is *all* you ever do; everything below happens by itself.
+
+- Each tag becomes a **clickable chip** on the post's blog-index card and
+  under the post's title. Clicking a chip filters the blog to that tag,
+  and the URL becomes `…/blog/#tag=repotting` — shareable, and the
+  browser's Back button un-filters.
+- **Rules:** short lowercase labels; join multi-word tags with dashes
+  (`the-cat`); **reuse exact spellings** across posts (`repotting` and
+  `repot` would be two different chips); and **never use the tag `posts`**
+  — that name is reserved by the site's machinery.
+- To rename or remove a tag, just edit the front matter of the posts that
+  carry it and deploy. There is no separate tag registry.
+- Tags also travel with each post in the RSS feed.
+
+The **search box** at the top of the blog needs no maintenance at all: it
+searches the full text of every post (plus titles, excerpts, and tags),
+its index is rebuilt automatically on each deploy, and it doesn't slow
+the page — the index only loads when a visitor starts typing. Search and
+a clicked tag combine: "posts tagged *repotting* that mention *akadama*".
+
+### 3.3 Thumbnails
 
 `thumb:` is the small image on the blog index card. Upload it to
 `bonsai-images/blog/` (move B), ~800 px wide, ideally landscape (the card
 crops to 4:3), then reference it as above. If you omit `thumb:`, the card
 shows the striped placeholder pattern — fine while drafting.
 
-### 3.3 Formatting text (Markdown cheat sheet)
+### 3.4 Formatting text (Markdown cheat sheet)
 
 | You type | You get |
 | --- | --- |
@@ -230,7 +276,7 @@ shows the striped placeholder pattern — fine while drafting.
 That's intentionally the whole palette — fonts, sizes, and colors are
 global so every post looks consistent (see 6.2 to change them site-wide).
 
-### 3.4 Embedding images
+### 3.5 Embedding images
 
 Same as the About page — upload to `bonsai-images/blog/`, then:
 
@@ -238,7 +284,7 @@ Same as the About page — upload to `bonsai-images/blog/`, then:
 {% cdnimg "blog/roots-closeup.webp", "Root ball after combing", "More feeder roots than expected." %}
 ```
 
-### 3.5 Embedding YouTube videos
+### 3.6 Embedding YouTube videos
 
 Take the video ID from the YouTube URL — the part after `v=`:
 `youtube.com/watch?v=`**`dQw4w9WgXcQ`** (in a `youtu.be/...` short link,
@@ -251,7 +297,7 @@ it's the part right after the slash). Then:
 You get a full-width, responsive player (privacy-friendly: YouTube sets no
 cookies until the visitor presses play).
 
-### 3.6 Publishing and updating
+### 3.7 Publishing and updating
 
 New post or edit → commit → **deploy** (section 5). To fix a typo later:
 edit the file (move A), commit, deploy again. To unpublish a post: delete
@@ -274,19 +320,39 @@ and deploy.
 
 ## 5. Deploying (publishing) the site
 
-Any change in the **`nasty-cat-bonsai`** repo — posts, About, CSS, templates
-— needs a deploy to go live, and so does the gallery list (`gallery.json`
-in `bonsai-images`): each deploy bakes the current photo list into the
-site. Merely uploading image files doesn't need one — they only appear
-once `gallery.json` lists them and that change is deployed.
+**When do I need a deploy?**
 
-1. Open <https://github.com/marius-vrancianu/nasty-cat-bonsai>.
-2. Click the **Actions** tab (top of the page).
-3. In the left sidebar, click **Deploy to GitHub Pages**.
-4. On the right, click the **Run workflow ▾** button → keep branch `main` →
-   press the green **Run workflow**.
-5. A new run appears in the list within a few seconds (refresh if not).
-   Click it to watch. **Green check ✓** = live (allow a minute + Ctrl+F5).
+| You changed… | Deploy needed? |
+| --- | --- |
+| A blog post (new, edited, or deleted) | **Yes** |
+| About / privacy text | **Yes** |
+| `gallery.json` in `bonsai-images` | **Yes** — but wait ~5 min after committing (see 1.3 step 7) |
+| Design (CSS), templates, social links | **Yes** |
+| Only uploaded an image file | No — it shows up once `gallery.json` or a post references it *and* that change is deployed |
+
+**The button, click by click:**
+
+1. Open <https://github.com/marius-vrancianu/nasty-cat-bonsai> in your
+   browser (log in to GitHub if it asks).
+2. Under the repository name is a horizontal menu:
+   *Code · Issues · Pull requests · **Actions** · …* — click **Actions**.
+3. In the **left sidebar**, under "All workflows", click
+   **Deploy to GitHub Pages**.
+4. A blue banner appears above the list of past runs, saying the workflow
+   can be run manually. At the banner's **right edge**, click the grey
+   **Run workflow ▾** button.
+5. A small panel drops down. Leave "Branch: main" exactly as it is and
+   click the green **Run workflow** button inside the panel.
+6. Wait a few seconds and refresh the page: a new run appears at the top
+   of the list with an amber "in progress" dot. Click it to watch if you
+   like.
+7. **Green check ✓ = live.** Typically 1–2 minutes; occasionally GitHub
+   queues the run for a few extra minutes before starting — that's
+   normal, don't re-trigger it. Then hard-refresh the site (**Ctrl+F5**).
+
+**From the phone:** the GitHub mobile app can do the same — open the
+repo → **Actions** → *Deploy to GitHub Pages* → **Run workflow**. Publish
+from the couch.
 
 **If it fails with a red ✗:** click the run → click the failed job → read
 the last lines. If it says **"Deployment failed, try again later"**, that's
@@ -295,10 +361,8 @@ again (it has never failed twice in a row here). Any other error: it will
 almost always be a typo in a file you just edited (a broken front-matter
 `---` block, or a stray comma in `gallery.json` — the error message names
 the gallery manifest in that case) — recheck your last commit, or see 6.3
-to undo it.
-
-The GitHub mobile app can also trigger this workflow, so you can publish
-from the couch.
+to undo it. A failed deploy never breaks the live site; the previous
+version stays up until a deploy succeeds.
 
 ---
 
@@ -324,9 +388,11 @@ used everywhere:
 - Dark theme: the `:root[data-theme="dark"] { ... }` block right below it.
 
 Change a value there, commit, deploy — the whole site follows. The
-typeface is Proza Libre, loaded from Google Fonts in
-`src/_includes/layouts/base.njk`; to swap fonts, replace the Google Fonts
-`<link>` there and the `--font` variable in the CSS.
+typeface is Proza Libre, self-hosted: the font files live in
+`src/assets/fonts/` and are declared in `src/assets/css/fonts.css` (no
+visitor data goes to Google for font delivery). Swapping the typeface
+means replacing those files and declarations plus the `--font` variable
+in `main.css` — a bigger job than a color tweak.
 
 Below the variables, the CSS is organized in commented sections (homepage,
 gallery, blog...). It's safe to experiment: deploy is manual and undo is
@@ -424,6 +490,6 @@ at the root URL `marius-vrancianu.github.io`, that's where it goes.
 - Sharing a link (Facebook, WhatsApp, etc.) shows a preview card: posts
   use their `thumb:` image and `excerpt:`, everything else the hero. Set
   both in a post's front matter to control how it looks when shared.
-- The browser-tab icon is a 🐈 emoji, set in
-  `src/_includes/layouts/base.njk` (searchable as `favicon`) — swap the
-  emoji there if the cat ever calms down.
+- The browser-tab icon is a small hand-drawn bonsai, the file
+  `src/assets/img/favicon.svg` — upload a replacement under the exact
+  same name (move B) to change it.
