@@ -356,10 +356,39 @@ a { color: inherit; }
   width: 100%;
   padding: 20px 24px 32px;
   display: flex;
+  flex-wrap: wrap; /* on phones the nav words wrap onto their own row */
   align-items: center;
   justify-content: center;
-  gap: 22px;
+  gap: 2px 22px;
   border-top: 1px solid var(--hairline);
+}
+
+/* Quiet cross-navigation between the inner pages. */
+.footer-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-nav a {
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  color: var(--rust);
+  text-decoration: none;
+  padding: 6px; /* comfortable touch target */
+  transition: color 0.2s ease;
+}
+
+.footer-nav a:hover,
+.footer-nav a:focus-visible { color: var(--teal); }
+
+/* Phones: the nav words take their own centered row, everything else
+   fits on one tight row beneath — two quiet lines in total. */
+@media (max-width: 520px) {
+  .site-footer { gap: 0 8px; }
+  .site-footer a,
+  .cookie-settings { padding: 4px; }
+  .footer-nav { flex-basis: 100%; justify-content: center; }
+  .footer-nav a { padding: 6px 8px; }
 }
 
 .site-footer a {
