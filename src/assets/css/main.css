@@ -716,6 +716,16 @@ a { color: inherit; }
   justify-content: center;
   padding: 24px;
   z-index: 50;
+  /* gallery.js implements the touch gestures (swipe to step / close);
+     the browser must not consume the moves itself */
+  touch-action: none;
+}
+
+/* Touch devices navigate by swiping — the arrows would only cover the
+   photo. Desktop (fine pointer / hover) keeps them. */
+@media (hover: none) and (pointer: coarse) {
+  .lightbox-prev,
+  .lightbox-next { display: none; }
 }
 
 .lightbox[hidden] { display: none; }
