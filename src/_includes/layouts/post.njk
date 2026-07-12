@@ -10,6 +10,14 @@ layout: layouts/base.njk
     <article class="post">
       <div class="post-date">{{ page.date | readableDate }}</div>
       <h1 class="post-title">{{ title }}</h1>
+      {%- set ptags = tags | displayTags %}
+      {%- if ptags.length %}
+      <div class="post-tags">
+        {%- for t in ptags %}
+        <a class="tag-chip" href="/blog/#tag={{ t | urlencode }}">{{ t }}</a>
+        {%- endfor %}
+      </div>
+      {%- endif %}
       {{ content | safe }}
 
       {# Cusdis comments — anonymous nickname + comment, no login.

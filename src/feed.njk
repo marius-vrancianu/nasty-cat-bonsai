@@ -18,6 +18,9 @@ eleventyExcludeFromCollections: true
     <updated>{{ post.date | rfc3339 }}</updated>
     <id>{{ site.url }}{{ post.url }}</id>
     <summary>{{ post.data.excerpt }}</summary>
+    {%- for t in post.data.tags | displayTags %}
+    <category term="{{ t }}"/>
+    {%- endfor %}
     <content type="html">{{ post.templateContent | absoluteHtml(site.url) }}</content>
   </entry>
   {%- endfor %}

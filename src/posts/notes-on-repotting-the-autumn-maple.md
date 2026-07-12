@@ -3,6 +3,7 @@ title: Notes on Repotting the Autumn Maple
 date: 2024-06-12
 excerpt: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 thumb: blog/post-01-thumb.webp
+tags: [repotting, maples]
 ---
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
 

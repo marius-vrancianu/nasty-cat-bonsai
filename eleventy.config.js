@@ -18,6 +18,22 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addFilter("rfc3339", (date) => new Date(date).toISOString());
 
+  // Post tags minus Eleventy's own "posts" collection tag (which every
+  // post carries via src/posts/posts.json and must never be displayed).
+  eleventyConfig.addFilter("displayTags", (tags) =>
+    (tags || []).filter((t) => t !== "posts")
+  );
+
+  // Rendered HTML -> plain text for the client-side search index.
+  eleventyConfig.addFilter("plainText", (html) =>
+    String(html)
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
+
   // Feed-only: root-relative href/src (as authored, before HtmlBasePlugin)
   // become absolute using the deployed base URL, which already carries the
   // /nasty-cat-bonsai path prefix — mirroring what HtmlBasePlugin does for
