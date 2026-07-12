@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {#- Tints mobile browser chrome to match the paper. theme.js swaps the
+      value when the visitor toggles dark mode (values mirror --washi). #}
+  <meta name="theme-color" content="#f2ece0">
   <title>{% if title %}{{ title }} — {{ site.name }}{% else %}{{ site.name }}{% endif %}</title>
   <meta name="description" content="{{ description or site.description }}">
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">

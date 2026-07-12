@@ -3,6 +3,9 @@ layout: layouts/base.njk
 bodyClass: home-body
 ---
 <div class="home">
+  {#- The visible title lives inside the hero artwork; this gives screen
+      readers and search engines a real page heading. #}
+  <h1 class="visually-hidden">Nasty Cat Bonsai</h1>
   {% include "partials/theme-toggle.njk" %}
   <div class="home-pines" aria-hidden="true"></div>
   {# AVIF → WebP → JPEG, largest-first per format; phones (which display
