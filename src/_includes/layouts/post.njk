@@ -2,11 +2,12 @@
 layout: layouts/base.njk
 ---
 <div class="page">
+  <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <a class="back-link" href="/blog/">&larr; Blog</a>
     {% include "partials/theme-toggle.njk" %}
   </header>
-  <main class="page-main">
+  <main id="main" tabindex="-1" class="page-main">
     <article class="post">
       <div class="post-date">{{ page.date | readableDate }}</div>
       <h1 class="post-title">{{ title }}</h1>
@@ -34,7 +35,9 @@ layout: layouts/base.njk
              data-page-id="{{ page.url }}"
              data-page-url="{{ site.url }}{{ page.url }}"
              data-page-title="{{ title }}"></div>
-        <script async defer src="https://cusdis.com/js/cusdis.es.js"></script>
+        {#- The widget script is loaded lazily by comments.js when the
+            reader scrolls near this section — see that file. #}
+        <script src="/assets/js/comments.js" defer></script>
       </section>
       {% else %}
       <div class="comments-placeholder">Comments load here once Cusdis is configured — see src/_data/site.js.</div>

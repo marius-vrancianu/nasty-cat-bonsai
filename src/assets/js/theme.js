@@ -26,6 +26,12 @@
       );
     });
 
+    // Mobile browser chrome tint follows the theme (values mirror --washi).
+    var themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) {
+      themeColor.content = theme === "dark" ? "#222222" : "#f2ece0";
+    }
+
     // Keep the Cusdis comments widget in step, if present.
     var cusdis = document.getElementById("cusdis_thread");
     if (cusdis) {
