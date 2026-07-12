@@ -1,9 +1,14 @@
 /* Gallery lightbox. The photo grid itself is rendered at build time from
    the bonsai-images manifest (see src/_data/gallery.js); each card is a
    plain link to the full image, so the gallery works — and is indexable —
-   without JavaScript. This script upgrades those links into a
-   keyboard-navigable lightbox, reading item metadata (ratio, species,
-   notes) from the inline JSON blob rendered next to the grid. */
+   without JavaScript. This script upgrades those links into a lightbox
+   with keyboard navigation (desktop), swipe navigation (touch: left/right
+   to step, down to close — the arrow buttons are hidden by CSS there),
+   and a per-tree progression filter.
+
+   URL state lives in the hash: #tree=<tree>&photo=<file>. Opening a
+   photo pushes one history entry (Back closes it); stepping through
+   photos replaces the entry, so the history never fills up. */
 (function () {
   "use strict";
 
@@ -23,6 +28,8 @@
   var current = null;
   var lastFocused = null;
   var visible = items.map(function (_, i) { return i; });
+  var activeTree = "";
+  var openedByPush = false; // whether Back should close the lightbox
 
   function el(tag, className, text) {
     var node = document.createElement(tag);
@@ -55,7 +62,33 @@
     return f;
   }
 
-  /* ---- Lightbox ---------------------------------------------------- */
+  /* ---- URL hash state ------------------------------------------------ */
+
+  function parseHash() {
+    var state = { tree: "", photo: "" };
+    location.hash.slice(1).split("&").forEach(function (part) {
+      var eq = part.indexOf("=");
+      if (eq === -1) return;
+      var key = part.slice(0, eq);
+      var val = decodeURIComponent(part.slice(eq + 1));
+      if (key === "tree") state.tree = val;
+      if (key === "photo") state.photo = val;
+    });
+    return state;
+  }
+
+  function hashString(tree, photo) {
+    var parts = [];
+    if (tree) parts.push("tree=" + encodeURIComponent(tree));
+    if (photo) parts.push("photo=" + encodeURIComponent(photo));
+    return parts.length ? "#" + parts.join("&") : "";
+  }
+
+  function replaceHash(tree, photo) {
+    history.replaceState("", "", location.pathname + location.search + hashString(tree, photo));
+  }
+
+  /* ---- Lightbox ------------------------------------------------------ */
 
   var box = el("div", "lightbox");
   box.hidden = true;
@@ -173,6 +206,20 @@
     if (item.notes) cap.appendChild(el("div", "lightbox-notes", item.notes));
     body.appendChild(cap);
     fit();
+
+    // Keep the URL pointing at the photo on screen — replace, not push,
+    // so stepping through a tree doesn't fill the browser history.
+    replaceHash(activeTree, item.file);
+
+    // Decode ahead: fetch the neighbours in the current filtered set so
+    // the next swipe/arrow shows instantly.
+    var pos = visible.indexOf(i);
+    if (pos !== -1 && visible.length > 1) {
+      [1, -1].forEach(function (d) {
+        var n = visible[(pos + d + visible.length) % visible.length];
+        if (n !== i) new Image().src = cards[n].href;
+      });
+    }
   }
 
   // Refit only on real viewport changes (rotation, window resize) — mobile
@@ -187,7 +234,7 @@
     }
   });
 
-  function open(i) {
+  function openLightbox(i) {
     lastFocused = document.activeElement;
     document.documentElement.classList.add("lightbox-open");
     box.hidden = false;
@@ -195,11 +242,26 @@
     closeBtn.focus();
   }
 
-  function close() {
+  function closeLightbox() {
     box.hidden = true;
     document.documentElement.classList.remove("lightbox-open");
     current = null;
+    openedByPush = false; // any close path invalidates the pending Back
     if (lastFocused) lastFocused.focus();
+  }
+
+  // Close on user intent (X, Esc, backdrop tap, swipe down). If the
+  // lightbox was opened on this page, Back both closes it and removes the
+  // photo hash; on a direct deep link there is no such entry, so the hash
+  // is stripped in place instead.
+  function requestClose() {
+    if (openedByPush) {
+      openedByPush = false;
+      history.back(); // hashchange -> syncFromHash -> closeLightbox
+    } else {
+      replaceHash(activeTree, "");
+      closeLightbox();
+    }
   }
 
   // Arrows move through the filtered set only, so browsing one tree's
@@ -211,16 +273,16 @@
     show(visible[(pos + delta + visible.length) % visible.length]);
   }
 
-  closeBtn.addEventListener("click", close);
+  closeBtn.addEventListener("click", requestClose);
   prevBtn.addEventListener("click", function (e) { e.stopPropagation(); step(-1); });
   nextBtn.addEventListener("click", function (e) { e.stopPropagation(); step(1); });
   box.addEventListener("click", function (e) {
-    if (e.target === box || e.target === body) close();
+    if (e.target === box || e.target === body) requestClose();
   });
 
   window.addEventListener("keydown", function (e) {
     if (box.hidden) return;
-    if (e.key === "Escape") close();
+    if (e.key === "Escape") requestClose();
     else if (e.key === "ArrowRight") step(1);
     else if (e.key === "ArrowLeft") step(-1);
     else if (e.key === "Tab") {
@@ -235,22 +297,69 @@
     }
   });
 
+  /* ---- Touch gestures ------------------------------------------------ */
+  // Swipe left/right steps through the (filtered) photos, swipe down
+  // closes; the photo follows the finger for feedback. CSS hides the
+  // arrow buttons on coarse-pointer devices, and .lightbox has
+  // touch-action: none so the browser leaves these gestures to us.
+
+  var touch = { active: false, x: 0, y: 0, dx: 0, dy: 0 };
+
+  box.addEventListener("touchstart", function (e) {
+    if (box.hidden || e.touches.length !== 1) {
+      touch.active = false;
+      return;
+    }
+    touch.active = true;
+    touch.x = e.touches[0].clientX;
+    touch.y = e.touches[0].clientY;
+    touch.dx = 0;
+    touch.dy = 0;
+  }, { passive: true });
+
+  box.addEventListener("touchmove", function (e) {
+    if (!touch.active) return;
+    touch.dx = e.touches[0].clientX - touch.x;
+    touch.dy = e.touches[0].clientY - touch.y;
+    if (Math.abs(touch.dx) > Math.abs(touch.dy)) {
+      body.style.transform = "translateX(" + touch.dx + "px)";
+      box.style.opacity = "";
+    } else if (touch.dy > 0) {
+      body.style.transform = "translateY(" + touch.dy + "px)";
+      box.style.opacity = String(Math.max(1 - touch.dy / 400, 0.4));
+    }
+  }, { passive: true });
+
+  box.addEventListener("touchend", function () {
+    if (!touch.active) return;
+    touch.active = false;
+    body.style.transform = "";
+    box.style.opacity = "";
+    if (Math.abs(touch.dx) > 60 && Math.abs(touch.dx) > Math.abs(touch.dy) * 1.5) {
+      step(touch.dx < 0 ? 1 : -1);
+    } else if (touch.dy > 90 && touch.dy > Math.abs(touch.dx) * 1.5) {
+      requestClose();
+    }
+  });
+
+  /* ---- Cards open via the hash ---------------------------------------- */
+
   cards.forEach(function (card, i) {
     card.setAttribute("aria-haspopup", "dialog");
     card.addEventListener("click", function (e) {
       e.preventDefault();
-      open(i);
+      openedByPush = true;
+      // pushes one history entry; syncFromHash opens the lightbox
+      location.hash = hashString(activeTree, items[i].file);
     });
   });
 
-  /* ---- Per-tree progression filter ---------------------------------- */
+  /* ---- Per-tree progression filter ------------------------------------ */
   // Entries listing the same string in their `trees` array are photos of
   // one tree over the years; photos with several trees in frame
   // (exhibitions, group shots) list them all and appear under each. The
   // dropdown shows each unique value; picking one hides every card not
-  // featuring that tree and mirrors the choice into the URL hash
-  // (#tree=...) so a tree's view is linkable and the back button undoes
-  // the filter.
+  // featuring that tree.
 
   var select = document.getElementById("tree-filter");
   var trees = [];
@@ -270,21 +379,37 @@
   });
 
   function applyFilter(tree) {
-    var active = trees.indexOf(tree) !== -1 ? tree : "";
+    activeTree = trees.indexOf(tree) !== -1 ? tree : "";
     visible = [];
     cards.forEach(function (card, i) {
-      var shown = !active || treesOf(items[i]).indexOf(active) !== -1;
+      var shown = !activeTree || treesOf(items[i]).indexOf(activeTree) !== -1;
       card.hidden = !shown;
       if (shown) visible.push(i);
     });
-    if (select) select.value = active;
-    return active;
+    if (select) select.value = activeTree;
   }
 
-  function treeFromHash() {
-    var m = location.hash.match(/^#tree=(.+)$/);
-    return m ? decodeURIComponent(m[1]) : "";
+  // Single source of truth: the hash. Covers card clicks, tag/tree deep
+  // links, back/forward, and hand-edited URLs.
+  function syncFromHash() {
+    var h = parseHash();
+    applyFilter(h.tree);
+    if (h.photo) {
+      var idx = -1;
+      for (var k = 0; k < items.length; k++) {
+        if (items[k].file === h.photo) { idx = k; break; }
+      }
+      if (idx !== -1) {
+        if (box.hidden) openLightbox(idx);
+        else if (current !== idx) show(idx);
+        return;
+      }
+    }
+    if (!box.hidden) closeLightbox();
   }
+
+  window.addEventListener("hashchange", syncFromHash);
+  window.addEventListener("popstate", syncFromHash);
 
   if (select && trees.length) {
     var all = el("option", null, "All trees");
@@ -298,19 +423,17 @@
     });
 
     select.addEventListener("change", function () {
-      var active = applyFilter(select.value);
-      if (active) {
-        location.hash = "tree=" + encodeURIComponent(active);
+      if (select.value) {
+        location.hash = hashString(select.value, "");
       } else if (location.hash) {
         // strip the hash without leaving a dangling "#"
         history.pushState("", "", location.pathname + location.search);
+        syncFromHash();
       }
     });
-    // Covers load-with-hash, back/forward, and hand-edited hashes.
-    window.addEventListener("hashchange", function () { applyFilter(treeFromHash()); });
-    window.addEventListener("popstate", function () { applyFilter(treeFromHash()); });
-    applyFilter(treeFromHash());
 
     select.parentElement.hidden = false;
   }
+
+  syncFromHash();
 })();
