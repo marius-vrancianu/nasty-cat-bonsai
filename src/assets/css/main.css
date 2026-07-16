@@ -344,6 +344,14 @@ a { color: inherit; }
   width: 100%;
 }
 
+/* <main tabindex="-1"> (the skip-link target) is click-focusable, and
+   Chrome renders a blinking text caret wherever you click inside it.
+   Hide that; real text fields get their caret back. (The comments
+   widget lives in its own iframe and is unaffected either way.) */
+#main { caret-color: transparent; }
+#main input,
+#main textarea { caret-color: var(--ink); }
+
 .page-title {
   font-size: clamp(36px, 6vw, 56px);
   font-weight: 400;

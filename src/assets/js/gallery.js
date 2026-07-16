@@ -126,16 +126,28 @@
   // at the photo's lower right. When the viewport is too narrow for
   // that arrangement (portrait phones), fall back to a stacked card:
   // photo above caption, the whole unit fitted to the viewport height.
-  // Float the close button just above the photo's top-right corner.
+  //
+  // The close button sits beside the photo's top-right corner on desktop
+  // and just above it on touch devices (where the photo often spans the
+  // full width and there is no room at the side).
+  var touchUI = window.matchMedia("(hover: none) and (pointer: coarse)");
+
   function positionClose() {
     var f = body.firstChild;
     if (!f || box.hidden) return;
     var fr = f.getBoundingClientRect();
     var br = closeBtn.getBoundingClientRect();
-    var top = Math.max(fr.top - br.height, 2);
-    var left = Math.min(Math.max(fr.right - br.width, 2), window.innerWidth - br.width - 2);
+    var top;
+    var left;
+    if (touchUI.matches) {
+      top = Math.max(fr.top - br.height, 2);
+      left = Math.max(fr.right - br.width, 2);
+    } else {
+      top = Math.max(fr.top - 4, 2);
+      left = fr.right + 6;
+    }
     closeBtn.style.top = top + "px";
-    closeBtn.style.left = left + "px";
+    closeBtn.style.left = Math.min(left, window.innerWidth - br.width - 2) + "px";
     closeBtn.style.right = "auto";
   }
 
