@@ -264,8 +264,23 @@ a { color: inherit; }
      230px tall — the nav's 20px top padding, three 60px links with 4px
      gaps, then the social row's own 4px gap and 18px margin — and its
      height comes from type size, not viewport width, so it holds as the
-     screen widens. `contain` fits the scroll inside the band: full width on
-     a narrow phone, slightly inset on a wide one, never onto the icons. */
+     screen widens.
+
+     Only the right 60% of the screen is shown here. Across the drawing's
+     width the ink falls into: mist to 28% (the faintest far trees), the
+     main group to 66%, the clearing at 66-74%, then the right group. On a
+     phone the whole thing is too wide to read as trees and the links land
+     on the busiest part of it, so the mist and the left of the main group
+     are cropped away and the clearing is brought to the middle, behind the
+     stacked links.
+
+     Right-aligning an over-wide background does the crop: at 100/(1-0.4) =
+     166.667% the image overhangs the box by exactly the 40% being dropped,
+     so the remaining 60% fills the band edge to edge and the clearing (70%
+     across the full drawing) lands at (0.7-0.4)/0.6 = the centre. The zoom
+     that costs is 1.67x, and since the band's height is fixed the trunks
+     are cut at its bottom edge rather than tapering out; anchoring `top`
+     keeps the crowns, which are what read as pine at this size. */
   .home-pines {
     top: calc(100vw * 1.1219);
     right: 0;
@@ -274,16 +289,16 @@ a { color: inherit; }
     width: auto;
     height: 230px;
     aspect-ratio: auto;
-    background-size: contain;
-    background-position: center top;
+    background-size: 166.667% auto;
+    background-position: right top;
     opacity: 0.35;
   }
 
   [data-theme="dark"] .home-pines {
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    -webkit-mask-position: center top;
-    mask-position: center top;
+    -webkit-mask-size: 166.667% auto;
+    mask-size: 166.667% auto;
+    -webkit-mask-position: right top;
+    mask-position: right top;
     opacity: 0.32;
   }
 
