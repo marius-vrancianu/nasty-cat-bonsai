@@ -8,11 +8,12 @@ vocabulary as the site's original pine-trees.svg.
 Vocabulary (borrowed from pine-trees.svg): one <g> per tree at its own
 opacity - overlapping trees at different opacities give the mist, no blur
 filters; trunks are thick round-capped cubic curves; branches are thinner
-curves that leave the trunk, droop and lift; every branch tip carries a fan
+curves that leave the trunk level near the top and droop more and more
+toward the base, as on an old pine; every branch tip carries a fan
 of a few hundred straight needles radiating over a 40-60 degree arc from a
 small scattered base. Composition coordinates follow the painting, except
-that the empty middle panels are narrowed: the right group sits 250 px
-closer than in the 2000 x 880 layout of the screen, on a 1750 x 880
+that the empty middle panels are narrowed: the right group sits 370 px
+closer than in the 2000 x 880 layout of the screen, on a 1630 x 880
 canvas. All ink is #222,
 so the file also works as the dark-theme alpha mask. Deterministic per seed;
 standard library only.
@@ -22,7 +23,7 @@ import random
 import sys
 from collections import defaultdict
 
-W, H = 1750, 880
+W, H = 1630, 880
 INK = "#222"
 random.seed(int(sys.argv[2]) if len(sys.argv) > 2 else 11)
 
@@ -208,13 +209,16 @@ def fan(tree, x, y, direction, L, n=None, arc=54, width=(1.4, 4.0),
                   random.uniform(*width), random.uniform(*op))
 
 def foliage_mass(tree, tpts, cx, cy, w, h, fan_L, wood=(9, 4), n_mult=1.0,
-                 arc=54, fan_w=(1.4, 4.0), hang=0.5, level=0.5):
+                 arc=54, fan_w=(1.4, 4.0), hang=0.5, level=0.5, bias=1):
     """A horizontal mass of foliage around (cx, cy), w wide, h tall, hung
     on branches leaving the trunk polyline tpts. `level` is the mass's
-    height within the crown (0 = top, 1 = bottom): upper branches rise,
-    lower ones droop. Fans sit close together along each branch, on twigs
-    rising above it and hanging below it, so the mass is layered, ragged
-    and asymmetric; the two sides leave the trunk at different heights."""
+    height within the crown (0 = top, 1 = bottom): the top branches run
+    level or dip a little, and each lower one leaves the trunk higher and
+    hangs more steeply, like an old pine. `bias` (+1/-1) is the side the
+    tree favours - its branches reach further there. Fans sit close
+    together along each branch, on twigs rising above it and hanging below
+    it. The two sides leave the trunk at different heights, one side is
+    sometimes missing, and every reach is jittered, so no two masses match."""
     tx = trunk_x(tpts, cy)
     sides = []
     left, right = cx - w / 2, cx + w / 2
@@ -225,26 +229,31 @@ def foliage_mass(tree, tpts, cx, cy, w, h, fan_L, wood=(9, 4), n_mult=1.0,
     if not sides:
         sides.append((1 if cx >= tx else -1, w / 2))
     random.shuffle(sides)
+    if len(sides) > 1 and random.random() < 0.18:
+        sides.pop()                                   # the odd one-sided tier
     for k_side, (s, reach) in enumerate(sides):
-        stagger = (k_side - 0.5) * h * 0.5 if len(sides) > 1 else 0
-        sy = cy + h * random.uniform(0.2, 0.45) + stagger
-        ey = cy + random.uniform(-h * 0.1, h * 0.2) + stagger * 0.5
+        reach *= random.uniform(0.7, 1.25) * (1.15 if s == bias else 0.88)
+        stagger = (k_side - 0.5) * h * random.uniform(0.3, 0.9) if len(sides) > 1 else 0
+        # the branch leaves the trunk above the mass and comes down into it
+        sy = cy - h * (0.1 + 0.5 * level) + stagger
+        ey = cy + h * (0.1 + 0.25 * level) + stagger * 0.5 + random.uniform(-0.1, 0.1) * h
         start, end = (tx, sy), (tx + s * reach, ey)
-        rise = reach * (0.24 - 0.34 * level) + random.uniform(-0.04, 0.04) * reach
-        w0 = wood[0] * min(1.0, reach / 80) + wood[1]
-        at = branch(tree, start, end, rise, w0, wood[1] * 0.8,
-                    droop=0.04 + 0.1 * level)
+        # negative rise = the branch sets off downward; steeper lower down
+        rise = -reach * (0.02 + 0.3 * level) + random.uniform(-0.03, 0.03) * reach
+        w0 = wood[0] * 0.7 * min(1.0, reach / 80) + wood[1] * 0.8
+        at = branch(tree, start, end, rise, w0, wood[1] * 0.6,
+                    droop=0.03 + 0.14 * level)
         # small fan at the junction with the trunk
         jx, jy = at(0.14)
         fan(tree, jx, jy - 2, -90 + s * random.uniform(-10, 20), fan_L * 0.7,
             n=int(fan_L * 1.3 * n_mult), arc=arc, width=fan_w, spread=(10, 6))
         n_fans = max(2, int(reach / 24))
         for k in range(n_fans):
-            t = 1.0 - k / n_fans * 0.68 + random.uniform(-0.04, 0.04)
+            t = 1.0 - k / n_fans * 0.76 + random.uniform(-0.04, 0.04)
             px, py = at(t)
             qx, qy = at(min(1.0, t + 0.05))
             slope = math.degrees(math.atan2(qy - py, qx - px))
-            tilt = s * (2 + 28 * t) + random.uniform(-10, 10)
+            tilt = s * (2 + 22 * t) + random.uniform(-10, 10)
             L = fan_L * random.uniform(0.75, 1.15) * (0.85 + 0.15 * t)
             fan(tree, px, py - 3, -90 + tilt, L, n=int(L * 1.7 * n_mult),
                 arc=arc + random.uniform(-8, 12), width=fan_w, along=slope,
@@ -267,6 +276,7 @@ def pine(opacity, tpts, wood=(22, 9), masses=(), fan_L=44, wood_op=0.6, fade=Non
     top), and foliage masses (cx, cy, w, h[, fan-length multiplier])."""
     t = Tree(opacity, wood_op)
     trunk(t, tpts, wood[0], wood[1], fade=fade)
+    bias = random.choice((-1, 1))                     # the side this tree favours
     if masses:
         ys = [m[1] for m in masses]
         lo, hi = min(ys), max(ys)
@@ -274,8 +284,10 @@ def pine(opacity, tpts, wood=(22, 9), masses=(), fan_L=44, wood_op=0.6, fade=Non
             cx, cy, w, h = m[:4]
             Lm = m[4] if len(m) > 4 else 1.0
             level = (cy - lo) / (hi - lo) if hi > lo else 0.5
+            cy += random.uniform(-0.25, 0.25) * h     # irregular spacing of the tiers
             foliage_mass(t, tpts, cx, cy, w, h, fan_L * Lm, wood=(wood[1] * 1.2, twig_w),
-                         n_mult=n_mult, arc=arc, fan_w=fan_w, hang=hang, level=level)
+                         n_mult=n_mult, arc=arc, fan_w=fan_w, hang=hang, level=level,
+                         bias=bias)
         # fans sitting against the trunk between the masses hide the pole
         y = hi + 10
         while y > lo - 10:
@@ -295,18 +307,18 @@ trees = []
 
 # ---- far left: the misty group (panels 1-2), four pale overlapping pines
 FAR = dict(fan_L=50, wood_op=0.5, n_mult=0.225, twig_w=3, fan_w=(1.6, 4.5), hang=0.35)
-trees.append(pine(0.16, [(268, 560), (266, 420), (262, 290), (258, 190)], wood=(11, 4),
-                  masses=[(262, 195, 120, 44), (248, 250, 150, 52), (274, 308, 130, 46), (266, 352, 90, 34)],
+trees.append(pine(0.16, [(268, 560), (266, 430), (262, 320), (256, 236)], wood=(11, 4),
+                  masses=[(262, 240, 110, 42), (246, 292, 160, 54), (276, 350, 120, 44)],
                   fade=(380, 560), **FAR))
-trees.append(pine(0.2, [(338, 580), (340, 440), (346, 270), (348, 150)], wood=(12, 4),
-                  masses=[(345, 158, 90, 38), (358, 214, 150, 54), (334, 272, 150, 54), (362, 328, 110, 42),
-                          (350, 372, 80, 30)],
+trees.append(pine(0.2, [(338, 580), (340, 440), (346, 270), (350, 118)], wood=(12, 4),
+                  masses=[(348, 126, 70, 32), (360, 186, 150, 54), (332, 262, 170, 56), (364, 330, 100, 40),
+                          (350, 386, 70, 28)],
                   fade=(410, 580), **FAR))
 trees.append(pine(0.17, [(474, 560), (470, 430), (474, 300), (470, 210)], wood=(11, 4),
                   masses=[(472, 222, 110, 42), (458, 278, 160, 54), (482, 334, 130, 46), (476, 382, 90, 34)],
                   fade=(390, 560), **FAR))
-trees.append(pine(0.12, [(420, 520), (416, 400), (410, 290), (404, 240)], wood=(9, 3),
-                  masses=[(404, 250, 100, 40), (416, 300, 120, 44), (426, 350, 90, 34)],
+trees.append(pine(0.12, [(420, 520), (416, 420), (410, 340), (404, 296)], wood=(9, 3),
+                  masses=[(404, 306, 100, 40), (420, 362, 130, 46)],
                   fade=(360, 520), **FAR))
 
 # ---- second rank: the tall pine peeking above the dark group, and one
@@ -331,42 +343,42 @@ trees.append(pine(0.2, [(1052, 500), (1050, 400), (1048, 262), (1050, 190)], woo
 # ---- the dark group (panels 2-3): four trunks, base -> top
 NEAR = dict(fan_L=46, wood_op=0.55, n_mult=0.57, twig_w=4, fan_w=(1.0, 2.8), hang=0.55)
 # companions first (behind), the main tree last (on top)
-trees.append(pine(0.6, [(858, 806), (862, 680), (850, 540), (848, 410)], wood=(15, 6),
-                  masses=[(880, 618, 130, 60), (862, 456, 80, 32), (876, 372, 70, 30)], **NEAR))
-trees.append(pine(0.7, [(640, 800), (650, 700), (644, 560), (652, 440)], wood=(17, 7),
-                  masses=[(636, 522, 150, 60), (600, 572, 80, 32), (646, 626, 70, 30)], **NEAR))
-trees.append(pine(0.8, [(704, 812), (700, 700), (712, 520), (710, 350), (706, 300)], wood=(21, 8),
-                  masses=[(700, 306, 90, 40), (720, 470, 60, 28)], **NEAR))
+trees.append(pine(0.6, [(858, 806), (862, 690), (852, 580), (848, 476)], wood=(15, 6),
+                  masses=[(884, 622, 140, 62), (866, 500, 90, 36)], **NEAR))
+trees.append(pine(0.7, [(640, 800), (650, 700), (644, 560), (654, 404)], wood=(17, 7),
+                  masses=[(650, 420, 90, 36), (630, 522, 160, 62), (600, 578, 80, 32), (646, 630, 70, 30)], **NEAR))
+trees.append(pine(0.8, [(704, 812), (700, 700), (712, 520), (710, 350), (704, 246)], wood=(21, 8),
+                  masses=[(696, 262, 80, 36), (700, 330, 100, 42), (722, 470, 60, 28)], **NEAR))
 trees.append(pine(0.92, [(774, 816), (766, 680), (774, 500), (768, 330), (766, 150)], wood=(26, 7),
-                  masses=[(766, 150, 90, 42, 0.85), (770, 224, 190, 84), (796, 322, 240, 92),
-                          (742, 402, 115, 44)], **NEAR))
+                  masses=[(766, 150, 90, 42, 0.85), (774, 222, 200, 84), (798, 322, 250, 92),
+                          (748, 410, 120, 46)], **NEAR))
 
 # ---- right group (panels 5-6)
 # faint one to the left of the group
-trees.append(pine(0.14, [(1420, 480), (1412, 360), (1406, 230), (1400, 190)], wood=(10, 4),
-                  masses=[(1402, 208, 100, 42), (1416, 262, 120, 46)],
+trees.append(pine(0.14, [(1300, 480), (1292, 360), (1286, 230), (1280, 190)], wood=(10, 4),
+                  masses=[(1282, 208, 100, 42), (1296, 262, 120, 46)],
                   fade=(50, 480), **FAR))
 # tall faint pine behind, crown poking above the main one
-trees.append(pine(0.28, [(1522, 560), (1508, 400), (1495, 170), (1492, 110)], wood=(12, 5),
-                  masses=[(1492, 128, 90, 38), (1485, 182, 130, 48), (1510, 232, 80, 32)],
+trees.append(pine(0.28, [(1402, 560), (1388, 400), (1375, 170), (1372, 110)], wood=(12, 5),
+                  masses=[(1372, 128, 90, 38), (1365, 182, 130, 48), (1390, 232, 80, 32)],
                   fade=(90, 560), **MID))
 # pine at the far right edge
-trees.append(pine(0.26, [(1740, 560), (1730, 420), (1718, 260), (1712, 180)], wood=(12, 5),
-                  masses=[(1712, 200, 90, 38), (1725, 256, 110, 46), (1730, 310, 80, 32)],
+trees.append(pine(0.26, [(1620, 560), (1610, 420), (1598, 300), (1594, 226)], wood=(12, 5),
+                  masses=[(1594, 240, 90, 38), (1606, 296, 120, 46), (1612, 350, 80, 32)],
                   fade=(90, 560), **MID))
 # faint trunk standing behind-left of the main pine
-trees.append(pine(0.3, [(1422, 816), (1432, 640), (1442, 470), (1440, 440)], wood=(14, 7),
-                  masses=[(1422, 480, 90, 38)], **MID))
+trees.append(pine(0.3, [(1302, 816), (1312, 640), (1322, 470), (1320, 440)], wood=(14, 7),
+                  masses=[(1302, 480, 90, 38)], **MID))
 # a thinner companion trunk beside the main one
-trees.append(pine(0.5, [(1596, 812), (1588, 700), (1580, 560), (1576, 520)], wood=(12, 6),
-                  masses=[(1606, 640, 60, 26)], **NEAR))
+trees.append(pine(0.5, [(1476, 812), (1468, 700), (1462, 600), (1458, 566)], wood=(12, 6),
+                  masses=[(1486, 650, 70, 28)], **NEAR))
 
 # the main right pine: dark crown, leaning trunk, long branch sweeping down-left
-main_r = pine(0.88, [(1642, 816), (1626, 700), (1612, 560), (1592, 390), (1574, 250)], wood=(22, 7),
-              masses=[(1568, 268, 70, 36, 0.85), (1574, 334, 150, 80), (1588, 410, 120, 50),
-                      (1512, 362, 70, 40)], **NEAR)
+main_r = pine(0.88, [(1522, 816), (1506, 700), (1492, 560), (1472, 390), (1454, 250)], wood=(22, 7),
+              masses=[(1448, 268, 70, 36, 0.85), (1454, 334, 150, 80), (1468, 410, 120, 50),
+                      (1392, 362, 70, 40)], **NEAR)
 # the long sweeping branch, hung with fans along its length
-at = branch(main_r, (1610, 520), (1382, 616), -10, 8, 3, droop=0.12)
+at = branch(main_r, (1490, 520), (1262, 616), -10, 8, 3, droop=0.12)
 for k, t in enumerate((1.0, 0.86, 0.72, 0.58, 0.44, 0.3)):
     px, py = at(t)
     L = 44 * random.uniform(0.85, 1.05)
@@ -378,7 +390,7 @@ for k, t in enumerate((1.0, 0.86, 0.72, 0.58, 0.44, 0.3)):
         e = twig(main_r, (px, py + 2), random.uniform(18, 34), 90 + random.uniform(-30, 30), 3)
         fan(main_r, e[0], e[1], -90 + random.uniform(-20, 20), L * 0.75, n=int(L * 0.87), arc=50, width=(1.0, 2.8))
     fan(main_r, px, py + 4, 95, L * 0.55, n=int(L * 0.47), arc=36, op=(0.4, 0.8), spread=(14, 4), width=(1.0, 2.8))
-at2 = branch(main_r, (1614, 480), (1712, 598), -8, 6, 3, droop=0.1)
+at2 = branch(main_r, (1494, 480), (1592, 598), -8, 6, 3, droop=0.1)
 for t in (1.0, 0.75, 0.5):
     px, py = at2(t)
     fan(main_r, px, py - 2, -90 + 12 * t, 40, n=48, arc=52, width=(1.0, 2.8))
