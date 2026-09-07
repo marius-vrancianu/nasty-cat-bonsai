@@ -12,9 +12,9 @@ curves that leave the trunk level near the top and droop more and more
 toward the base, as on an old pine; every branch tip carries a fan
 of a few hundred straight needles radiating over a 40-60 degree arc from a
 small scattered base. Composition coordinates follow the painting, except
-that the empty middle panels are narrowed: the right group sits 370 px
-closer than in the 2000 x 880 layout of the screen, on a 1630 x 880
-canvas. All ink is #222,
+that the empty middle panels are closed up: the right group sits 520 px
+closer than in the 2000 x 880 layout of the screen, on a 1480 x 880
+canvas, so the mistiest trees of the two groups overlap. All ink is #222,
 so the file also works as the dark-theme alpha mask. Deterministic per seed;
 standard library only.
 """
@@ -23,7 +23,7 @@ import random
 import sys
 from collections import defaultdict
 
-W, H = 1630, 880
+W, H = 1480, 880
 INK = "#222"
 random.seed(int(sys.argv[2]) if len(sys.argv) > 2 else 11)
 
@@ -233,16 +233,17 @@ def foliage_mass(tree, tpts, cx, cy, w, h, fan_L, wood=(9, 4), n_mult=1.0,
         sides.pop()                                   # the odd one-sided tier
     for k_side, (s, reach) in enumerate(sides):
         reach *= random.uniform(0.7, 1.25) * (1.15 if s == bias else 0.88)
+        reach *= 1 + 0.33 * level ** 1.5                 # the lowest tiers reach furthest
         stagger = (k_side - 0.5) * h * random.uniform(0.3, 0.9) if len(sides) > 1 else 0
         # the branch leaves the trunk above the mass and comes down into it
-        sy = cy - h * (0.1 + 0.5 * level) + stagger
-        ey = cy + h * (0.1 + 0.25 * level) + stagger * 0.5 + random.uniform(-0.1, 0.1) * h
+        sy = cy - h * (0.1 + 0.6 * level) + stagger
+        ey = cy + h * (0.1 + 0.45 * level) + stagger * 0.5 + random.uniform(-0.1, 0.1) * h
         start, end = (tx, sy), (tx + s * reach, ey)
         # negative rise = the branch sets off downward; steeper lower down
-        rise = -reach * (0.02 + 0.3 * level) + random.uniform(-0.03, 0.03) * reach
+        rise = -reach * (0.02 + 0.42 * level ** 1.2) + random.uniform(-0.03, 0.03) * reach
         w0 = wood[0] * 0.7 * min(1.0, reach / 80) + wood[1] * 0.8
         at = branch(tree, start, end, rise, w0, wood[1] * 0.6,
-                    droop=0.03 + 0.14 * level)
+                    droop=0.03 + 0.2 * level)
         # small fan at the junction with the trunk
         jx, jy = at(0.14)
         fan(tree, jx, jy - 2, -90 + s * random.uniform(-10, 20), fan_L * 0.7,
@@ -355,30 +356,30 @@ trees.append(pine(0.92, [(774, 816), (766, 680), (774, 500), (768, 330), (766, 1
 
 # ---- right group (panels 5-6)
 # faint one to the left of the group
-trees.append(pine(0.14, [(1300, 480), (1292, 360), (1286, 230), (1280, 190)], wood=(10, 4),
-                  masses=[(1282, 208, 100, 42), (1296, 262, 120, 46)],
+trees.append(pine(0.14, [(1150, 480), (1142, 360), (1136, 230), (1130, 190)], wood=(10, 4),
+                  masses=[(1132, 208, 100, 42), (1146, 262, 120, 46)],
                   fade=(50, 480), **FAR))
 # tall faint pine behind, crown poking above the main one
-trees.append(pine(0.28, [(1402, 560), (1388, 400), (1375, 170), (1372, 110)], wood=(12, 5),
-                  masses=[(1372, 128, 90, 38), (1365, 182, 130, 48), (1390, 232, 80, 32)],
+trees.append(pine(0.28, [(1252, 560), (1238, 400), (1225, 170), (1222, 110)], wood=(12, 5),
+                  masses=[(1222, 128, 90, 38), (1215, 182, 130, 48), (1240, 232, 80, 32)],
                   fade=(90, 560), **MID))
 # pine at the far right edge
-trees.append(pine(0.26, [(1620, 560), (1610, 420), (1598, 300), (1594, 226)], wood=(12, 5),
-                  masses=[(1594, 240, 90, 38), (1606, 296, 120, 46), (1612, 350, 80, 32)],
+trees.append(pine(0.26, [(1470, 560), (1460, 420), (1448, 300), (1444, 226)], wood=(12, 5),
+                  masses=[(1444, 240, 90, 38), (1456, 296, 120, 46), (1462, 350, 80, 32)],
                   fade=(90, 560), **MID))
 # faint trunk standing behind-left of the main pine
-trees.append(pine(0.3, [(1302, 816), (1312, 640), (1322, 470), (1320, 440)], wood=(14, 7),
-                  masses=[(1302, 480, 90, 38)], **MID))
+trees.append(pine(0.3, [(1152, 816), (1162, 640), (1172, 470), (1170, 440)], wood=(14, 7),
+                  masses=[(1152, 480, 90, 38)], **MID))
 # a thinner companion trunk beside the main one
-trees.append(pine(0.5, [(1476, 812), (1468, 700), (1462, 600), (1458, 566)], wood=(12, 6),
-                  masses=[(1486, 650, 70, 28)], **NEAR))
+trees.append(pine(0.5, [(1326, 812), (1318, 700), (1312, 600), (1308, 566)], wood=(12, 6),
+                  masses=[(1336, 650, 70, 28)], **NEAR))
 
 # the main right pine: dark crown, leaning trunk, long branch sweeping down-left
-main_r = pine(0.88, [(1522, 816), (1506, 700), (1492, 560), (1472, 390), (1454, 250)], wood=(22, 7),
-              masses=[(1448, 268, 70, 36, 0.85), (1454, 334, 150, 80), (1468, 410, 120, 50),
-                      (1392, 362, 70, 40)], **NEAR)
+main_r = pine(0.88, [(1372, 816), (1356, 700), (1342, 560), (1322, 390), (1304, 250)], wood=(22, 7),
+              masses=[(1298, 268, 70, 36, 0.85), (1304, 334, 150, 80), (1318, 410, 120, 50),
+                      (1242, 362, 70, 40)], **NEAR)
 # the long sweeping branch, hung with fans along its length
-at = branch(main_r, (1490, 520), (1262, 616), -10, 8, 3, droop=0.12)
+at = branch(main_r, (1340, 520), (1112, 616), -10, 8, 3, droop=0.12)
 for k, t in enumerate((1.0, 0.86, 0.72, 0.58, 0.44, 0.3)):
     px, py = at(t)
     L = 44 * random.uniform(0.85, 1.05)
@@ -390,7 +391,7 @@ for k, t in enumerate((1.0, 0.86, 0.72, 0.58, 0.44, 0.3)):
         e = twig(main_r, (px, py + 2), random.uniform(18, 34), 90 + random.uniform(-30, 30), 3)
         fan(main_r, e[0], e[1], -90 + random.uniform(-20, 20), L * 0.75, n=int(L * 0.87), arc=50, width=(1.0, 2.8))
     fan(main_r, px, py + 4, 95, L * 0.55, n=int(L * 0.47), arc=36, op=(0.4, 0.8), spread=(14, 4), width=(1.0, 2.8))
-at2 = branch(main_r, (1494, 480), (1592, 598), -8, 6, 3, droop=0.1)
+at2 = branch(main_r, (1344, 480), (1442, 598), -8, 6, 3, droop=0.1)
 for t in (1.0, 0.75, 0.5):
     px, py = at2(t)
     fan(main_r, px, py - 2, -90 + 12 * t, 40, n=48, arc=52, width=(1.0, 2.8))
