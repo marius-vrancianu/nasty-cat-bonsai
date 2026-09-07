@@ -258,29 +258,23 @@ a { color: inherit; }
     flex-direction: column;
   }
 
-  /* Pines become the backdrop behind the three links: full width, starting
-     at the framed hero's bottom edge (frame height ≈ 112.19vw, see the
-     .hero-frame math) and stopping just above the social row. That band is
-     230px tall — the nav's 20px top padding, three 60px links with 4px
-     gaps, then the social row's own 4px gap and 18px margin — and its
-     height comes from type size, not viewport width, so it holds as the
-     screen widens.
+  /* Pines become the backdrop behind the three links, as two clusters
+     standing either side of them: the dark group (tohaku-pines-left.svg)
+     at the left edge, the right group (tohaku-pines-right.svg) at the
+     right, both at the band's full height so whole trunks show, ground
+     lines level — the two files share the drawing's vertical range, so a
+     common height gives them a common scale. Their widths follow from that
+     height (0.743x and 0.568x it, see gen-tohaku-pines.py's output), which
+     leaves the middle of the band to the links: about 88px clear on a
+     390px phone, more as the screen widens. Some overlap on a narrow one
+     is fine — the crowns are pale where they reach the text.
 
-     Only the right 60% of the screen is shown here. Across the drawing's
-     width the ink falls into: mist to 28% (the faintest far trees), the
-     main group to 66%, the clearing at 66-74%, then the right group. On a
-     phone the whole thing is too wide to read as trees and the links land
-     on the busiest part of it, so the mist and the left of the main group
-     are cropped away and the clearing is brought to the middle, behind the
-     stacked links.
-
-     Right-aligning an over-wide background does the crop: at 100/(1-0.4) =
-     166.667% the image overhangs the box by exactly the 40% being dropped,
-     so the remaining 60% fills the band edge to edge and the clearing (70%
-     across the full drawing) lands at (0.7-0.4)/0.6 = the centre. The zoom
-     that costs is 1.67x, and since the band's height is fixed the trunks
-     are cut at its bottom edge rather than tapering out; anchoring `top`
-     keeps the crowns, which are what read as pine at this size. */
+     The band starts at the framed hero's bottom edge (frame height ≈
+     112.19vw, see the .hero-frame math) and stops just above the social
+     row. It is 230px tall — the nav's 20px top padding, three 60px links
+     with 4px gaps, then the social row's own 4px gap and 18px margin — and
+     that height comes from type size, not viewport width, so it holds as
+     the screen widens. */
   .home-pines {
     top: calc(100vw * 1.1219);
     right: 0;
@@ -289,16 +283,22 @@ a { color: inherit; }
     width: auto;
     height: 230px;
     aspect-ratio: auto;
-    background-size: 166.667% auto;
-    background-position: right top;
+    background-image: url("../img/tohaku-pines-left.svg"),
+                      url("../img/tohaku-pines-right.svg");
+    background-size: auto 100%, auto 100%;
+    background-position: left bottom, right bottom;
     opacity: 0.35;
   }
 
   [data-theme="dark"] .home-pines {
-    -webkit-mask-size: 166.667% auto;
-    mask-size: 166.667% auto;
-    -webkit-mask-position: right top;
-    mask-position: right top;
+    -webkit-mask-image: url("../img/tohaku-pines-left.svg"),
+                        url("../img/tohaku-pines-right.svg");
+    mask-image: url("../img/tohaku-pines-left.svg"),
+                url("../img/tohaku-pines-right.svg");
+    -webkit-mask-size: auto 100%, auto 100%;
+    mask-size: auto 100%, auto 100%;
+    -webkit-mask-position: left bottom, right bottom;
+    mask-position: left bottom, right bottom;
     opacity: 0.32;
   }
 
