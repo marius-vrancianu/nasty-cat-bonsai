@@ -108,11 +108,11 @@ a { color: inherit; }
 }
 
 /* Pine backdrop — Hasegawa Tōhaku's "Pine Trees" screen as a vector
-   (tohaku-pines.svg, redrawn by tools/gen-tohaku-pines.py; re-run that
-   script rather than editing the SVG). A background-image in light mode;
-   in dark mode the same SVG becomes an alpha mask over the ink color,
-   recoloring the #222222 strokes to washi ink while keeping every stroke's
-   transparency.
+   (tohaku-pines.svg, cut from the traced painting by
+   tools/gen-tohaku-pines.py; re-run that script rather than editing the
+   SVG). A background-image in light mode; in dark mode the same SVG becomes
+   an alpha mask over the ink color, recoloring the #222222 strokes to washi
+   ink while keeping every stroke's transparency.
 
    On desktop the screen spans the empty panel beside the hero edge to
    edge: left = the hero frame's right edge (≈89.14dvh, see .hero-frame),
@@ -127,9 +127,11 @@ a { color: inherit; }
    34px) — so the bottom edge sits those two plus a 12px gap up from the
    window's bottom.
 
-   The SVG's viewBox is cropped to the ink (gen-tohaku-pines.py measures it
+   The SVG's viewBox is cut to the drawing (gen-tohaku-pines.py measures it
    and prints the numbers), so the leftmost tree sits on the box's left edge
-   and the right group runs off its right edge with no built-in margin;
+   and the right group runs off its right edge with no built-in margin — the
+   screen's bare middle panels are squeezed out to bring the two groups that
+   close, and a strip of empty sky comes off the top so they close at all.
    `background-size: 100% 100%` then fills the box exactly, leaving no gap
    at either side whatever the window's proportions. Keep the aspect-ratio
    below equal to that viewBox's — matched, the fill is a plain scale; if
@@ -149,7 +151,12 @@ a { color: inherit; }
   background-repeat: no-repeat;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.62;
+  /* The traced screen is a wash of soft greys where the drawn backdrop it
+     replaces was a few solid masses, so at the panel's scale it lands about
+     40% lighter for the same opacity; 0.8 puts its weight back where the
+     old one sat. Dark mode needs no such lift — masked over the ink color
+     the two measure the same, so 0.55 stays. */
+  opacity: 0.8;
 }
 
 [data-theme="dark"] .home-pines {
@@ -258,22 +265,24 @@ a { color: inherit; }
     flex-direction: column;
   }
 
-  /* Pines become the backdrop behind the three links, as two clusters
-     standing either side of them over a third, wider layer of mist: the
-     dark group (tohaku-pines-left.svg) at the left edge, the right group
-     (tohaku-pines-right.svg) at the right, and behind both, centred,
-     everything the whole screen paints between the two groups — the
-     far-left mist, the second rank, the pair behind the dark group
-     (tohaku-pines-mist.svg). All three sit at the band's full height so
-     whole trunks show, ground lines level: the files share the drawing's
-     vertical range, so a common height gives them a common scale, and the
-     mist keeps floating above the ground line as it does on the desktop.
+  /* Pines become the backdrop behind the three links, as the screen's own
+     two groups standing either side of them: the near group
+     (tohaku-pines-left.svg) on the left, the far one
+     (tohaku-pines-right.svg) on the right. Both sit at the band's full
+     height so whole trunks show and the ground lines stay level — the two
+     files share the drawing's vertical range, so a common height gives them
+     a common scale, and the mist inside the near group keeps floating above
+     the ground line as it does on the desktop.
 
-     The pair's widths follow from that height (0.743x and 0.568x it, see
-     gen-tohaku-pines.py's output), so the solid trees keep off the middle
-     of the band — about 88px clear on a 390px phone, more as the screen
-     widens — and only the mist, at 1.345x the height, reaches across it,
-     pale enough to read the links over.
+     Their widths follow from that height (1.223x and 0.570x it, see
+     gen-tohaku-pines.py's output): 281px and 131px on the 230px band. The
+     near group carries its mist on its left and its dark trees in the middle
+     of that width, so anchored flush left its trunks would stand under the
+     links. Sliding it 88px off the left edge — the screen continuing past
+     the frame, as a byōbu does — puts those trees back where the old
+     backdrop's stood (dark from 36px in, ink petering out by 171px, against
+     36px and 166px before) and leaves the middle of the band to the links:
+     about 88px clear on a 390px phone, more as the screen widens.
 
      The band starts at the framed hero's bottom edge (frame height ≈
      112.19vw, see the .hero-frame math) and stops just above the social
@@ -289,26 +298,22 @@ a { color: inherit; }
     width: auto;
     height: 230px;
     aspect-ratio: auto;
-    /* last layer is the bottom one: the mist sits behind the pair */
     background-image: url("../img/tohaku-pines-left.svg"),
-                      url("../img/tohaku-pines-right.svg"),
-                      url("../img/tohaku-pines-mist.svg");
-    background-size: auto 100%, auto 100%, auto 100%;
-    background-position: left bottom, right bottom, center bottom;
+                      url("../img/tohaku-pines-right.svg");
+    background-size: auto 100%, auto 100%;
+    background-position: -88px bottom, right bottom;
     opacity: 0.35;
   }
 
   [data-theme="dark"] .home-pines {
     -webkit-mask-image: url("../img/tohaku-pines-left.svg"),
-                        url("../img/tohaku-pines-right.svg"),
-                        url("../img/tohaku-pines-mist.svg");
+                        url("../img/tohaku-pines-right.svg");
     mask-image: url("../img/tohaku-pines-left.svg"),
-                url("../img/tohaku-pines-right.svg"),
-                url("../img/tohaku-pines-mist.svg");
-    -webkit-mask-size: auto 100%, auto 100%, auto 100%;
-    mask-size: auto 100%, auto 100%, auto 100%;
-    -webkit-mask-position: left bottom, right bottom, center bottom;
-    mask-position: left bottom, right bottom, center bottom;
+                url("../img/tohaku-pines-right.svg");
+    -webkit-mask-size: auto 100%, auto 100%;
+    mask-size: auto 100%, auto 100%;
+    -webkit-mask-position: -88px bottom, right bottom;
+    mask-position: -88px bottom, right bottom;
     opacity: 0.32;
   }
 
