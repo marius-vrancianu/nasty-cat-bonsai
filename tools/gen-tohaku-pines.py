@@ -37,12 +37,13 @@ Three files come out, all sharing one scale and one ground line:
   tohaku-pines-right.svg  the right group on its own
 
 The two split files are what the mobile layout stands either side of the
-nav links. All three share one vertical crop, so a common height gives them
-a common scale and one ground line; horizontally each is cut to its own ink,
-so the CSS can size them edge to edge with no built-in margin. Keep
-.home-pines' aspect-ratio equal to the desktop viewBox's ratio, which this
-script prints along with each split file's width as a multiple of the shared
-height - the numbers the mobile rules are written against.
+nav links. Every file ends at the drawing's lowest ink, so whatever height
+the CSS gives them they stand on one ground line; on the other three sides
+each is cut to its own, so a band fills with tree rather than with the sky
+above a group that happens to start lower. Keep .home-pines' aspect-ratio
+equal to the desktop viewBox's ratio, which this script prints along with
+each split file's own width-to-height - the numbers the mobile rules are
+written against.
 
 Standard library only.
 """
@@ -287,8 +288,11 @@ def main():
 
     lbox, rbox = box_of(sum(left, []), xf), box_of(sum(right, []), xf)
 
-    # One vertical range for all three files - crown to root - so a common
-    # height gives them a common scale and one ground line.
+    # One ground line for every file - they all end at the drawing's lowest
+    # ink, so the two mobile files stand on the same ground however each is
+    # scaled. The desktop file spans both groups' crowns; the split files
+    # each start at their own, which is what lets the far group fill a band
+    # rather than hanging 9% of it in empty sky (see .home-pines on mobile).
     y0, y1 = min(lbox[1], rbox[1]), max(lbox[3], rbox[3])
     height = y1 - y0
     width = (lbox[2] - lbox[0]) + (rbox[2] - rbox[0]) - OVERLAP
@@ -300,14 +304,15 @@ def main():
     vb = "0 %s %s %s" % (num(y0), num(width), num(height))
     uni = write(os.path.join(OUT, "tohaku-pines.svg"), pairs, vb, xf)
 
-    # -- mobile: each group on its own, cropped to its own ink but keeping the
-    #    shared vertical range, so a common height gives them a common scale.
+    # -- mobile: each group on its own, cut to its own ink on three sides and
+    #    to the shared ground line at the bottom.
     outs = {}
     for name, group, gbox in (("left", left, lbox), ("right", right, rbox)):
-        vbg = "0 %s %s %s" % (num(y0), num(gbox[2] - gbox[0]), num(height))
+        gh = y1 - gbox[1]
+        vbg = "0 %s %s %s" % (num(gbox[1]), num(gbox[2] - gbox[0]), num(gh))
         outs[name] = (write(os.path.join(OUT, "tohaku-pines-%s.svg" % name),
                             [(-gbox[0], list(zip(ops, group)))], vbg, xf),
-                      gbox[2] - gbox[0])
+                      (gbox[2] - gbox[0]) / gh)
 
     print("opacities (lightest first): %s"
           % ", ".join("%g" % o for o in ops))
@@ -317,9 +322,9 @@ def main():
           "  ratio %.4f = %.0f/%.0f - set .home-pines' aspect-ratio to it"
           % (len(uni) / 1024, vb, width / height, round(width), round(height)))
     for name in ("left", "right"):
-        svg, w = outs[name]
-        print("tohaku-pines-%-6s.svg %6.0f KB  %.3f x the shared height"
-              % (name, len(svg) / 1024, w / height))
+        svg, ratio = outs[name]
+        print("tohaku-pines-%-6s.svg %6.0f KB  %.4f x its own height - the "
+              "width it takes in a band" % (name, len(svg) / 1024, ratio))
 
 
 if __name__ == "__main__":

@@ -115,10 +115,20 @@ a { color: inherit; }
    ink while keeping every stroke's transparency.
 
    On desktop the screen spans the empty panel beside the hero edge to
-   edge: left = the hero frame's right edge (≈89.14dvh, see .hero-frame),
-   right = the window. No height is given — `aspect-ratio` derives it from
-   that width and the box grows up from `bottom`, so the pines rescale with
-   the window's width, not just its height.
+   edge: flush to the window on the right, and as wide as the panel — the
+   window less the hero frame (≈89.14dvh, see .hero-frame). No height is
+   given — `aspect-ratio` derives it from that width and the box grows up
+   from `bottom`, so the pines rescale with the window's width, not just its
+   height.
+
+   On a wide, short window that panel is wide enough to make the box taller
+   than the window, and the crowns run off the top. So the width is a min()
+   of the panel and the width the ratio allows in the height there is: past
+   that point the pines stop filling the panel and stay whole instead,
+   leaving washi between them and the hero rather than a beheaded pine at
+   the window's top edge. The height they are allowed is the window less the
+   frame's stroke at the top (so the drawing tops out level with the nav's
+   first link) and less the box's own offset from the bottom.
 
    The trunks stop above the social row rather than running down behind the
    icons: that row is pinned to the hero frame's bottom edge (4.052dvh) and
@@ -143,8 +153,10 @@ a { color: inherit; }
   bottom: calc(100vh * 0.04052 + clamp(30px, 3.8vh, 34px) + 12px);
   bottom: calc(100dvh * 0.04052 + clamp(30px, 3.8vh, 34px) + 12px);
   right: 0;
-  left: calc(100vh * 0.8914);
-  left: calc(100dvh * 0.8914);
+  width: min(100% - 100vh * 0.8914,
+             (100vh * 0.91896 - clamp(30px, 3.8vh, 34px) - 12px) * 2000 / 1287);
+  width: min(100% - 100dvh * 0.8914,
+             (100dvh * 0.91896 - clamp(30px, 3.8vh, 34px) - 12px) * 2000 / 1287);
   aspect-ratio: 2000 / 1287;
   background-image: url("../img/tohaku-pines.svg");
   background-size: 100% 100%;
@@ -269,27 +281,32 @@ a { color: inherit; }
   /* Pines become the backdrop behind the three links, as the screen's own
      two groups standing either side of them: the near group
      (tohaku-pines-left.svg) on the left, the far one
-     (tohaku-pines-right.svg) on the right. Both sit at the band's full
-     height so whole trunks show and the ground lines stay level — the two
-     files share the drawing's vertical range, so a common height gives them
-     a common scale, and the mist inside the near group keeps floating above
-     the ground line as it does on the desktop.
+     (tohaku-pines-right.svg) on the right. Both are sized to the band's
+     full height, crown on its top edge and roots on its bottom, and because
+     every file ends at the drawing's one ground line they stand level even
+     though each fills the band at its own scale. The far group starts lower
+     in the painting than the near one, so were the two cut to a shared top
+     it would spend 9% of the band on empty sky and read small; cut to its
+     own it comes up a tenth larger and reaches the top.
 
-     Their widths follow from that height (1.092x and 0.509x it, see
-     gen-tohaku-pines.py's output): 251px and 117px on the 230px band. The
-     near group carries its mist on its left and its dark trees in the middle
-     of that width, so anchored flush left its trunks would stand under the
-     links. Sliding it 74px off the left edge — the screen continuing past
-     the frame, as a byōbu does — puts those trees back where the old
-     backdrop's stood (dark from 36px in, against 36px before) and leaves the
-     middle of the band to the links: about 100px clear on a 390px phone,
-     more as the screen widens.
+     The band is 258px: the nav's own height — its 20px top padding, three
+     60px links with 4px gaps, then the social row's 4px gap and 18px margin,
+     230px in all — plus the 12% the crowns add. Trees sized to the nav's
+     230px alone would stand a tenth shorter than the old backdrop's, since
+     that height would now have to hold the crowns too, so the extra goes on
+     at the bottom instead: the ground line drops behind the social row,
+     where the drawing is roots and faint ground and the icons read straight
+     through it. Everything above it — where the links are — is unchanged.
 
-     The band's height stays the nav's, not the drawing's: the files carry
-     the pale crowns at the top of the screen, which are the tallest thing
-     in the painting, so fitting them into the same 230px sets the trees a
-     touch smaller than the old backdrop's rather than running the band down
-     over the social row.
+     The widths follow from that height (1.092x and 0.559x it, see
+     gen-tohaku-pines.py's output): 282px and 144px. The near group carries
+     its mist on its left and its dark trees in the middle of that width, so
+     anchored flush left its trunks would stand under the links. Sliding it
+     88px off the left edge — the screen continuing past the frame, as a
+     byōbu does — puts those trees back where the old backdrop's stood (dark
+     from 30px in, against 44px before) and leaves the middle of the band to
+     the links: about 75px clear on a 390px phone, more as the screen
+     widens.
 
      The band starts at the framed hero's bottom edge (frame height ≈
      112.19vw, see the .hero-frame math) and stops just above the social
@@ -303,12 +320,12 @@ a { color: inherit; }
     bottom: auto;
     left: 0;
     width: auto;
-    height: 230px;
+    height: 258px;
     aspect-ratio: auto;
     background-image: url("../img/tohaku-pines-left.svg"),
                       url("../img/tohaku-pines-right.svg");
     background-size: auto 100%, auto 100%;
-    background-position: -74px bottom, right bottom;
+    background-position: -88px bottom, right bottom;
     opacity: 0.35;
   }
 
@@ -319,8 +336,8 @@ a { color: inherit; }
                 url("../img/tohaku-pines-right.svg");
     -webkit-mask-size: auto 100%, auto 100%;
     mask-size: auto 100%, auto 100%;
-    -webkit-mask-position: -74px bottom, right bottom;
-    mask-position: -74px bottom, right bottom;
+    -webkit-mask-position: -88px bottom, right bottom;
+    mask-position: -88px bottom, right bottom;
     opacity: 0.32;
   }
 
