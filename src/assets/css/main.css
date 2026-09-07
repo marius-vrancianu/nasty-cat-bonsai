@@ -128,13 +128,14 @@ a { color: inherit; }
    window's bottom.
 
    The SVG's viewBox is cut to the drawing (gen-tohaku-pines.py measures it
-   and prints the numbers), so the leftmost tree sits on the box's left edge
-   and the right group runs off its right edge with no built-in margin — the
-   screen's bare middle panels are squeezed out to bring the two groups that
-   close, and a strip of empty sky comes off the top so they close at all.
-   `background-size: 100% 100%` then fills the box exactly, leaving no gap
-   at either side whatever the window's proportions. Keep the aspect-ratio
-   below equal to that viewBox's — matched, the fill is a plain scale; if
+   and prints the numbers), so the leftmost tree sits on the box's left edge,
+   the right group runs off its right edge with no built-in margin, and the
+   tall pale crowns reach the top edge — the screen's bare middle panels are
+   squeezed out to bring the two groups that close, and nothing is cropped to
+   reach a ratio. `background-size: 100% 100%` then fills the box exactly,
+   leaving no gap at either side whatever the window's proportions. So the
+   aspect-ratio below is not a design choice but the drawing's own, and must
+   be kept equal to the viewBox's — matched, the fill is a plain scale; if
    the two ever drift apart the drawing stretches slightly rather than
    letterboxing whitespace back in. */
 .home-pines {
@@ -144,7 +145,7 @@ a { color: inherit; }
   right: 0;
   left: calc(100vh * 0.8914);
   left: calc(100dvh * 0.8914);
-  aspect-ratio: 1367 / 785;
+  aspect-ratio: 2000 / 1287;
   background-image: url("../img/tohaku-pines.svg");
   background-size: 100% 100%;
   background-position: bottom center;
@@ -274,15 +275,21 @@ a { color: inherit; }
      a common scale, and the mist inside the near group keeps floating above
      the ground line as it does on the desktop.
 
-     Their widths follow from that height (1.223x and 0.570x it, see
-     gen-tohaku-pines.py's output): 281px and 131px on the 230px band. The
+     Their widths follow from that height (1.092x and 0.509x it, see
+     gen-tohaku-pines.py's output): 251px and 117px on the 230px band. The
      near group carries its mist on its left and its dark trees in the middle
      of that width, so anchored flush left its trunks would stand under the
-     links. Sliding it 88px off the left edge — the screen continuing past
+     links. Sliding it 74px off the left edge — the screen continuing past
      the frame, as a byōbu does — puts those trees back where the old
-     backdrop's stood (dark from 36px in, ink petering out by 171px, against
-     36px and 166px before) and leaves the middle of the band to the links:
-     about 88px clear on a 390px phone, more as the screen widens.
+     backdrop's stood (dark from 36px in, against 36px before) and leaves the
+     middle of the band to the links: about 100px clear on a 390px phone,
+     more as the screen widens.
+
+     The band's height stays the nav's, not the drawing's: the files carry
+     the pale crowns at the top of the screen, which are the tallest thing
+     in the painting, so fitting them into the same 230px sets the trees a
+     touch smaller than the old backdrop's rather than running the band down
+     over the social row.
 
      The band starts at the framed hero's bottom edge (frame height ≈
      112.19vw, see the .hero-frame math) and stops just above the social
@@ -301,7 +308,7 @@ a { color: inherit; }
     background-image: url("../img/tohaku-pines-left.svg"),
                       url("../img/tohaku-pines-right.svg");
     background-size: auto 100%, auto 100%;
-    background-position: -88px bottom, right bottom;
+    background-position: -74px bottom, right bottom;
     opacity: 0.35;
   }
 
@@ -312,8 +319,8 @@ a { color: inherit; }
                 url("../img/tohaku-pines-right.svg");
     -webkit-mask-size: auto 100%, auto 100%;
     mask-size: auto 100%, auto 100%;
-    -webkit-mask-position: -88px bottom, right bottom;
-    mask-position: -88px bottom, right bottom;
+    -webkit-mask-position: -74px bottom, right bottom;
+    mask-position: -74px bottom, right bottom;
     opacity: 0.32;
   }
 

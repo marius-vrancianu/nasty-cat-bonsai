@@ -29,8 +29,10 @@ tone in ink.
 Three files come out, all sharing one scale and one ground line:
 
   tohaku-pines.svg        desktop - both groups, the empty middle panels of
-                          the screen closed up so the composition fits the
-                          panel beside the hero (see .home-pines in main.css)
+                          the screen closed up (see .home-pines in main.css);
+                          its ratio follows from that, so the CSS takes the
+                          ratio from the drawing rather than the drawing
+                          being cropped to a ratio
   tohaku-pines-left.svg   the left group on its own
   tohaku-pines-right.svg  the right group on its own
 
@@ -69,13 +71,12 @@ SPLIT_X = 2050
 
 # Desktop: the left group's ink starts at the box's left edge and the right
 # group's runs off the right edge, exactly as the old backdrop did, with the
-# screen's bare middle panels squeezed out between them. The box has to hold
-# ASPECT, so what decides the scale is how tall it is: the shorter the box,
-# the wider the groups sit at that height, and the further they close up. So
-# the height is not the drawing's full ink height - it is whatever puts the
-# two groups OVERLAP apart, and the difference comes off the TOP, which in
-# this painting is thin sky and a few pale tips rather than crowns.
-ASPECT = 1367 / 785                  # the ratio the previous backdrop published
+# screen's bare middle panels squeezed out between them until the groups
+# stand OVERLAP apart. Nothing is cropped to reach a ratio - the box is as
+# tall as the drawing is and as wide as the closed-up groups make it, and
+# the ratio that falls out is what the CSS is told to use. Cropping the top
+# instead would buy a wider box by beheading the tall pale pines, whose
+# crowns are the highest thing in the painting.
 OVERLAP = 60                         # px the groups share, mist over mist
 
 # ------------------------------------------------------------------ parsing
@@ -286,14 +287,11 @@ def main():
 
     lbox, rbox = box_of(sum(left, []), xf), box_of(sum(right, []), xf)
 
-    # Shared vertical crop: one ground line, one scale, whichever file is used.
-    # The bottom is the drawing's own; the top is cut back until the box is
-    # exactly as wide as the two groups standing OVERLAP apart.
-    y1 = max(lbox[3], rbox[3])
+    # One vertical range for all three files - crown to root - so a common
+    # height gives them a common scale and one ground line.
+    y0, y1 = min(lbox[1], rbox[1]), max(lbox[3], rbox[3])
+    height = y1 - y0
     width = (lbox[2] - lbox[0]) + (rbox[2] - rbox[0]) - OVERLAP
-    height = width / ASPECT
-    y0 = y1 - height
-    assert y0 >= min(lbox[1], rbox[1]), "the crop would eat into the crowns"
 
     # -- desktop: the left group flush left, the right group flush right.
     dx_l = -lbox[0]
@@ -315,10 +313,9 @@ def main():
           % ", ".join("%g" % o for o in ops))
     print("ink: left x %.0f..%.0f, right x %.0f..%.0f, y %.0f..%.0f"
           % (lbox[0], lbox[2], rbox[0], rbox[2], y0, y1))
-    print("tohaku-pines.svg       %6.0f KB  viewBox %s (ratio %.4f - keep "
-          ".home-pines' aspect-ratio equal to it); %.0fpx of sky off the top"
-          % (len(uni) / 1024, vb, width / height,
-             y0 - min(lbox[1], rbox[1])))
+    print("tohaku-pines.svg       %6.0f KB  viewBox %s\n"
+          "  ratio %.4f = %.0f/%.0f - set .home-pines' aspect-ratio to it"
+          % (len(uni) / 1024, vb, width / height, round(width), round(height)))
     for name in ("left", "right"):
         svg, w = outs[name]
         print("tohaku-pines-%-6s.svg %6.0f KB  %.3f x the shared height"
