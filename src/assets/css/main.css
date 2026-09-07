@@ -259,15 +259,21 @@ a { color: inherit; }
   }
 
   /* Pines become the backdrop behind the three links, as two clusters
-     standing either side of them: the dark group (tohaku-pines-left.svg)
-     at the left edge, the right group (tohaku-pines-right.svg) at the
-     right, both at the band's full height so whole trunks show, ground
-     lines level — the two files share the drawing's vertical range, so a
-     common height gives them a common scale. Their widths follow from that
-     height (0.743x and 0.568x it, see gen-tohaku-pines.py's output), which
-     leaves the middle of the band to the links: about 88px clear on a
-     390px phone, more as the screen widens. Some overlap on a narrow one
-     is fine — the crowns are pale where they reach the text.
+     standing either side of them over a third, wider layer of mist: the
+     dark group (tohaku-pines-left.svg) at the left edge, the right group
+     (tohaku-pines-right.svg) at the right, and behind both, centred,
+     everything the whole screen paints between the two groups — the
+     far-left mist, the second rank, the pair behind the dark group
+     (tohaku-pines-mist.svg). All three sit at the band's full height so
+     whole trunks show, ground lines level: the files share the drawing's
+     vertical range, so a common height gives them a common scale, and the
+     mist keeps floating above the ground line as it does on the desktop.
+
+     The pair's widths follow from that height (0.743x and 0.568x it, see
+     gen-tohaku-pines.py's output), so the solid trees keep off the middle
+     of the band — about 88px clear on a 390px phone, more as the screen
+     widens — and only the mist, at 1.345x the height, reaches across it,
+     pale enough to read the links over.
 
      The band starts at the framed hero's bottom edge (frame height ≈
      112.19vw, see the .hero-frame math) and stops just above the social
@@ -283,22 +289,26 @@ a { color: inherit; }
     width: auto;
     height: 230px;
     aspect-ratio: auto;
+    /* last layer is the bottom one: the mist sits behind the pair */
     background-image: url("../img/tohaku-pines-left.svg"),
-                      url("../img/tohaku-pines-right.svg");
-    background-size: auto 100%, auto 100%;
-    background-position: left bottom, right bottom;
+                      url("../img/tohaku-pines-right.svg"),
+                      url("../img/tohaku-pines-mist.svg");
+    background-size: auto 100%, auto 100%, auto 100%;
+    background-position: left bottom, right bottom, center bottom;
     opacity: 0.35;
   }
 
   [data-theme="dark"] .home-pines {
     -webkit-mask-image: url("../img/tohaku-pines-left.svg"),
-                        url("../img/tohaku-pines-right.svg");
+                        url("../img/tohaku-pines-right.svg"),
+                        url("../img/tohaku-pines-mist.svg");
     mask-image: url("../img/tohaku-pines-left.svg"),
-                url("../img/tohaku-pines-right.svg");
-    -webkit-mask-size: auto 100%, auto 100%;
-    mask-size: auto 100%, auto 100%;
-    -webkit-mask-position: left bottom, right bottom;
-    mask-position: left bottom, right bottom;
+                url("../img/tohaku-pines-right.svg"),
+                url("../img/tohaku-pines-mist.svg");
+    -webkit-mask-size: auto 100%, auto 100%, auto 100%;
+    mask-size: auto 100%, auto 100%, auto 100%;
+    -webkit-mask-position: left bottom, right bottom, center bottom;
+    mask-position: left bottom, right bottom, center bottom;
     opacity: 0.32;
   }
 

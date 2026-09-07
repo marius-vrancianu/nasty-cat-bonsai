@@ -452,14 +452,19 @@ VX, VY, VW, VH = box(trees)
 out = sys.argv[1] if len(sys.argv) > 1 else "tohaku-pines.svg"
 svg = write(out, trees, (VX, VY, VW, VH))
 
-# Two more files for the phone, where the screen is too wide to read whole
-# and the links sit down the middle of it: the dark group alone on one side
-# and the right group alone on the other, so the CSS can stand a cluster at
-# each edge of the band at full height, whole trunks showing, and leave the
-# middle to the links. The pale mist and second rank, which live between
-# the two, are left to the desktop file. Both take the full drawing's
-# vertical range, so at a common height they share one scale.
-SIDES = {"left": section("dark"), "right": section("right")}
+# Three more files for the phone, where the screen is too wide to read
+# whole and the links sit down the middle of it. The two solid groups are
+# split off to stand one at each edge of the band, at full height with
+# whole trunks showing - the dark group on the left, the right group on the
+# right - and everything painted between them in the original composition
+# (the far-left mist, the second rank, the pair behind the dark group, all
+# of them pale) becomes a third file that hangs across the middle behind
+# the pair, faint enough to read the links over. All three take the full
+# drawing's vertical range rather than their own, so at a common height
+# they share one scale: trunks on the same ground line, and the mist still
+# floating above it exactly as it does in the whole screen.
+SIDES = {"left": section("dark"), "right": section("right"),
+         "mist": section("mist", "second", "behind")}
 sides = {}
 for name, group in SIDES.items():
     vb = box(group, y_from=trees)
