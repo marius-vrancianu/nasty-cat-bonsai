@@ -112,20 +112,40 @@ a { color: inherit; }
    script rather than editing the SVG). A background-image in light mode;
    in dark mode the same SVG becomes an alpha mask over the ink color,
    recoloring the #222222 strokes to washi ink while keeping every stroke's
-   transparency. Sized by height, not width, so the crowns clear the nav on
-   any window ratio. (The SVG's viewBox is 1480x880, hence the aspect
-   ratio: the width follows from the height at 58dvh × 1480/880 ≈ 97.5dvh.) */
+   transparency.
+
+   On desktop the screen spans the empty panel beside the hero edge to
+   edge: left = the hero frame's right edge (≈89.14dvh, see .hero-frame),
+   right = the window. No height is given — `aspect-ratio` derives it from
+   that width and the box grows up from `bottom`, so the pines rescale with
+   the window's width, not just its height.
+
+   The trunks stop above the social row rather than running down behind the
+   icons: that row is pinned to the hero frame's bottom edge (4.052dvh) and
+   is as tall as the taller of its icons (clamp(22px, 3.8vh, 34px), see
+   .home-social svg) and its 30px text links — i.e. clamp(30px, 3.8vh,
+   34px) — so the bottom edge sits those two plus a 12px gap up from the
+   window's bottom.
+
+   The SVG's viewBox is cropped to the ink (gen-tohaku-pines.py measures it
+   and prints the numbers), so the leftmost tree sits on the box's left edge
+   and the right group runs off its right edge with no built-in margin;
+   `background-size: 100% 100%` then fills the box exactly, leaving no gap
+   at either side whatever the window's proportions. Keep the aspect-ratio
+   below equal to that viewBox's — matched, the fill is a plain scale; if
+   the two ever drift apart the drawing stretches slightly rather than
+   letterboxing whitespace back in. */
 .home-pines {
   position: absolute;
-  bottom: 4vh;
-  bottom: 4dvh;
+  bottom: calc(100vh * 0.04052 + clamp(30px, 3.8vh, 34px) + 12px);
+  bottom: calc(100dvh * 0.04052 + clamp(30px, 3.8vh, 34px) + 12px);
   right: 0;
-  height: 58vh;
-  height: 58dvh;
-  aspect-ratio: 1480 / 880;
+  left: calc(100vh * 0.8914);
+  left: calc(100dvh * 0.8914);
+  aspect-ratio: 1367 / 785;
   background-image: url("../img/tohaku-pines.svg");
-  background-size: contain;
-  background-position: bottom right;
+  background-size: 100% 100%;
+  background-position: bottom center;
   background-repeat: no-repeat;
   z-index: 0;
   pointer-events: none;
@@ -137,10 +157,10 @@ a { color: inherit; }
   background-color: var(--ink);
   -webkit-mask-image: url("../img/tohaku-pines.svg");
   mask-image: url("../img/tohaku-pines.svg");
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-position: bottom right;
-  mask-position: bottom right;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-position: bottom center;
+  mask-position: bottom center;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   opacity: 0.55;
@@ -254,11 +274,14 @@ a { color: inherit; }
     width: auto;
     height: 230px;
     aspect-ratio: auto;
+    background-size: contain;
     background-position: center top;
     opacity: 0.35;
   }
 
   [data-theme="dark"] .home-pines {
+    -webkit-mask-size: contain;
+    mask-size: contain;
     -webkit-mask-position: center top;
     mask-position: center top;
     opacity: 0.32;
