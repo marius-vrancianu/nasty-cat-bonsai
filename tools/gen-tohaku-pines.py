@@ -10,8 +10,10 @@ opacity - overlapping trees at different opacities give the mist, no blur
 filters; trunks are thick round-capped cubic curves; branches are thinner
 curves that leave the trunk, droop and lift; every branch tip carries a fan
 of a few hundred straight needles radiating over a 40-60 degree arc from a
-small scattered base. Composition coordinates follow the painting in a
-2000 x 880 space (~2.27:1, like the 356 x 156.8 cm screen). All ink is #222,
+small scattered base. Composition coordinates follow the painting, except
+that the empty middle panels are narrowed: the right group sits 250 px
+closer than in the 2000 x 880 layout of the screen, on a 1750 x 880
+canvas. All ink is #222,
 so the file also works as the dark-theme alpha mask. Deterministic per seed;
 standard library only.
 """
@@ -20,7 +22,7 @@ import random
 import sys
 from collections import defaultdict
 
-W, H = 2000, 880
+W, H = 1750, 880
 INK = "#222"
 random.seed(int(sys.argv[2]) if len(sys.argv) > 2 else 11)
 
@@ -32,7 +34,7 @@ def q(v, step):
     return round(round(v / step) * step, 2)
 
 class Tree:
-    """One tree = one <g opacity=...>. All the wood (trunk, branches, roots)
+    """One tree = one <g opacity=...>. All the wood (trunk and branches)
     is a single filled path with fill-rule nonzero, so overlapping pieces
     never darken each other; needles are straight strokes grouped by
     (width, opacity) into shared <path>s to keep the file small."""
@@ -88,10 +90,11 @@ def sample_chain(segs, per_seg=12):
             pts.append(cubic(p0, c1, c2, p3, i / per_seg))
     return pts
 
-def outline(pts, width_at, round_ends=True):
+def outline(pts, width_at, round_ends=True, round_start=None):
     """Closed ring around polyline pts; width_at(t) gives the full width at
-    t in [0, 1]. Ends are rounded. Orientation is always the same relative
-    to the direction of travel, so all rings union under fill-rule nonzero."""
+    t in [0, 1]. Ends are rounded (round_start=False cuts the start flat).
+    Orientation is always the same relative to the direction of travel, so
+    all rings union under fill-rule nonzero."""
     n = len(pts)
     left, right = [], []
     for i, (x, y) in enumerate(pts):
@@ -123,7 +126,9 @@ def outline(pts, width_at, round_ends=True):
             c = math.cos(a)
             arc.append((x + (nxk * -c + cx) * w * sign, y + (nyk * -c + cy) * w * sign))
         return arc
-    ring = left + (cap(n - 1, 1) if round_ends else []) + right[::-1] + (cap(0, -1) if round_ends else [])
+    if round_start is None:
+        round_start = round_ends
+    ring = left + (cap(n - 1, 1) if round_ends else []) + right[::-1] + (cap(0, -1) if round_start else [])
     return ring
 
 def trunk(tree, pts, w0, w1, fade=None):
@@ -133,12 +138,11 @@ def trunk(tree, pts, w0, w1, fade=None):
     chain = sample_chain(catmull(pts), 14)
     def width_at(t):
         w = w0 + (w1 - w0) * t
-        w *= 1 + 0.45 * max(0.0, 1 - t / 0.07) ** 2          # flare at the base
         if fade:
             y = chain[min(len(chain) - 1, int(t * (len(chain) - 1)))][1]
             w *= max(0.0, min(1.0, (fade[1] - y) / (fade[1] - fade[0]))) ** 0.7
         return w
-    tree.shape(outline(chain, width_at))
+    tree.shape(outline(chain, width_at, round_start=False))
     if fade:
         # a few pale streaks continue below the fade, hinting at the trunk
         for _ in range(3):
@@ -257,26 +261,12 @@ def foliage_mass(tree, tpts, cx, cy, w, h, fan_L, wood=(9, 4), n_mult=1.0,
                     L * random.uniform(0.45, 0.7), n=int(L * 0.7 * n_mult), arc=36,
                     width=fan_w, op=(0.4, 0.8), spread=(14, 4))
 
-def roots(tree, x, y, w, n=3):
-    for _ in range(n):
-        s = random.choice((-1, 1))
-        L = random.uniform(28, 70)
-        p0 = (x + s * random.uniform(0, 8), y - random.uniform(0, 12))
-        end = (x + s * L, y + random.uniform(4, 14))
-        c1 = (x + s * L * 0.3, y - random.uniform(4, 14))
-        c2 = (x + s * L * 0.7, y + random.uniform(-6, 8))
-        pts = [cubic(p0, c1, c2, end, i / 8) for i in range(9)]
-        wr = random.uniform(w * 0.6, w * 0.95)
-        tree.shape(outline(pts, lambda t, wr=wr: wr * (1 - 0.75 * t)))
-
 def pine(opacity, tpts, wood=(22, 9), masses=(), fan_L=44, wood_op=0.6, fade=None,
-         n_mult=1.0, root=0, twig_w=4, arc=54, fan_w=(1.4, 4.0), hang=0.5):
+         n_mult=1.0, twig_w=4, arc=54, fan_w=(1.4, 4.0), hang=0.5):
     """A whole tree: trunk polyline tpts (base -> top), widths wood=(base,
     top), and foliage masses (cx, cy, w, h[, fan-length multiplier])."""
     t = Tree(opacity, wood_op)
     trunk(t, tpts, wood[0], wood[1], fade=fade)
-    if root:
-        roots(t, tpts[0][0], tpts[0][1], wood[0] * 0.55, n=root)
     if masses:
         ys = [m[1] for m in masses]
         lo, hi = min(ys), max(ys)
@@ -304,7 +294,7 @@ def pine(opacity, tpts, wood=(22, 9), masses=(), fan_L=44, wood_op=0.6, fade=Non
 trees = []
 
 # ---- far left: the misty group (panels 1-2), four pale overlapping pines
-FAR = dict(fan_L=50, wood_op=0.5, n_mult=0.45, twig_w=3, fan_w=(1.6, 4.5), hang=0.35)
+FAR = dict(fan_L=50, wood_op=0.5, n_mult=0.225, twig_w=3, fan_w=(1.6, 4.5), hang=0.35)
 trees.append(pine(0.16, [(268, 560), (266, 420), (262, 290), (258, 190)], wood=(11, 4),
                   masses=[(262, 195, 120, 44), (248, 250, 150, 52), (274, 308, 130, 46), (266, 352, 90, 34)],
                   fade=(380, 560), **FAR))
@@ -321,7 +311,7 @@ trees.append(pine(0.12, [(420, 520), (416, 400), (410, 290), (404, 240)], wood=(
 
 # ---- second rank: the tall pine peeking above the dark group, and one
 # between the far group and the cluster
-MID = dict(fan_L=46, wood_op=0.6, n_mult=0.6, twig_w=3.5, fan_w=(1.3, 3.6), hang=0.4)
+MID = dict(fan_L=46, wood_op=0.6, n_mult=0.3, twig_w=3.5, fan_w=(1.3, 3.6), hang=0.4)
 trees.append(pine(0.3, [(586, 570), (588, 380), (582, 150), (578, 70)], wood=(12, 5),
                   masses=[(580, 90, 80, 36), (566, 140, 120, 48), (592, 190, 100, 42), (585, 236, 70, 30)],
                   fade=(330, 570), **MID))
@@ -339,64 +329,59 @@ trees.append(pine(0.2, [(1052, 500), (1050, 400), (1048, 262), (1050, 190)], woo
                   fade=(340, 500), **MID))
 
 # ---- the dark group (panels 2-3): four trunks, base -> top
-NEAR = dict(fan_L=46, wood_op=0.55, n_mult=0.85, twig_w=4, fan_w=(1.0, 2.8), hang=0.55)
+NEAR = dict(fan_L=46, wood_op=0.55, n_mult=0.57, twig_w=4, fan_w=(1.0, 2.8), hang=0.55)
 # companions first (behind), the main tree last (on top)
 trees.append(pine(0.6, [(858, 806), (862, 680), (850, 540), (848, 410)], wood=(15, 6),
-                  masses=[(880, 618, 130, 60), (862, 456, 80, 32), (876, 372, 70, 30)],
-                  root=2, **NEAR))
+                  masses=[(880, 618, 130, 60), (862, 456, 80, 32), (876, 372, 70, 30)], **NEAR))
 trees.append(pine(0.7, [(640, 800), (650, 700), (644, 560), (652, 440)], wood=(17, 7),
-                  masses=[(636, 522, 150, 60), (600, 572, 80, 32), (646, 626, 70, 30)],
-                  root=3, **NEAR))
+                  masses=[(636, 522, 150, 60), (600, 572, 80, 32), (646, 626, 70, 30)], **NEAR))
 trees.append(pine(0.8, [(704, 812), (700, 700), (712, 520), (710, 350), (706, 300)], wood=(21, 8),
-                  masses=[(700, 306, 90, 40), (720, 470, 60, 28)],
-                  root=3, **NEAR))
+                  masses=[(700, 306, 90, 40), (720, 470, 60, 28)], **NEAR))
 trees.append(pine(0.92, [(774, 816), (766, 680), (774, 500), (768, 330), (766, 150)], wood=(26, 7),
                   masses=[(766, 150, 90, 42, 0.85), (770, 224, 190, 84), (796, 322, 240, 92),
-                          (742, 402, 115, 44)],
-                  root=4, **NEAR))
+                          (742, 402, 115, 44)], **NEAR))
 
 # ---- right group (panels 5-6)
 # faint one to the left of the group
-trees.append(pine(0.14, [(1670, 480), (1662, 360), (1656, 230), (1650, 190)], wood=(10, 4),
-                  masses=[(1652, 208, 100, 42), (1666, 262, 120, 46)],
-                  fade=(300, 480), **FAR))
+trees.append(pine(0.14, [(1420, 480), (1412, 360), (1406, 230), (1400, 190)], wood=(10, 4),
+                  masses=[(1402, 208, 100, 42), (1416, 262, 120, 46)],
+                  fade=(50, 480), **FAR))
 # tall faint pine behind, crown poking above the main one
-trees.append(pine(0.28, [(1772, 560), (1758, 400), (1745, 170), (1742, 110)], wood=(12, 5),
-                  masses=[(1742, 128, 90, 38), (1735, 182, 130, 48), (1760, 232, 80, 32)],
-                  fade=(340, 560), **MID))
+trees.append(pine(0.28, [(1522, 560), (1508, 400), (1495, 170), (1492, 110)], wood=(12, 5),
+                  masses=[(1492, 128, 90, 38), (1485, 182, 130, 48), (1510, 232, 80, 32)],
+                  fade=(90, 560), **MID))
 # pine at the far right edge
-trees.append(pine(0.26, [(1990, 560), (1980, 420), (1968, 260), (1962, 180)], wood=(12, 5),
-                  masses=[(1962, 200, 90, 38), (1975, 256, 110, 46), (1980, 310, 80, 32)],
-                  fade=(340, 560), **MID))
+trees.append(pine(0.26, [(1740, 560), (1730, 420), (1718, 260), (1712, 180)], wood=(12, 5),
+                  masses=[(1712, 200, 90, 38), (1725, 256, 110, 46), (1730, 310, 80, 32)],
+                  fade=(90, 560), **MID))
 # faint trunk standing behind-left of the main pine
-trees.append(pine(0.3, [(1672, 816), (1682, 640), (1692, 470), (1690, 440)], wood=(14, 7),
-                  masses=[(1672, 480, 90, 38)], **MID))
+trees.append(pine(0.3, [(1422, 816), (1432, 640), (1442, 470), (1440, 440)], wood=(14, 7),
+                  masses=[(1422, 480, 90, 38)], **MID))
 # a thinner companion trunk beside the main one
-trees.append(pine(0.5, [(1846, 812), (1838, 700), (1830, 560), (1826, 520)], wood=(12, 6),
-                  masses=[(1856, 640, 60, 26)], root=2, **NEAR))
+trees.append(pine(0.5, [(1596, 812), (1588, 700), (1580, 560), (1576, 520)], wood=(12, 6),
+                  masses=[(1606, 640, 60, 26)], **NEAR))
 
 # the main right pine: dark crown, leaning trunk, long branch sweeping down-left
-main_r = pine(0.88, [(1892, 816), (1876, 700), (1862, 560), (1842, 390), (1824, 250)], wood=(22, 7),
-              masses=[(1818, 268, 70, 36, 0.85), (1824, 334, 150, 80), (1838, 410, 120, 50),
-                      (1762, 362, 70, 40)],
-              root=4, **NEAR)
+main_r = pine(0.88, [(1642, 816), (1626, 700), (1612, 560), (1592, 390), (1574, 250)], wood=(22, 7),
+              masses=[(1568, 268, 70, 36, 0.85), (1574, 334, 150, 80), (1588, 410, 120, 50),
+                      (1512, 362, 70, 40)], **NEAR)
 # the long sweeping branch, hung with fans along its length
-at = branch(main_r, (1860, 520), (1632, 616), -10, 8, 3, droop=0.12)
+at = branch(main_r, (1610, 520), (1382, 616), -10, 8, 3, droop=0.12)
 for k, t in enumerate((1.0, 0.86, 0.72, 0.58, 0.44, 0.3)):
     px, py = at(t)
     L = 44 * random.uniform(0.85, 1.05)
-    fan(main_r, px, py - 2, -90 - (10 + 16 * t) + random.uniform(-5, 5), L, n=int(L * 1.8), arc=54, width=(1.0, 2.8))
+    fan(main_r, px, py - 2, -90 - (10 + 16 * t) + random.uniform(-5, 5), L, n=int(L * 1.2), arc=54, width=(1.0, 2.8))
     if k % 2 == 0:
         e = twig(main_r, (px + 6, py), random.uniform(16, 30), -90 + random.uniform(-40, 10), 3)
-        fan(main_r, e[0], e[1], -95, L * 0.7, n=int(L * 1.2), arc=48, width=(1.0, 2.8))
+        fan(main_r, e[0], e[1], -95, L * 0.7, n=int(L * 0.8), arc=48, width=(1.0, 2.8))
     else:
         e = twig(main_r, (px, py + 2), random.uniform(18, 34), 90 + random.uniform(-30, 30), 3)
-        fan(main_r, e[0], e[1], -90 + random.uniform(-20, 20), L * 0.75, n=int(L * 1.3), arc=50, width=(1.0, 2.8))
-    fan(main_r, px, py + 4, 95, L * 0.55, n=int(L * 0.7), arc=36, op=(0.4, 0.8), spread=(14, 4), width=(1.0, 2.8))
-at2 = branch(main_r, (1864, 480), (1962, 598), -8, 6, 3, droop=0.1)
+        fan(main_r, e[0], e[1], -90 + random.uniform(-20, 20), L * 0.75, n=int(L * 0.87), arc=50, width=(1.0, 2.8))
+    fan(main_r, px, py + 4, 95, L * 0.55, n=int(L * 0.47), arc=36, op=(0.4, 0.8), spread=(14, 4), width=(1.0, 2.8))
+at2 = branch(main_r, (1614, 480), (1712, 598), -8, 6, 3, droop=0.1)
 for t in (1.0, 0.75, 0.5):
     px, py = at2(t)
-    fan(main_r, px, py - 2, -90 + 12 * t, 40, n=72, arc=52, width=(1.0, 2.8))
+    fan(main_r, px, py - 2, -90 + 12 * t, 40, n=48, arc=52, width=(1.0, 2.8))
 trees.append(main_r)
 
 # ---------------------------------------------------------------- output
