@@ -24,8 +24,8 @@
     "input, textarea { border-color: #9a2104 !important; border-radius: 3px; }" +
     "button { background: transparent !important; border: 1px solid #9a2104 !important;" +
     " border-radius: 3px; color: #9a2104 !important; }" +
-    ".dark input, .dark textarea { border-color: #859239 !important; }" +
-    ".dark button { border-color: #859239 !important; color: #859239 !important; }";
+    ".dark input, .dark textarea { border-color: #86914b !important; }" +
+    ".dark button { border-color: #86914b !important; color: #86914b !important; }";
 
   function injectSkin(iframe) {
     try {
