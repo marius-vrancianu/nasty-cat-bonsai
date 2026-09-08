@@ -384,13 +384,13 @@ a { color: inherit; }
   .home-pines {
     --pine-h: clamp(216px, 62vw, 258px);
     /* The far group's height: 0.91063 (= 1171.9/1286.9, what the painting
-       gives it against the near group) x 0.8 x 1.1 x 1.1 = 0.88149 of
-       --pine-h.
+       gives it against the near group) x 0.8 x 1.1 x 1.1 x 0.9 = 0.79334
+       of --pine-h.
        The 0.8 is a deliberate departure from the shared scale, not a slip:
        hung from the top-right corner it reads as a far corner of the screen
        rather than as a tree standing on the near group's ground, and the
        reduction is what sells the distance. The two 1.1s take it back up a
-       tenth each from there.
+       tenth each from there, and the 0.9 a tenth back down.
 
        The width is NOT the file's own proportion of that height. An earlier
        pass widened the group 15% against the 10% it was heightened, so it
@@ -398,19 +398,28 @@ a { color: inherit; }
        4.55% wider than it is drawn. That is intended; keep the stretch in
        this ratio rather than "fixing" the width back onto the height. (The
        later 10% applies to both, so it leaves the ratio alone.) */
-    --pine-far-h: calc(var(--pine-h) * 0.88149);
+    --pine-far-h: calc(var(--pine-h) * 0.79334);
     --pine-far-w: calc(var(--pine-far-h) * 0.58545);
     --pine-near-ink: 0.36;
     --pine-far-ink: 0.24;
 
     --pine-nav-h: 314px;    /* 296px from 430px up, where the row unwraps */
-    /* The band's height, and with it the near group's: from the framed
-       hero's bottom edge down to the footer icons' top edge. One figure
-       serves both, so the group cannot drift off either edge — it is the
-       band, top and bottom, at every window height. */
+    /* The band's height: from the framed hero's bottom edge down to the
+       footer icons' top edge, at every window height.
+
+       The near group is nine tenths of it, and anchored to the BOTTOM. It
+       was the whole band for a while — pinned to both edges — and shrinking
+       it means one of the two pins has to go. The bottom is the one that
+       stays: the near group's job is to stand on the icons while the far
+       group hangs from the hero, and it is that difference in level, not
+       the sizes, that reads as the asymmetry. So the crown now sits a tenth
+       of the band below the picture instead of touching it, and the two
+       groups' feet are about 102px apart at 393x852 rather than 83px.
+       Shrink it further and the crown drops further; the feet do not move. */
     --pine-band-h: calc(230px + max(0px, 100vh - 100vw * 1.1219
                                          - var(--pine-nav-h)) / 2);
-    --pine-near-w: calc(var(--pine-band-h) * 1.0933);
+    --pine-near-h: calc(var(--pine-band-h) * 0.9);
+    --pine-near-w: calc(var(--pine-near-h) * 1.0933);
 
     top: calc(100vw * 1.1219);
     right: 0;
@@ -471,15 +480,15 @@ a { color: inherit; }
      and the trunks push under the links, too much more and only mist is
      left in frame, which is what a 46% SLIDE used to do here.
 
-     Its height is the band's, exactly: crowns on the framed hero's bottom
-     edge, roots on the footer icons, stretching between the two as the
-     window's height changes. It used to be capped at --pine-h, which kept
-     the scene on one scale with the far group but left the grove sunk away
-     from the picture on a tall window, with paper above its crowns.
+     Its height is nine tenths of the band's, anchored at the bottom: roots
+     on the footer icons at every window height, crown a tenth of the band
+     clear of the picture above. Both figures track the band, so the grove
+     still grows and shrinks with the window rather than sitting at a fixed
+     size.
 
-     The cap's other job is covered by the same change rather than lost: a
-     group that IS the band cannot overflow it, so there is no window short
-     enough to cut the crowns on the band's top edge.
+     Being smaller than the band, it cannot overflow it either, so no window
+     is short enough to cut the crowns on the band's top edge — the job the
+     old --pine-h cap used to do.
 
      What does go is the single scale — the far group is still sized from
      --pine-h and no longer moves, so on a tall window the near group grows
@@ -491,7 +500,7 @@ a { color: inherit; }
      Its lower edge is the band's, so the fade spans the whole box. */
   .home-pines::before {
     background-image: url("../img/tohaku-pines-left.svg");
-    background-size: var(--pine-near-w) var(--pine-band-h);
+    background-size: var(--pine-near-w) var(--pine-near-h);
     background-position: calc(var(--pine-near-w) * -0.45) bottom;
     opacity: var(--pine-near-ink);
     -webkit-mask-image: var(--pine-fade-near);
@@ -588,8 +597,8 @@ a { color: inherit; }
     background-position: 0 0;
     -webkit-mask-image: url("../img/tohaku-pines-left.svg");
     mask-image: url("../img/tohaku-pines-left.svg");
-    -webkit-mask-size: var(--pine-near-w) var(--pine-band-h);
-    mask-size: var(--pine-near-w) var(--pine-band-h);
+    -webkit-mask-size: var(--pine-near-w) var(--pine-near-h);
+    mask-size: var(--pine-near-w) var(--pine-near-h);
     -webkit-mask-position: calc(var(--pine-near-w) * -0.45) bottom;
     mask-position: calc(var(--pine-near-w) * -0.45) bottom;
   }
