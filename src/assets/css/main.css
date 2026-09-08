@@ -194,10 +194,19 @@ a { color: inherit; }
   pointer-events: none;
   /* The traced screen is a wash of soft greys where the drawn backdrop it
      replaces was a few solid masses, so at the panel's scale it lands about
-     40% lighter for the same opacity; 0.8 puts its weight back where the
-     old one sat. Dark mode needs no such lift — masked over the ink color
-     the two measure the same, so 0.55 stays. */
-  opacity: 0.8;
+     40% lighter for the same opacity; the lift here puts its weight back
+     where the old one sat.
+
+     Both figures are set against gen-tohaku-pines.py's CONTRAST curve, which
+     thins the file's pale layers to sharpen the drawing and takes about a
+     quarter of its ink out doing so. Each mode buys that back as opacity —
+     0.8 → 0.9 here, 0.55 → 0.82 masked — which lands both close to their old
+     mean weight over the drawing while the tonal spread grows a fifth in
+     light and half in dark. Dark needed the larger share: over a near-black
+     ground the layers the curve removes were the ones fogging it, and it now
+     carries about the same spread as light rather than two thirds of it.
+     Re-run the script with another CONTRAST and both figures want redoing. */
+  opacity: 0.9;
 }
 
 [data-theme="dark"] .home-pines {
@@ -211,7 +220,7 @@ a { color: inherit; }
   mask-position: bottom center;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  opacity: 0.55;
+  opacity: 0.82;
 }
 
 /* Washi-colored mat around the hero. Stroke width = 5% of the displayed
@@ -408,8 +417,8 @@ a { color: inherit; }
        later 10% applies to both, so it leaves the ratio alone.) */
     --pine-far-h: calc(var(--pine-h) * 0.79334);
     --pine-far-w: calc(var(--pine-far-h) * 0.58545);
-    --pine-near-ink: 0.36;
-    --pine-far-ink: 0.24;
+    --pine-near-ink: 0.41;
+    --pine-far-ink: 0.27;
 
     --pine-nav-h: 314px;    /* 296px from 430px up, where the row unwraps */
     /* The band's height: from the framed hero's bottom edge down to the
@@ -468,8 +477,9 @@ a { color: inherit; }
        edge, which is the framed hero's outer stroke boundary, and the join
        has to be exact — a fade there would leave it floating a few pixels
        clear of the picture. The near group meets the same edge with its
-       palest mist (0.0756 of the ink before the group's own opacity), so it
-       costs nothing to leave that hard too. */
+       palest mist (0.0124 of the ink before the group's own opacity, since
+       the CONTRAST curve thinned it), so it costs nothing to leave that
+       hard too. */
     --pine-fade-near: linear-gradient(to bottom,
                         #000 0, #000 92%, transparent 100%);
     --pine-fade-far: linear-gradient(to bottom,
@@ -592,8 +602,8 @@ a { color: inherit; }
      the two groups a second time, with the desktop file's shape, and the
      band all but disappears. */
   [data-theme="dark"] .home-pines {
-    --pine-near-ink: 0.34;
-    --pine-far-ink: 0.22;
+    --pine-near-ink: 0.51;
+    --pine-far-ink: 0.33;
     background-color: transparent;
     -webkit-mask-image: none;
     mask-image: none;
