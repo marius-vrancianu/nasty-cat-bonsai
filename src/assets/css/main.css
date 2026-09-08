@@ -344,10 +344,10 @@ a { color: inherit; }
      middle of its width, so anchored flush left its trunks would stand
      under the links. It is slid 46% of its own width off the left edge
      instead — the screen continuing past the frame, as a byōbu does. The
-     far group needs no such offset: at four fifths of its painted height it
-     is narrow enough (0.51 x --pine-h in width, against the near group's
-     1.09) to sit flush in the top-right corner and still leave the band's
-     middle to the links.
+     far group needs no such offset: reduced as it is, it stays narrow
+     enough (0.47 x --pine-h in width, against the near group's 1.09) to sit
+     flush in the top-right corner and still leave the band's middle to the
+     links.
 
      The two groups are separate pseudo-elements rather than two background
      layers on one box because they no longer share an opacity; the box
@@ -368,13 +368,21 @@ a { color: inherit; }
      row. */
   .home-pines {
     --pine-h: clamp(216px, 62vw, 258px);
-    /* The far group at four fifths of the height the painting gives it
-       (0.91063 = 1171.9/1286.9 of the near group's), i.e. 0.72850. The 0.8
-       is a deliberate departure from the shared scale, not a slip: hung
-       from the top-right corner it is read as a far corner of the screen
+    /* The far group's height: 0.91063 (= 1171.9/1286.9, what the painting
+       gives it against the near group) x 0.8 x 1.1 = 0.80135 of --pine-h.
+       The 0.8 is a deliberate departure from the shared scale, not a slip:
+       hung from the top-right corner it reads as a far corner of the screen
        rather than as a tree standing on the near group's ground, and the
-       extra reduction is what sells the distance. */
-    --pine-far-h: calc(var(--pine-h) * 0.91063 * 0.8);
+       reduction is what sells the distance. The 1.1 takes it back up a
+       tenth from there.
+
+       The width is NOT derived from that height. The group was widened 15%
+       against the 10% it was heightened, so it no longer holds the file's
+       own 0.56 proportion: 0.56 x 1.15/1.1 = 0.58545, a drawing stretched
+       4.55% wider than it is drawn. That is intended - keep the two factors
+       apart rather than "fixing" the width back onto the height. */
+    --pine-far-h: calc(var(--pine-h) * 0.80135);
+    --pine-far-w: calc(var(--pine-far-h) * 0.58545);
     --pine-near-ink: 0.36;
     --pine-far-ink: 0.24;
 
@@ -437,7 +445,7 @@ a { color: inherit; }
      the point of hanging it here. */
   .home-pines::after {
     background-image: url("../img/tohaku-pines-right.svg");
-    background-size: auto var(--pine-far-h);
+    background-size: var(--pine-far-w) var(--pine-far-h);
     background-position: right top;
     opacity: var(--pine-far-ink);
     /* the fade is cut to the group's own height, not the band's, so it
@@ -498,8 +506,8 @@ a { color: inherit; }
     background-position: right top;
     -webkit-mask-image: url("../img/tohaku-pines-right.svg");
     mask-image: url("../img/tohaku-pines-right.svg");
-    -webkit-mask-size: auto var(--pine-far-h);
-    mask-size: auto var(--pine-far-h);
+    -webkit-mask-size: var(--pine-far-w) var(--pine-far-h);
+    mask-size: var(--pine-far-w) var(--pine-far-h);
     -webkit-mask-position: right top;
     mask-position: right top;
   }
