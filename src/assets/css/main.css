@@ -397,11 +397,12 @@ a { color: inherit; }
     aspect-ratio: auto;
     background-image: none;
     opacity: 1;
-    /* The far group is rotated (see .home-pines::after) and swings ~56px
-       past the window's right edge. A transform overflows its container, so
-       without this the page gains a horizontal scrollbar; the edge it is
-       cut against is the window's own, where the drawing is meant to run
-       off anyway. */
+    /* The far group is rotated (see .home-pines::after). Its ink is shifted
+       back inside the window, but the pseudo-element's own box is the full
+       width of the band and rotating that sweeps its transparent corners
+       past the window's right edge — about 12px of them. Transparent
+       overflow still counts towards the page's scroll width, so without
+       this the page gains a horizontal scrollbar. */
     overflow: hidden;
 
     /* Both files' ink runs to all four edges of their own box, so each
@@ -451,17 +452,34 @@ a { color: inherit; }
      continuing out from behind the picture. It no longer stands on the near
      group's ground line; that is the point of hanging it here.
 
-     It is then turned 15 degrees anticlockwise about that same corner. The
-     rotation has to be a transform on the box — a background image cannot
-     be turned — which is why transform-origin is pinned to the corner the
-     drawing is anchored to: rotating about the box's own centre would swing
-     the group out of the band entirely. With the corner as the pivot the
-     anchor holds and the drawing swings down and right, the far edge
-     passing about 56px beyond the window (the band clips it) and the lowest
-     corner landing around 240px down, inside the band's 258. Both figures
-     move with --pine-h, so a taller band or a larger group needs them
-     re-checked. Its own bottom fade turns with it, since the mask is
-     applied before the transform. */
+     It is then turned 15 degrees anticlockwise. The rotation has to be a
+     transform on the box — a background image cannot be turned — with
+     transform-origin pinned to the corner the drawing is anchored to;
+     rotating about the box's own centre would swing the group out of the
+     band entirely.
+
+     Rotating about that corner alone is not enough, because it pins the
+     BOX's corner while what has to stay put is the INK's. The drawing does
+     not reach its own top-right corner — that part of the trace is empty
+     sky — so a plain rotation drops the crown 0.0818 of the group's height
+     below the band's top edge (the join with the picture visibly opens up)
+     and swings the trunk, which is the drawing's rightmost mass, 0.2545 of
+     that height past the window, where the band's clip eats it.
+
+     The translate below undoes exactly that: the figures are the rotated
+     ink's own bounding box, measured off the rasterised file at several
+     alpha thresholds (they hold to within 0.015 across them), so the
+     topmost ink lands on the band's top edge and the rightmost ink on the
+     window's edge. The horizontal figure is then pulled in 0.0263 from the
+     0.2545 the raw bounding box gives: the last of the trunk is a tail so
+     faint it renders below a tenth of a percent against the paper, and
+     keeping it in frame stood the visible trunk 6px short of the edge.
+     Rotated and shifted, the drawing spans about 150px in from the right
+     and bottoms out around 0.91 of its height, well inside the band. Both
+     figures were checked against the painted pixels rather than the
+     arithmetic, at 320/393/430. Re-measure them if the angle changes — they
+     are specific to 15 degrees. Its own bottom fade turns with it, since
+     the mask is applied before the transform. */
   .home-pines::after {
     background-image: url("../img/tohaku-pines-right.svg");
     background-size: var(--pine-far-w) var(--pine-far-h);
@@ -476,7 +494,9 @@ a { color: inherit; }
     -webkit-mask-position: right top;
     mask-position: right top;
     transform-origin: 100% 0;
-    transform: rotate(-15deg);
+    transform: translate(calc(var(--pine-far-h) * -0.2282),
+                         calc(var(--pine-far-h) * -0.0818))
+               rotate(-15deg);
   }
 
   /* Dark mode: the same two files become alpha masks over the ink colour,
