@@ -458,16 +458,16 @@ a { color: inherit; }
   }
 
   /* Near group: 1.0933 x its height wide, and standing at the left edge of
-     the window with 40% of its width cropped off. The crop and the flush
+     the window with 45% of its width cropped off. The crop and the flush
      edge are one declaration: the box's left edge is the window's, so
-     positioning the drawing at -40% of its own width puts that 40% outside
+     positioning the drawing at -45% of its own width puts that 45% outside
      the box, where it is not painted.
 
      The figure is a crop, not an offset — the drawing is anchored at the
      window's left edge and loses what falls outside it, rather than being
      slid leftwards with its far side still notionally in the layout. The
      grove carries its mist on its left and its trunks in the middle of its
-     width, so the 40% takes the mist and leaves the trunks; too much less
+     width, so the 45% takes the mist and leaves the trunks; too much less
      and the trunks push under the links, too much more and only mist is
      left in frame, which is what a 46% SLIDE used to do here.
 
@@ -478,7 +478,7 @@ a { color: inherit; }
   .home-pines::before {
     background-image: url("../img/tohaku-pines-left.svg");
     background-size: var(--pine-near-w) var(--pine-near-h);
-    background-position: calc(var(--pine-near-w) * -0.4) bottom;
+    background-position: calc(var(--pine-near-w) * -0.45) bottom;
     opacity: var(--pine-near-ink);
     -webkit-mask-image: var(--pine-fade-near);
     mask-image: var(--pine-fade-near);
@@ -576,8 +576,8 @@ a { color: inherit; }
     mask-image: url("../img/tohaku-pines-left.svg");
     -webkit-mask-size: var(--pine-near-w) var(--pine-near-h);
     mask-size: var(--pine-near-w) var(--pine-near-h);
-    -webkit-mask-position: calc(var(--pine-near-w) * -0.4) bottom;
-    mask-position: calc(var(--pine-near-w) * -0.4) bottom;
+    -webkit-mask-position: calc(var(--pine-near-w) * -0.45) bottom;
+    mask-position: calc(var(--pine-near-w) * -0.45) bottom;
   }
 
   [data-theme="dark"] .home-pines::after {
