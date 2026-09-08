@@ -12,7 +12,9 @@
   --ink: #222222;            /* primary text */
   --rust: #9a2104;           /* headings, icons (from the hero title) */
   --rust-hover: #a5361f;     /* link hover accent */
-  --olive: #515b36;          /* secondary accent (olive drab), 5.26:1 on washi */
+  --olive: #6e764e;          /* secondary accent (olive drab) — one shade in
+                                 both themes; 3.49:1 on this paper, 3.31:1 on
+                                 the dark theme's ink. See the note below. */
   --hairline: rgba(28, 26, 23, 0.12);
   --hairline-strong: rgba(28, 26, 23, 0.2);
   --font: "Proza Libre", Georgia, serif;
@@ -26,11 +28,20 @@
    tuned to sit just past WCAG AA (≥ 4.5:1) against the #222222 paper —
    don't darken them without rechecking contrast.
 
-   The two accents sit at the same lightness and are told apart by hue
-   alone, as the teal pair they replaced was: --rust is the warm
-   yellow-olive of the palette anchor (H≈55), --olive the cooler moss
-   drab (H≈76). Keep that hue gap if you retune either — matching their
-   lightness is what makes the focus states read as a change. */
+   --olive no longer tracks the theme: it is one shade, #6e764e, on both
+   grounds. That is deliberate, and it costs contrast — no single colour
+   can clear AA against both #e3dbca paper and #222222 ink at once. The
+   best any single shade can do against both is 3.40:1, and #6e764e is
+   within a whisker of that ceiling (3.49 light, 3.31 dark). So it is
+   sound for the focus rings and the .cdn-frame hatching, which answer to
+   the 3:1 non-text threshold, but the five places that set it as running
+   text — .post blockquote p, .post-figure figcaption, .blog-filter-status,
+   .gallery-status, .lightbox-tree — sit below the 4.5:1 AA needs at their
+   13-15px. Reintroduce a per-theme token for those if that matters more
+   than the single shade does.
+
+   --rust keeps its own warmer olive (H≈55) and is much the lighter of the
+   two in dark mode, so the pair still reads as two colours. */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
@@ -38,7 +49,7 @@
   --ink: #d7cab0;
   --rust: #928d5b;       /* 4.68:1 on #222222 */
   --rust-hover: #a19b68; /* 5.61:1 */
-  --olive: #859658;      /* 4.93:1 — captions, quotes, hovers */
+  --olive: #6e764e;      /* 3.31:1 — same shade as the light theme */
   --hairline: rgba(215, 202, 176, 0.16);
   --hairline-strong: rgba(215, 202, 176, 0.28);
 }
