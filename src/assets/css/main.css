@@ -448,10 +448,18 @@ a { color: inherit; }
     --pine-fade-far: linear-gradient(to bottom,
                        #000 0, #000 82%, transparent 100%);
 
-    /* The near group fades in from the window's left edge over exactly the
-       width of the framed hero's stroke above it (4.545vw — the same figure
-       .hero-frame pads by), so the grove starts where the picture's mat
-       ends rather than running hard into the edge.
+    /* The near group fades in from the window's left edge. The ramp began
+       as exactly the framed hero's stroke above it (4.545vw — the figure
+       .hero-frame pads by) and is now half again as wide, so it is no
+       longer flush with the mat: it starts on the same edge and runs 50%
+       past where the picture's mat ends.
+
+       It also holds FULL transparency across its first 30% before ramping,
+       rather than climbing from the edge. The two together carry 1.95x the
+       transparency of the plain ramp over the stroke's width — the area
+       under (1 − alpha), which is the honest way to measure "how much
+       fade" is in a gradient, since the endpoint was already transparent
+       and had nothing left to give.
 
        This one DOES live on the band, and it is the reason the two fades
        above cannot: a group needs a vertical fade and a horizontal one at
@@ -461,8 +469,11 @@ a { color: inherit; }
        applies to what its children have already painted — so the
        intersection comes out without the composite. The far group is
        nowhere near this edge, so it is untouched. */
+    --pine-edge-w: calc(100vw * 0.04545 * 1.5);
     --pine-fade-edge: linear-gradient(to right,
-                        transparent 0, #000 calc(100vw * 0.04545));
+                        transparent 0,
+                        transparent calc(var(--pine-edge-w) * 0.3),
+                        #000 var(--pine-edge-w));
     -webkit-mask-image: var(--pine-fade-edge);
     mask-image: var(--pine-fade-edge);
     -webkit-mask-size: 100% 100%;
