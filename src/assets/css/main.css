@@ -382,6 +382,14 @@ a { color: inherit; }
      property is USED, and it takes the whole declaration down with it
      rather than falling back to the line above. */
   .home-pines {
+    /* The scale the far group is drawn at, and the pattern both groups
+       follow: sized from the viewport's WIDTH and clamped at both ends,
+       never from its height. A drawing that grows when the window gets
+       taller reads as a backdrop stretching rather than a tree at a
+       distance, and it undoes the difference in level the two groups exist
+       to create — so no size in this band may depend on the window's
+       height. The band's own height still does, but that is where the
+       drawing SITS, not how big it is. */
     --pine-h: clamp(216px, 62vw, 258px);
     /* The far group's height: 0.91063 (= 1171.9/1286.9, what the painting
        gives it against the near group) x 0.8 x 1.1 x 1.1 x 0.9 = 0.79334
@@ -407,18 +415,28 @@ a { color: inherit; }
     /* The band's height: from the framed hero's bottom edge down to the
        footer icons' top edge, at every window height.
 
-       The near group is nine tenths of it, and anchored to the BOTTOM. It
-       was the whole band for a while — pinned to both edges — and shrinking
-       it means one of the two pins has to go. The bottom is the one that
-       stays: the near group's job is to stand on the icons while the far
-       group hangs from the hero, and it is that difference in level, not
-       the sizes, that reads as the asymmetry. So the crown now sits a tenth
-       of the band below the picture instead of touching it, and the two
-       groups' feet are about 102px apart at 393x852 rather than 83px.
-       Shrink it further and the crown drops further; the feet do not move. */
+       The band is the only thing here that follows the window, and it must:
+       it is what keeps the near group's roots on the icons wherever the
+       icons end up. The DRAWING inside it does not follow — see
+       --pine-near-h below.
+
+       The near group is sized from the WIDTH like the far one — see
+       --pine-near-h — and anchored to the BOTTOM. It was a fraction of the
+       band for a while, which tied its size to the window's height; nothing
+       does that any more. The bottom is the anchor that stays because the
+       near group's job is to stand on the icons while the far group hangs
+       from the hero, and it is that difference in level that reads as the
+       asymmetry. Only the crown moves as the band changes; the feet never
+       do. */
     --pine-band-h: calc(230px + max(0px, 100vh - 100vw * 1.1219
                                          - var(--pine-nav-h)) / 2);
-    --pine-near-h: calc(var(--pine-band-h) * 0.9);
+    /* Sized from the width, like --pine-h, but on its own curve so the near
+       group stays the larger of the two. The 228px ceiling is not taste: the
+       band is only 230px tall when the page has no spare height — the
+       ordinary case on a phone — and the band clips, so a taller drawing
+       would lose its crown to the band's top edge exactly there. Raise this
+       only alongside that 230. */
+    --pine-near-h: clamp(190px, 58vw, 228px);
     --pine-near-w: calc(var(--pine-near-h) * 1.0933);
 
     top: calc(100vw * 1.1219);
@@ -480,15 +498,14 @@ a { color: inherit; }
      and the trunks push under the links, too much more and only mist is
      left in frame, which is what a 46% SLIDE used to do here.
 
-     Its height is nine tenths of the band's, anchored at the bottom: roots
-     on the footer icons at every window height, crown a tenth of the band
-     clear of the picture above. Both figures track the band, so the grove
-     still grows and shrinks with the window rather than sitting at a fixed
-     size.
+     Its height comes from the viewport's width (--pine-near-h) and is
+     anchored at the bottom: roots on the footer icons at every window
+     height, crown wherever that leaves it. Nothing about its size follows
+     the window's height.
 
-     Being smaller than the band, it cannot overflow it either, so no window
-     is short enough to cut the crowns on the band's top edge — the job the
-     old --pine-h cap used to do.
+     Being shorter than the shortest band, it cannot overflow it either, so
+     no window is short enough to cut the crowns on the band's top edge —
+     the job the old --pine-h cap used to do.
 
      What does go is the single scale — the far group is still sized from
      --pine-h and no longer moves, so on a tall window the near group grows
