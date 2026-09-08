@@ -8,11 +8,13 @@
      sets data-theme="dark" on <html>. */
   color-scheme: only light;
 
-  --washi: #f2ece0;          /* warm paper background */
+  --washi: #e3dbca;          /* warm paper background */
   --ink: #222222;            /* primary text */
   --rust: #9a2104;           /* headings, icons (from the hero title) */
   --rust-hover: #a5361f;     /* link hover accent */
-  --teal: #2e6b6b;           /* secondary accent (broken pot) */
+  --olive: #6e764e;          /* secondary accent (olive drab) — one shade in
+                                 both themes; 3.49:1 on this paper, 3.31:1 on
+                                 the dark theme's ink. See the note below. */
   --hairline: rgba(28, 26, 23, 0.12);
   --hairline-strong: rgba(28, 26, 23, 0.2);
   --font: "Proza Libre", Georgia, serif;
@@ -22,17 +24,32 @@
 
 /* Dark scheme: paper and ink swap — paper takes the light theme's ink
    color, ink lightens to a washi tone, and the rust accent becomes a
-   soft plant-y teal (the light theme keeps its rust). Both teals are
+   soft military olive (the light theme keeps its rust). Both olives are
    tuned to sit just past WCAG AA (≥ 4.5:1) against the #222222 paper —
-   don't darken them without rechecking contrast. */
+   don't darken them without rechecking contrast.
+
+   --olive no longer tracks the theme: it is one shade, #6e764e, on both
+   grounds. That is deliberate, and it costs contrast — no single colour
+   can clear AA against both #e3dbca paper and #222222 ink at once. The
+   best any single shade can do against both is 3.40:1, and #6e764e is
+   within a whisker of that ceiling (3.49 light, 3.31 dark). So it is
+   sound for the focus rings and the .cdn-frame hatching, which answer to
+   the 3:1 non-text threshold, but the five places that set it as running
+   text — .post blockquote p, .post-figure figcaption, .blog-filter-status,
+   .gallery-status, .lightbox-tree — sit below the 4.5:1 AA needs at their
+   13-15px. Reintroduce a per-theme token for those if that matters more
+   than the single shade does.
+
+   --rust keeps its own warmer olive (H≈55) and is much the lighter of the
+   two in dark mode, so the pair still reads as two colours. */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
   --washi: #222222;
   --ink: #d7cab0;
-  --rust: #2d9c7c;       /* 4.67:1 on #222222 */
-  --rust-hover: #36ac88; /* 5.62:1 */
-  --teal: #449c9c;       /* 4.91:1 — captions, quotes, hovers */
+  --rust: #928d5b;       /* 4.68:1 on #222222 */
+  --rust-hover: #a19b68; /* 5.61:1 */
+  --olive: #6e764e;      /* 3.31:1 — same shade as the light theme */
   --hairline: rgba(215, 202, 176, 0.16);
   --hairline-strong: rgba(215, 202, 176, 0.28);
 }
@@ -107,38 +124,83 @@ a { color: inherit; }
   user-select: none;
 }
 
-/* Pine backdrop. A background-image in light mode; in dark mode the same
-   SVG becomes an alpha mask over the ink color, recoloring the #222222
-   strokes to washi ink while keeping every stroke's transparency.
-   (The SVG's viewBox is 900x1000, hence the aspect ratio.) */
+/* Pine backdrop — Hasegawa Tōhaku's "Pine Trees" screen as a vector
+   (tohaku-pines.svg, cut from the traced painting by
+   tools/gen-tohaku-pines.py; re-run that script rather than editing the
+   SVG). A background-image in light mode; in dark mode the same SVG becomes
+   an alpha mask over the ink color, recoloring the #222222 strokes to washi
+   ink while keeping every stroke's transparency.
+
+   On desktop the screen spans the empty panel beside the hero edge to
+   edge: flush to the window on the right, and as wide as the panel — the
+   window less the hero frame (≈89.14dvh, see .hero-frame). No height is
+   given — `aspect-ratio` derives it from that width and the box grows up
+   from `bottom`, so the pines rescale with the window's width, not just its
+   height.
+
+   On a wide, short window that panel is wide enough to make the box taller
+   than the window, and the crowns run off the top. So the width is a min()
+   of the panel and the width the ratio allows in the height there is: past
+   that point the pines stop filling the panel and stay whole instead,
+   leaving washi between them and the hero rather than a beheaded pine at
+   the window's top edge. The height they are allowed is the window less the
+   frame's stroke at the top (so the drawing tops out level with the nav's
+   first link) and less the box's own offset from the bottom.
+
+   The trunks stop above the social row rather than running down behind the
+   icons: that row is pinned to the hero frame's bottom edge (4.052dvh) and
+   is as tall as the taller of its icons (clamp(22px, 3.8vh, 34px), see
+   .home-social svg) and its 30px text links — i.e. clamp(30px, 3.8vh,
+   34px) — so the bottom edge sits those two plus a 12px gap up from the
+   window's bottom.
+
+   The SVG's viewBox is cut to the drawing (gen-tohaku-pines.py measures it
+   and prints the numbers), so the leftmost tree sits on the box's left edge,
+   the right group runs off its right edge with no built-in margin, and the
+   tall pale crowns reach the top edge — the screen's bare middle panels are
+   squeezed out to bring the two groups that close, and nothing is cropped to
+   reach a ratio. `background-size: 100% 100%` then fills the box exactly,
+   leaving no gap at either side whatever the window's proportions. So the
+   aspect-ratio below is not a design choice but the drawing's own, and must
+   be kept equal to the viewBox's — matched, the fill is a plain scale; if
+   the two ever drift apart the drawing stretches slightly rather than
+   letterboxing whitespace back in. */
 .home-pines {
   position: absolute;
-  bottom: 0;
+  bottom: calc(100vh * 0.04052 + clamp(30px, 3.8vh, 34px) + 12px);
+  bottom: calc(100dvh * 0.04052 + clamp(30px, 3.8vh, 34px) + 12px);
   right: 0;
-  height: 100vh;
-  height: 100dvh;
-  aspect-ratio: 900 / 1000;
-  background-image: url("../img/pine-trees.svg");
-  background-size: contain;
-  background-position: bottom right;
+  width: min(100% - 100vh * 0.8914,
+             (100vh * 0.91896 - clamp(30px, 3.8vh, 34px) - 12px) * 2000 / 1287);
+  width: min(100% - 100dvh * 0.8914,
+             (100dvh * 0.91896 - clamp(30px, 3.8vh, 34px) - 12px) * 2000 / 1287);
+  aspect-ratio: 2000 / 1287;
+  background-image: url("../img/tohaku-pines.svg");
+  background-size: 100% 100%;
+  background-position: bottom center;
   background-repeat: no-repeat;
   z-index: 0;
   pointer-events: none;
-  transform: rotate(-10deg);
-  transform-origin: bottom right;
+  /* The traced screen is a wash of soft greys where the drawn backdrop it
+     replaces was a few solid masses, so at the panel's scale it lands about
+     40% lighter for the same opacity; 0.8 puts its weight back where the
+     old one sat. Dark mode needs no such lift — masked over the ink color
+     the two measure the same, so 0.55 stays. */
+  opacity: 0.8;
 }
 
 [data-theme="dark"] .home-pines {
   background-image: none;
   background-color: var(--ink);
-  -webkit-mask-image: url("../img/pine-trees.svg");
-  mask-image: url("../img/pine-trees.svg");
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-position: bottom right;
-  mask-position: bottom right;
+  -webkit-mask-image: url("../img/tohaku-pines.svg");
+  mask-image: url("../img/tohaku-pines.svg");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-position: bottom center;
+  mask-position: bottom center;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
+  opacity: 0.55;
 }
 
 /* Washi-colored mat around the hero. Stroke width = 5% of the displayed
@@ -214,7 +276,7 @@ a { color: inherit; }
 }
 
 .home-social a:hover,
-.home-social a:focus-visible { color: var(--teal); }
+.home-social a:focus-visible { color: var(--olive); }
 
 .home-social svg {
   width: clamp(22px, 3.8vh, 34px);
@@ -233,14 +295,71 @@ a { color: inherit; }
     flex-direction: column;
   }
 
-  /* Pines stay, subtly: anchored bottom-right, reaching up to the framed
-     hero's bottom edge (frame height ≈ 112.19vw, see .hero-frame math). */
+  /* Pines become the backdrop behind the three links, as the screen's own
+     two groups standing either side of them: the near group
+     (tohaku-pines-left.svg) on the left, the far one
+     (tohaku-pines-right.svg) on the right. Both sit with their roots on the
+     band's bottom edge, and because every file ends at the drawing's one
+     ground line they stand level even though each fills the band at its own
+     scale. The far group is sized to the band's full height, crown on its
+     top edge; the near one to 92% of it, so its crown stops a little short
+     of the top and it reads as the smaller of the two. The far group starts lower
+     in the painting than the near one, so were the two cut to a shared top
+     it would spend 9% of the band on empty sky and read small; cut to its
+     own it comes up a tenth larger and reaches the top.
+
+     The band is 258px: the nav's own height — its 20px top padding, three
+     60px links with 4px gaps, then the social row's 4px gap and 18px margin,
+     230px in all — plus the 12% the crowns add. Trees sized to the nav's
+     230px alone would stand a tenth shorter than the old backdrop's, since
+     that height would now have to hold the crowns too, so the extra goes on
+     at the bottom instead: the ground line drops behind the social row,
+     where the drawing is roots and faint ground and the icons read straight
+     through it. Everything above it — where the links are — is unchanged.
+
+     The widths follow from each group's own height (1.092x and 0.559x it,
+     see gen-tohaku-pines.py's output): the near group is 259px wide at its
+     237px height, the far one 144px at the band's full 258px. The near
+     group carries its mist on its left and its dark trees in the middle of
+     that width, so anchored flush left its trunks would stand under the
+     links. It is slid 101px off the left edge instead — the screen
+     continuing past the frame, as a byōbu does — which keeps its trunks
+     out from under the links and leaves the middle of the band to them. The
+     far group is inset 14px from the right edge rather than run flush to
+     it, so the two groups stand a little closer in and the band's clear
+     middle stays centered on the links.
+
+     The band starts at the framed hero's bottom edge (frame height ≈
+     112.19vw, see the .hero-frame math) and stops just above the social
+     row. It is 230px tall — the nav's 20px top padding, three 60px links
+     with 4px gaps, then the social row's own 4px gap and 18px margin — and
+     that height comes from type size, not viewport width, so it holds as
+     the screen widens. */
   .home-pines {
     top: calc(100vw * 1.1219);
-    bottom: 0;
-    height: auto;
-    opacity: 0.3;
-    transform: none;
+    right: 0;
+    bottom: auto;
+    left: 0;
+    width: auto;
+    height: 258px;
+    aspect-ratio: auto;
+    background-image: url("../img/tohaku-pines-left.svg"),
+                      url("../img/tohaku-pines-right.svg");
+    background-size: auto 92%, auto 100%;
+    background-position: -100.96px bottom, right 14.42px bottom 0;
+    opacity: 0.35;
+  }
+
+  [data-theme="dark"] .home-pines {
+    -webkit-mask-image: url("../img/tohaku-pines-left.svg"),
+                        url("../img/tohaku-pines-right.svg");
+    mask-image: url("../img/tohaku-pines-left.svg"),
+                url("../img/tohaku-pines-right.svg");
+    -webkit-mask-size: auto 92%, auto 100%;
+    mask-size: auto 92%, auto 100%;
+    -webkit-mask-position: -100.96px bottom, right 14.42px bottom 0;
+    mask-position: -100.96px bottom, right 14.42px bottom 0;
+    opacity: 0.32;
   }
 
   /* Full-width frame: stroke = 5% of image width with the frame spanning
@@ -314,7 +433,7 @@ a { color: inherit; }
 }
 
 .theme-toggle:hover,
-.theme-toggle:focus-visible { color: var(--teal); }
+.theme-toggle:focus-visible { color: var(--olive); }
 
 .theme-toggle .icon-sun { display: none; }
 
@@ -390,7 +509,7 @@ a { color: inherit; }
 }
 
 .footer-nav a:hover,
-.footer-nav a:focus-visible { color: var(--teal); }
+.footer-nav a:focus-visible { color: var(--olive); }
 
 /* Phones: the nav words take their own centered row, everything else
    fits on one tight row beneath — two quiet lines in total. */
@@ -410,7 +529,7 @@ a { color: inherit; }
 }
 
 .site-footer a:hover,
-.site-footer a:focus-visible { color: var(--teal); }
+.site-footer a:focus-visible { color: var(--olive); }
 
 /* ==========================================================================
    Long-form text (about page, posts)
@@ -461,7 +580,7 @@ a { color: inherit; }
 
 .post blockquote p {
   font-style: italic;
-  color: var(--teal);
+  color: var(--olive);
 }
 
 .post-date {
@@ -476,7 +595,7 @@ a { color: inherit; }
 
 .post-figure figcaption {
   font-size: 14px;
-  color: var(--teal);
+  color: var(--olive);
   margin-top: 10px;
   line-height: 1.5;
 }
@@ -533,7 +652,7 @@ a { color: inherit; }
   border: 1px solid var(--hairline);
   background-image: repeating-linear-gradient(
     135deg,
-    var(--teal) 0px, var(--teal) 2px,
+    var(--olive) 0px, var(--olive) 2px,
     var(--washi) 2px, var(--washi) 18px
   );
   overflow: hidden;
@@ -601,7 +720,7 @@ a { color: inherit; }
 
 .blog-filter-status {
   font-size: 15px;
-  color: var(--teal);
+  color: var(--olive);
   margin: -12px 0 28px;
 }
 
@@ -686,7 +805,7 @@ a { color: inherit; }
 }
 
 .tag-chip:hover,
-.tag-chip:focus-visible { color: var(--teal); border-color: var(--teal); }
+.tag-chip:focus-visible { color: var(--olive); border-color: var(--olive); }
 
 @media (max-width: 520px) {
   .post-card-thumb { flex-basis: 100%; width: 100%; }
@@ -774,7 +893,7 @@ a { color: inherit; }
 
 .gallery-status {
   font-size: 15px;
-  color: var(--teal);
+  color: var(--olive);
   padding: 8px 0 40px;
 }
 
@@ -895,7 +1014,7 @@ html.lightbox-open body {
 
 .lightbox-species { color: var(--rust); font-size: 20px; }
 .lightbox-meta    { font-size: 14px; margin-top: 4px; }
-.lightbox-tree    { font-size: 13px; margin-top: 6px; color: var(--teal); font-style: italic; }
+.lightbox-tree    { font-size: 13px; margin-top: 6px; color: var(--olive); font-style: italic; }
 .lightbox-notes   { font-size: 15px; margin-top: 10px; line-height: 1.6; }
 
 /* ==========================================================================
@@ -951,7 +1070,7 @@ html.lightbox-open body {
 }
 
 .consent-decline:hover,
-.consent-decline:focus-visible { color: var(--teal); border-color: var(--teal); }
+.consent-decline:focus-visible { color: var(--olive); border-color: var(--olive); }
 
 .cookie-settings {
   font: inherit;
@@ -965,11 +1084,11 @@ html.lightbox-open body {
 }
 
 .cookie-settings:hover,
-.cookie-settings:focus-visible { color: var(--teal); }
+.cookie-settings:focus-visible { color: var(--olive); }
 
 .consent-text a { color: var(--rust); }
 .consent-text a:hover,
-.consent-text a:focus-visible { color: var(--teal); }
+.consent-text a:focus-visible { color: var(--olive); }
 
 .footer-text-link {
   font-size: 13px;

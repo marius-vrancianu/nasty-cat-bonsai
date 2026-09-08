@@ -29,7 +29,7 @@
     // Mobile browser chrome tint follows the theme (values mirror --washi).
     var themeColor = document.querySelector('meta[name="theme-color"]');
     if (themeColor) {
-      themeColor.content = theme === "dark" ? "#222222" : "#f2ece0";
+      themeColor.content = theme === "dark" ? "#222222" : "#e3dbca";
     }
 
     // Keep the Cusdis comments widget in step, if present.
