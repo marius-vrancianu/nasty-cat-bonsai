@@ -369,19 +369,21 @@ a { color: inherit; }
   .home-pines {
     --pine-h: clamp(216px, 62vw, 258px);
     /* The far group's height: 0.91063 (= 1171.9/1286.9, what the painting
-       gives it against the near group) x 0.8 x 1.1 = 0.80135 of --pine-h.
+       gives it against the near group) x 0.8 x 1.1 x 1.1 = 0.88149 of
+       --pine-h.
        The 0.8 is a deliberate departure from the shared scale, not a slip:
        hung from the top-right corner it reads as a far corner of the screen
        rather than as a tree standing on the near group's ground, and the
-       reduction is what sells the distance. The 1.1 takes it back up a
-       tenth from there.
+       reduction is what sells the distance. The two 1.1s take it back up a
+       tenth each from there.
 
-       The width is NOT derived from that height. The group was widened 15%
-       against the 10% it was heightened, so it no longer holds the file's
-       own 0.56 proportion: 0.56 x 1.15/1.1 = 0.58545, a drawing stretched
-       4.55% wider than it is drawn. That is intended - keep the two factors
-       apart rather than "fixing" the width back onto the height. */
-    --pine-far-h: calc(var(--pine-h) * 0.80135);
+       The width is NOT the file's own proportion of that height. An earlier
+       pass widened the group 15% against the 10% it was heightened, so it
+       sits at 0.56 x 1.15/1.1 = 0.58545 of its height - a drawing stretched
+       4.55% wider than it is drawn. That is intended; keep the stretch in
+       this ratio rather than "fixing" the width back onto the height. (The
+       later 10% applies to both, so it leaves the ratio alone.) */
+    --pine-far-h: calc(var(--pine-h) * 0.88149);
     --pine-far-w: calc(var(--pine-far-h) * 0.58545);
     --pine-near-ink: 0.36;
     --pine-far-ink: 0.24;
@@ -395,6 +397,12 @@ a { color: inherit; }
     aspect-ratio: auto;
     background-image: none;
     opacity: 1;
+    /* The far group is rotated (see .home-pines::after) and swings ~56px
+       past the window's right edge. A transform overflows its container, so
+       without this the page gains a horizontal scrollbar; the edge it is
+       cut against is the window's own, where the drawing is meant to run
+       off anyway. */
+    overflow: hidden;
 
     /* Both files' ink runs to all four edges of their own box, so each
        group's lower edge would otherwise cut roots along an invisible
@@ -437,12 +445,23 @@ a { color: inherit; }
     mask-size: 100% 100%;
   }
 
-  /* Far group: 0.56 x its own (smaller) height wide, hung from the band's
-     top-right corner — flush to the window on the right, and with its top
-     on the band's top edge, which is exactly the framed hero's outer
-     stroke boundary, so the screen reads as continuing out from behind the
-     picture. It no longer stands on the near group's ground line; that is
-     the point of hanging it here. */
+  /* Far group: hung from the band's top-right corner — flush to the window
+     on the right, and with its top on the band's top edge, which is exactly
+     the framed hero's outer stroke boundary, so the screen reads as
+     continuing out from behind the picture. It no longer stands on the near
+     group's ground line; that is the point of hanging it here.
+
+     It is then turned 15 degrees anticlockwise about that same corner. The
+     rotation has to be a transform on the box — a background image cannot
+     be turned — which is why transform-origin is pinned to the corner the
+     drawing is anchored to: rotating about the box's own centre would swing
+     the group out of the band entirely. With the corner as the pivot the
+     anchor holds and the drawing swings down and right, the far edge
+     passing about 56px beyond the window (the band clips it) and the lowest
+     corner landing around 240px down, inside the band's 258. Both figures
+     move with --pine-h, so a taller band or a larger group needs them
+     re-checked. Its own bottom fade turns with it, since the mask is
+     applied before the transform. */
   .home-pines::after {
     background-image: url("../img/tohaku-pines-right.svg");
     background-size: var(--pine-far-w) var(--pine-far-h);
@@ -456,6 +475,8 @@ a { color: inherit; }
     mask-size: 100% var(--pine-far-h);
     -webkit-mask-position: right top;
     mask-position: right top;
+    transform-origin: 100% 0;
+    transform: rotate(-15deg);
   }
 
   /* Dark mode: the same two files become alpha masks over the ink colour,
