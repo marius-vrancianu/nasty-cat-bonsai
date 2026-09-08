@@ -447,61 +447,6 @@ a { color: inherit; }
                         #000 0, #000 92%, transparent 100%);
     --pine-fade-far: linear-gradient(to bottom,
                        #000 0, #000 82%, transparent 100%);
-
-    /* The near group fades in from the window's left edge. The ramp began
-       as exactly the framed hero's stroke above it (4.545vw — the figure
-       .hero-frame pads by) and is now half again as wide, so it is no
-       longer flush with the mat: it starts on the same edge and runs 50%
-       past where the picture's mat ends.
-
-       It holds FULL transparency for its first 2.045vw, unchanged from when
-       that level was settled, and eases from there rather than ramping in a
-       straight line. Both matter to how gradual it reads, and the easing is
-       the less obvious half: a two-stop gradient's alpha has a CORNER at
-       each stop, and the eye finds those corners as edges (Mach bands) even
-       when the ramp is wide. Widening a straight ramp alone would have
-       moved the hard line rather than removed it.
-
-       CSS interpolates linearly between stops, so the ease is drawn as a
-       smoothstep — t²(3−2t) — sampled at eighths. Nine stops keep the
-       piecewise approximation within about 0.01 of the true curve, which is
-       far below what banding needs to show. Its derivative is zero at both
-       ends, so it leaves the plateau and reaches full ink without a corner
-       at either join.
-
-       The ramp runs to 3x the stroke's width, well past the mat, which is
-       what the width alone is for. It carries 1.77x the transparency of the
-       1.5x linear ramp before it — the area under (1 − alpha) — so the
-       grove IS lighter overall, not merely softer at the seam; that is
-       unavoidable in widening it, and the level at the edge itself is
-       untouched.
-
-       This one DOES live on the band, and it is the reason the two fades
-       above cannot: a group needs a vertical fade and a horizontal one at
-       once, and a single gradient cannot do both directions. Two mask
-       layers with mask-composite could, but a mask on the band composes
-       with each pseudo-element's own mask for free — the band's mask
-       applies to what its children have already painted — so the
-       intersection comes out without the composite. The far group is
-       nowhere near this edge, so it is untouched. */
-    --pine-edge-w: calc(100vw * 0.04545 * 3);      /* ramp ends here */
-    --pine-edge-p: calc(100vw * 0.04545 * 0.45);   /* plateau ends here */
-    --pine-edge-s: calc(var(--pine-edge-w) - var(--pine-edge-p));
-    --pine-fade-edge: linear-gradient(to right,
-      rgba(0, 0, 0, 0)     0,
-      rgba(0, 0, 0, 0)     var(--pine-edge-p),
-      rgba(0, 0, 0, 0.043) calc(var(--pine-edge-p) + var(--pine-edge-s) * 0.125),
-      rgba(0, 0, 0, 0.156) calc(var(--pine-edge-p) + var(--pine-edge-s) * 0.25),
-      rgba(0, 0, 0, 0.316) calc(var(--pine-edge-p) + var(--pine-edge-s) * 0.375),
-      rgba(0, 0, 0, 0.5)   calc(var(--pine-edge-p) + var(--pine-edge-s) * 0.5),
-      rgba(0, 0, 0, 0.684) calc(var(--pine-edge-p) + var(--pine-edge-s) * 0.625),
-      rgba(0, 0, 0, 0.844) calc(var(--pine-edge-p) + var(--pine-edge-s) * 0.75),
-      rgba(0, 0, 0, 0.957) calc(var(--pine-edge-p) + var(--pine-edge-s) * 0.875),
-      rgba(0, 0, 0, 1)     var(--pine-edge-w));
-    -webkit-mask-image: var(--pine-fade-edge);
-    mask-image: var(--pine-fade-edge);
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
   }
 
   .home-pines::before,
@@ -624,12 +569,8 @@ a { color: inherit; }
     --pine-near-ink: 0.34;
     --pine-far-ink: 0.22;
     background-color: transparent;
-    -webkit-mask-image: var(--pine-fade-edge);
-    mask-image: var(--pine-fade-edge);
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
-    -webkit-mask-position: 0 0;
-    mask-position: 0 0;
+    -webkit-mask-image: none;
+    mask-image: none;
     opacity: 1;
   }
 
