@@ -404,20 +404,20 @@ a { color: inherit; }
     --pine-far-ink: 0.24;
 
     --pine-nav-h: 314px;    /* 296px from 430px up, where the row unwraps */
-    --pine-near-h: min(var(--pine-h),
-                       calc(230px + max(0px, 100vh - 100vw * 1.1219
-                                             - var(--pine-nav-h)) / 2));
-    --pine-near-w: calc(var(--pine-near-h) * 1.0933);
+    /* The band's height, and with it the near group's: from the framed
+       hero's bottom edge down to the footer icons' top edge. One figure
+       serves both, so the group cannot drift off either edge — it is the
+       band, top and bottom, at every window height. */
+    --pine-band-h: calc(230px + max(0px, 100vh - 100vw * 1.1219
+                                         - var(--pine-nav-h)) / 2);
+    --pine-near-w: calc(var(--pine-band-h) * 1.0933);
 
     top: calc(100vw * 1.1219);
     right: 0;
     bottom: auto;
     left: 0;
     width: auto;
-    height: calc(230px + max(0px, 100vh - 100vw * 1.1219
-                                  - var(--pine-nav-h)) / 2);
-    height: calc(230px + max(0px, 100dvh - 100vw * 1.1219
-                                  - var(--pine-nav-h)) / 2);
+    height: var(--pine-band-h);
     aspect-ratio: auto;
     background-image: none;
     opacity: 1;
@@ -447,6 +447,26 @@ a { color: inherit; }
                         #000 0, #000 92%, transparent 100%);
     --pine-fade-far: linear-gradient(to bottom,
                        #000 0, #000 82%, transparent 100%);
+
+    /* The near group fades in from the window's left edge over exactly the
+       width of the framed hero's stroke above it (4.545vw — the same figure
+       .hero-frame pads by), so the grove starts where the picture's mat
+       ends rather than running hard into the edge.
+
+       This one DOES live on the band, and it is the reason the two fades
+       above cannot: a group needs a vertical fade and a horizontal one at
+       once, and a single gradient cannot do both directions. Two mask
+       layers with mask-composite could, but a mask on the band composes
+       with each pseudo-element's own mask for free — the band's mask
+       applies to what its children have already painted — so the
+       intersection comes out without the composite. The far group is
+       nowhere near this edge, so it is untouched. */
+    --pine-fade-edge: linear-gradient(to right,
+                        transparent 0, #000 calc(100vw * 0.04545));
+    -webkit-mask-image: var(--pine-fade-edge);
+    mask-image: var(--pine-fade-edge);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
   }
 
   .home-pines::before,
@@ -471,13 +491,27 @@ a { color: inherit; }
      and the trunks push under the links, too much more and only mist is
      left in frame, which is what a 46% SLIDE used to do here.
 
-     Its height is the band's, capped at --pine-h so the scene keeps one
-     scale with the far group; the cap is what stops the crowns being cut
-     by the band's top edge on a window too short for the full height.
+     Its height is the band's, exactly: crowns on the framed hero's bottom
+     edge, roots on the footer icons, stretching between the two as the
+     window's height changes. It used to be capped at --pine-h, which kept
+     the scene on one scale with the far group but left the grove sunk away
+     from the picture on a tall window, with paper above its crowns.
+
+     The cap's other job is covered by the same change rather than lost: a
+     group that IS the band cannot overflow it, so there is no window short
+     enough to cut the crowns on the band's top edge.
+
+     What does go is the single scale — the far group is still sized from
+     --pine-h and no longer moves, so on a tall window the near group grows
+     past it (about 14% larger than the shared figure at 393x852). That
+     reads as MORE depth, not less, since it is the near group that grows;
+     the inversion this whole arrangement exists to prevent would be the far
+     group growing instead. Keep it that way round.
+
      Its lower edge is the band's, so the fade spans the whole box. */
   .home-pines::before {
     background-image: url("../img/tohaku-pines-left.svg");
-    background-size: var(--pine-near-w) var(--pine-near-h);
+    background-size: var(--pine-near-w) var(--pine-band-h);
     background-position: calc(var(--pine-near-w) * -0.45) bottom;
     opacity: var(--pine-near-ink);
     -webkit-mask-image: var(--pine-fade-near);
@@ -555,8 +589,12 @@ a { color: inherit; }
     --pine-near-ink: 0.34;
     --pine-far-ink: 0.22;
     background-color: transparent;
-    -webkit-mask-image: none;
-    mask-image: none;
+    -webkit-mask-image: var(--pine-fade-edge);
+    mask-image: var(--pine-fade-edge);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
     opacity: 1;
   }
 
@@ -574,8 +612,8 @@ a { color: inherit; }
     background-position: 0 0;
     -webkit-mask-image: url("../img/tohaku-pines-left.svg");
     mask-image: url("../img/tohaku-pines-left.svg");
-    -webkit-mask-size: var(--pine-near-w) var(--pine-near-h);
-    mask-size: var(--pine-near-w) var(--pine-near-h);
+    -webkit-mask-size: var(--pine-near-w) var(--pine-band-h);
+    mask-size: var(--pine-near-w) var(--pine-band-h);
     -webkit-mask-position: calc(var(--pine-near-w) * -0.45) bottom;
     mask-position: calc(var(--pine-near-w) * -0.45) bottom;
   }
@@ -669,7 +707,7 @@ a { color: inherit; }
   .home-pines { --pine-nav-h: 296px; }
 }
 
-/* The dvh half of the fallback for --pine-near-h. It cannot be written as a
+/* The dvh half of the fallback for --pine-band-h. It cannot be written as a
    second declaration next to the vh one the way a real property can: a
    custom property swallows any unit at parse time and only fails when it is
    used, and a var() that fails there does not fall back to the declaration
@@ -678,9 +716,8 @@ a { color: inherit; }
 @supports (height: 1dvh) {
   @media (max-width: 767px) {
     .home-pines {
-      --pine-near-h: min(var(--pine-h),
-                         calc(230px + max(0px, 100dvh - 100vw * 1.1219
-                                               - var(--pine-nav-h)) / 2));
+      --pine-band-h: calc(230px + max(0px, 100dvh - 100vw * 1.1219
+                                           - var(--pine-nav-h)) / 2);
     }
   }
 }
