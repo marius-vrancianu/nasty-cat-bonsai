@@ -354,18 +354,33 @@ a { color: inherit; }
      itself carries only the fade that keeps the drawing from being sliced
      by its own edges (see below).
 
-     The band is 258px: the nav's own height — its 20px top padding, three
-     60px links with 4px gaps, then the social row's 4px gap and 18px margin,
-     230px in all — plus the 12% the crowns add. Trees sized to the nav's
-     230px alone would stand a tenth shorter than the old backdrop's, since
-     that height would now have to hold the crowns too, so the extra goes on
-     at the bottom instead: the ground line drops behind the social row,
-     where the drawing is roots and faint ground and the icons read straight
-     through it. Everything above it — where the links are — is unchanged.
-
      The band starts at the framed hero's bottom edge (frame height ≈
-     112.19vw, see the .hero-frame math) and stops just above the social
-     row. */
+     112.19vw, see the .hero-frame math) and ENDS ON THE FOOTER ICONS' TOP
+     EDGE, so the near group, which is anchored to the band's bottom, stands
+     on the icons rather than behind them.
+
+     That edge has to be computed, because the icons no longer sit at a
+     fixed offset: the social row centres itself in whatever height the page
+     has spare (see .home-social), so it moves with the window. The
+     arithmetic:
+
+       icons' top  =  230px + spare/2   below the band's top
+       spare       =  100dvh − 112.19vw − the nav's natural height
+
+     230px is the nav's own top padding (20) + three 60px links + their
+     three 4px gaps + the social row's 18px padding — measured identical at
+     every width from 320 to 767. The nav's natural height is 314px, except
+     that "cookie settings" stops wrapping to two lines at exactly 430px and
+     it becomes 296px, which is what --pine-nav-h carries. Both were
+     measured off the live page, not derived; re-measure them if the link
+     type, the icon size or the row's contents change. An error here is
+     halved before it reaches the band, since only spare/2 is used.
+
+     The formula is spelt out twice, in vh and dvh — the usual fallback —
+     and once more inside @supports below, because a custom property cannot
+     use that trick: an unsupported unit inside one is only caught when the
+     property is USED, and it takes the whole declaration down with it
+     rather than falling back to the line above. */
   .home-pines {
     --pine-h: clamp(216px, 62vw, 258px);
     /* The far group's height: 0.91063 (= 1171.9/1286.9, what the painting
@@ -388,12 +403,21 @@ a { color: inherit; }
     --pine-near-ink: 0.36;
     --pine-far-ink: 0.24;
 
+    --pine-nav-h: 314px;    /* 296px from 430px up, where the row unwraps */
+    --pine-near-h: min(var(--pine-h),
+                       calc(230px + max(0px, 100vh - 100vw * 1.1219
+                                             - var(--pine-nav-h)) / 2));
+    --pine-near-w: calc(var(--pine-near-h) * 1.0933);
+
     top: calc(100vw * 1.1219);
     right: 0;
     bottom: auto;
     left: 0;
     width: auto;
-    height: 258px;
+    height: calc(230px + max(0px, 100vh - 100vw * 1.1219
+                                  - var(--pine-nav-h)) / 2);
+    height: calc(230px + max(0px, 100dvh - 100vw * 1.1219
+                                  - var(--pine-nav-h)) / 2);
     aspect-ratio: auto;
     background-image: none;
     opacity: 1;
@@ -433,12 +457,21 @@ a { color: inherit; }
     background-repeat: no-repeat;
   }
 
-  /* near group: 1.0933 x its height wide, slid 46% of that off the left.
+  /* Near group: 1.0933 x its height wide, and standing at the left edge of
+     the window with 5% of its width cropped off. The crop and the flush
+     edge are one declaration: the box's left edge is the window's, so
+     positioning the drawing at -5% of its own width puts that 5% outside
+     the box, where it is not painted. It used to be slid 46% off instead,
+     which hid the grove's dark trunks and left only mist in the frame.
+
+     Its height is the band's, capped at --pine-h so the scene keeps one
+     scale with the far group; the cap is what stops the crowns being cut
+     by the band's top edge on a window too short for the full height.
      Its lower edge is the band's, so the fade spans the whole box. */
   .home-pines::before {
     background-image: url("../img/tohaku-pines-left.svg");
-    background-size: auto var(--pine-h);
-    background-position: calc(var(--pine-h) * 1.0933 * -0.46) bottom;
+    background-size: var(--pine-near-w) var(--pine-near-h);
+    background-position: calc(var(--pine-near-w) * -0.05) bottom;
     opacity: var(--pine-near-ink);
     -webkit-mask-image: var(--pine-fade-near);
     mask-image: var(--pine-fade-near);
@@ -534,10 +567,10 @@ a { color: inherit; }
     background-position: 0 0;
     -webkit-mask-image: url("../img/tohaku-pines-left.svg");
     mask-image: url("../img/tohaku-pines-left.svg");
-    -webkit-mask-size: auto var(--pine-h);
-    mask-size: auto var(--pine-h);
-    -webkit-mask-position: calc(var(--pine-h) * 1.0933 * -0.46) bottom;
-    mask-position: calc(var(--pine-h) * 1.0933 * -0.46) bottom;
+    -webkit-mask-size: var(--pine-near-w) var(--pine-near-h);
+    mask-size: var(--pine-near-w) var(--pine-near-h);
+    -webkit-mask-position: calc(var(--pine-near-w) * -0.05) bottom;
+    mask-position: calc(var(--pine-near-w) * -0.05) bottom;
   }
 
   [data-theme="dark"] .home-pines::after {
@@ -618,6 +651,31 @@ a { color: inherit; }
   }
 
   .home-social svg { width: 26px; height: 26px; }
+}
+
+/* From 430px up the social row's "cookie settings" stops wrapping to two
+   lines, so the nav is 18px shorter and the page has that much more spare
+   height to share out. .home-pines' band, which ends on the icons, has to
+   know. (A separate rule rather than one nested in the block above: plain
+   CSS cannot put @media inside @media.) */
+@media (min-width: 430px) and (max-width: 767px) {
+  .home-pines { --pine-nav-h: 296px; }
+}
+
+/* The dvh half of the fallback for --pine-near-h. It cannot be written as a
+   second declaration next to the vh one the way a real property can: a
+   custom property swallows any unit at parse time and only fails when it is
+   used, and a var() that fails there does not fall back to the declaration
+   above it — it leaves the property unset. So the dvh form is gated on
+   support instead, and browsers without dvh keep the vh form. */
+@supports (height: 1dvh) {
+  @media (max-width: 767px) {
+    .home-pines {
+      --pine-near-h: min(var(--pine-h),
+                         calc(230px + max(0px, 100dvh - 100vw * 1.1219
+                                               - var(--pine-nav-h)) / 2));
+    }
+  }
 }
 
 /* ==========================================================================
