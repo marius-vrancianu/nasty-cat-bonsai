@@ -12,9 +12,7 @@
   --ink: #222222;            /* primary text */
   --rust: #9a2104;           /* headings, icons (from the hero title) */
   --rust-hover: #a5361f;     /* link hover accent */
-  --olive: #6e764e;          /* secondary accent (olive drab) — one shade in
-                                 both themes; 3.49:1 on this paper, 3.31:1 on
-                                 the dark theme's ink. See the note below. */
+  --olive: #545b3c;          /* secondary accent, 5.19:1 on the paper */
   --hairline: rgba(28, 26, 23, 0.12);
   --hairline-strong: rgba(28, 26, 23, 0.2);
   --font: "Proza Libre", Georgia, serif;
@@ -28,28 +26,39 @@
    tuned to sit just past WCAG AA (≥ 4.5:1) against the #222222 paper —
    don't darken them without rechecking contrast.
 
-   --olive no longer tracks the theme: it is one shade, #6e764e, on both
-   grounds. That is deliberate, and it costs contrast — no single colour
-   can clear AA against both #e3dbca paper and #222222 ink at once. The
-   best any single shade can do against both is 3.40:1, and #6e764e is
-   within a whisker of that ceiling (3.49 light, 3.31 dark). So it is
-   sound for the focus rings and the .cdn-frame hatching, which answer to
-   the 3:1 non-text threshold, but the five places that set it as running
-   text — .post blockquote p, .post-figure figcaption, .blog-filter-status,
-   .gallery-status, .lightbox-tree — sit below the 4.5:1 AA needs at their
-   13-15px. Reintroduce a per-theme token for those if that matters more
-   than the single shade does.
+   Every olive in the palette — this theme's three and the light theme's
+   one — is the same green, H=72 S=20, taken from #6e764e. They differ
+   only in lightness, and each is solved to the contrast it wants against
+   its own ground rather than to a shared hex: one colour cannot clear AA
+   on both #e3dbca paper and #222222 ink, since the best any single shade
+   manages against both at once is 3.40:1.
 
-   --rust keeps its own warmer olive (H≈55) and is much the lighter of the
-   two in dark mode, so the pair still reads as two colours. */
+   The three dark shades are ordered by how much contrast their job needs,
+   which is why the secondary accent is the brightest of them and not the
+   dimmest:
+
+     --rust        4.69:1  headings and links, large or inline
+     --rust-hover  6.19:1  a clear step up from --rust on hover
+     --olive       7.50:1  13-15px captions, quotes and status lines
+
+   Small text needs more contrast than large text to read as easily — the
+   same reason AA asks 4.5:1 of body copy and only 3:1 of headings — so
+   the captions sit above the headings here by design.
+
+   That ordering also buys back the focus states. They work by swapping
+   --rust for --olive, so the two must not land on the same luminance:
+   they are 1.60:1 apart now, against the 1.05:1 they sat at while both
+   were mid-tone, and the swap reads as a real change. Keep a gap there if
+   you retune either. In the light theme the same swap crosses from rust
+   red to olive, so hue carries it. */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
   --washi: #222222;
   --ink: #d7cab0;
-  --rust: #928d5b;       /* 4.68:1 on #222222 */
-  --rust-hover: #a19b68; /* 5.61:1 */
-  --olive: #6e764e;      /* 3.31:1 — same shade as the light theme */
+  --rust: #87905f;       /* 4.69:1 on #222222 */
+  --rust-hover: #9da679; /* 6.19:1 */
+  --olive: #aeb690;      /* 7.50:1 */
   --hairline: rgba(215, 202, 176, 0.16);
   --hairline-strong: rgba(215, 202, 176, 0.28);
 }
@@ -322,9 +331,12 @@ a { color: inherit; }
      237px height, the far one 144px at the band's full 258px. The near
      group carries its mist on its left and its dark trees in the middle of
      that width, so anchored flush left its trunks would stand under the
-     links. It is slid 101px off the left edge instead — the screen
+     links. It is slid 83px off the left edge instead — the screen
      continuing past the frame, as a byōbu does — which keeps its trunks
-     out from under the links and leaves the middle of the band to them. The
+     out from under the links and leaves the middle of the band to them.
+     That offset puts its right edge at 176px, midway between where the
+     group ended before it was cut to 92% (194px) and where the cut alone
+     left it (158px). The
      far group is inset 14px from the right edge rather than run flush to
      it, so the two groups stand a little closer in and the band's clear
      middle stays centered on the links.
@@ -346,7 +358,7 @@ a { color: inherit; }
     background-image: url("../img/tohaku-pines-left.svg"),
                       url("../img/tohaku-pines-right.svg");
     background-size: auto 92%, auto 100%;
-    background-position: -100.96px bottom, right 14.42px bottom 0;
+    background-position: -83.21px bottom, right 14.42px bottom 0;
     opacity: 0.35;
   }
 
@@ -357,8 +369,8 @@ a { color: inherit; }
                 url("../img/tohaku-pines-right.svg");
     -webkit-mask-size: auto 92%, auto 100%;
     mask-size: auto 92%, auto 100%;
-    -webkit-mask-position: -100.96px bottom, right 14.42px bottom 0;
-    mask-position: -100.96px bottom, right 14.42px bottom 0;
+    -webkit-mask-position: -83.21px bottom, right 14.42px bottom 0;
+    mask-position: -83.21px bottom, right 14.42px bottom 0;
     opacity: 0.32;
   }
 
