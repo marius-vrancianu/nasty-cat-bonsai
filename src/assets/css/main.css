@@ -8,11 +8,11 @@
      sets data-theme="dark" on <html>. */
   color-scheme: only light;
 
-  --washi: #f2ece0;          /* warm paper background */
+  --washi: #e3dbca;          /* warm paper background */
   --ink: #222222;            /* primary text */
   --rust: #9a2104;           /* headings, icons (from the hero title) */
   --rust-hover: #a5361f;     /* link hover accent */
-  --olive: #5b663c;          /* secondary accent (olive drab) */
+  --olive: #515b36;          /* secondary accent (olive drab), 5.26:1 on washi */
   --hairline: rgba(28, 26, 23, 0.12);
   --hairline-strong: rgba(28, 26, 23, 0.2);
   --font: "Proza Libre", Georgia, serif;
