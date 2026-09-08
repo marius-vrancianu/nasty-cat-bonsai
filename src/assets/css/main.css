@@ -322,9 +322,12 @@ a { color: inherit; }
      237px height, the far one 144px at the band's full 258px. The near
      group carries its mist on its left and its dark trees in the middle of
      that width, so anchored flush left its trunks would stand under the
-     links. It is slid 101px off the left edge instead — the screen
+     links. It is slid 83px off the left edge instead — the screen
      continuing past the frame, as a byōbu does — which keeps its trunks
-     out from under the links and leaves the middle of the band to them. The
+     out from under the links and leaves the middle of the band to them.
+     That offset puts its right edge at 176px, midway between where the
+     group ended before it was cut to 92% (194px) and where the cut alone
+     left it (158px). The
      far group is inset 14px from the right edge rather than run flush to
      it, so the two groups stand a little closer in and the band's clear
      middle stays centered on the links.
@@ -346,7 +349,7 @@ a { color: inherit; }
     background-image: url("../img/tohaku-pines-left.svg"),
                       url("../img/tohaku-pines-right.svg");
     background-size: auto 92%, auto 100%;
-    background-position: -100.96px bottom, right 14.42px bottom 0;
+    background-position: -83.21px bottom, right 14.42px bottom 0;
     opacity: 0.35;
   }
 
@@ -357,8 +360,8 @@ a { color: inherit; }
                 url("../img/tohaku-pines-right.svg");
     -webkit-mask-size: auto 92%, auto 100%;
     mask-size: auto 92%, auto 100%;
-    -webkit-mask-position: -100.96px bottom, right 14.42px bottom 0;
-    mask-position: -100.96px bottom, right 14.42px bottom 0;
+    -webkit-mask-position: -83.21px bottom, right 14.42px bottom 0;
+    mask-position: -83.21px bottom, right 14.42px bottom 0;
     opacity: 0.32;
   }
 
