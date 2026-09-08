@@ -309,22 +309,23 @@ a { color: inherit; }
   /* Pines become the backdrop behind the three links, as the screen's own
      two groups standing either side of them: the near group
      (tohaku-pines-left.svg) on the left, the far one
-     (tohaku-pines-right.svg) on the right. Both sit with their roots on the
-     band's bottom edge — every file ends at the drawing's one ground line —
-     and, crucially, both are drawn to ONE scale, the way they stand in the
-     painting.
+     (tohaku-pines-right.svg) hung from the top right. The near group stands
+     with its roots on the band's bottom edge, where the file's own ground
+     line puts them; the far group does not stand on that ground at all —
+     it hangs from the band's top edge, which is the framed hero's outer
+     stroke boundary, and runs flush to the window on the right.
 
-     That shared scale is --pine-h: the height the near group takes. The far
-     group starts lower in the screen and is 0.9106 as tall (1171.9 of the
-     near group's 1286.9 source units), so it is sized to 91.06% of the same
-     figure rather than to the band's own height. Sizing each group to a
-     fraction of the band instead — which is what this rule used to do, 92%
-     for the near group and 100% for the far one — draws the far group 19%
-     LARGER than the near one and inverts the screen's depth: the distant
-     pine comes out the biggest, coarsest thing on the page and the near
-     grove reads as a smudge. The 9% of the band the far group leaves empty
-     above its crown is the painting's own sky, not waste. Keep the two
-     bound to one figure; never give them separate heights.
+     Both are still sized from ONE figure, --pine-h, the height the near
+     group takes. The far group is 0.9106 as tall as the near one in the
+     painting (1171.9 of its 1286.9 source units) and is then taken to four
+     fifths of that again, so its height stays tied to the near group's
+     rather than floating free. Sizing each group to a fraction of the BAND
+     instead — which is what this rule used to do, 92% for the near group
+     and 100% for the far one — draws the far group 19% LARGER than the near
+     one and inverts the screen's depth: the distant pine comes out the
+     biggest, coarsest thing on the page and the near grove reads as a
+     smudge. Whatever else changes here, keep the two bound to one figure;
+     never give them separate heights.
 
      Aerial recession does the rest of the work: the far group carries less
      mist than the near one in the trace — its ink is nearly all the one
@@ -343,9 +344,10 @@ a { color: inherit; }
      middle of its width, so anchored flush left its trunks would stand
      under the links. It is slid 46% of its own width off the left edge
      instead — the screen continuing past the frame, as a byōbu does. The
-     far group is inset 4vw from the right rather than run flush to it, so
-     the two stand a little closer in and the band's clear middle stays
-     centered on the links.
+     far group needs no such offset: at four fifths of its painted height it
+     is narrow enough (0.51 x --pine-h in width, against the near group's
+     1.09) to sit flush in the top-right corner and still leave the band's
+     middle to the links.
 
      The two groups are separate pseudo-elements rather than two background
      layers on one box because they no longer share an opacity; the box
@@ -366,8 +368,13 @@ a { color: inherit; }
      row. */
   .home-pines {
     --pine-h: clamp(216px, 62vw, 258px);
-    /* the far group's height, as the painting has it: 1171.9/1286.9 */
-    --pine-far-h: calc(var(--pine-h) * 0.91063);
+    /* The far group at four fifths of the height the painting gives it
+       (0.91063 = 1171.9/1286.9 of the near group's), i.e. 0.72850. The 0.8
+       is a deliberate departure from the shared scale, not a slip: hung
+       from the top-right corner it is read as a far corner of the screen
+       rather than as a tree standing on the near group's ground, and the
+       extra reduction is what sells the distance. */
+    --pine-far-h: calc(var(--pine-h) * 0.91063 * 0.8);
     --pine-near-ink: 0.36;
     --pine-far-ink: 0.24;
 
@@ -381,18 +388,24 @@ a { color: inherit; }
     background-image: none;
     opacity: 1;
 
-    /* Both files' ink runs to all four edges of their own box, so without
-       this the band's top and bottom edges cut crowns and roots along an
-       invisible straight line — most visibly a dark root mark left sitting
-       under the social row. The fade dissolves the last few percent at each
-       end into the washi instead. It sits on the box, not on the groups, so
-       it applies over both and over the dark theme's own masks alike. */
-    --pine-fade: linear-gradient(to bottom,
-                   transparent 0, #000 7%, #000 92%, transparent 100%);
-    -webkit-mask-image: var(--pine-fade);
-    mask-image: var(--pine-fade);
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
+    /* Both files' ink runs to all four edges of their own box, so each
+       group's lower edge would otherwise cut roots along an invisible
+       straight line — for the near group a dark root mark under the social
+       row, for the far group, hung clear of the ground, a stray mark left
+       hanging in mid-band. Each fades at its OWN lower edge instead (see
+       the two rules below), which is why the fade cannot live here on the
+       band: the two edges are in different places now.
+
+       Neither fades at the top: the far group is hung from the band's top
+       edge, which is the framed hero's outer stroke boundary, and the join
+       has to be exact — a fade there would leave it floating a few pixels
+       clear of the picture. The near group meets the same edge with its
+       palest mist (0.0756 of the ink before the group's own opacity), so it
+       costs nothing to leave that hard too. */
+    --pine-fade-near: linear-gradient(to bottom,
+                        #000 0, #000 92%, transparent 100%);
+    --pine-fade-far: linear-gradient(to bottom,
+                       #000 0, #000 82%, transparent 100%);
   }
 
   .home-pines::before,
@@ -403,25 +416,48 @@ a { color: inherit; }
     background-repeat: no-repeat;
   }
 
-  /* near group: 1.0933 x its height wide, slid 46% of that off the left */
+  /* near group: 1.0933 x its height wide, slid 46% of that off the left.
+     Its lower edge is the band's, so the fade spans the whole box. */
   .home-pines::before {
     background-image: url("../img/tohaku-pines-left.svg");
     background-size: auto var(--pine-h);
     background-position: calc(var(--pine-h) * 1.0933 * -0.46) bottom;
     opacity: var(--pine-near-ink);
+    -webkit-mask-image: var(--pine-fade-near);
+    mask-image: var(--pine-fade-near);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
   }
 
-  /* far group: 0.56 x its own (smaller) height wide, inset from the right */
+  /* Far group: 0.56 x its own (smaller) height wide, hung from the band's
+     top-right corner — flush to the window on the right, and with its top
+     on the band's top edge, which is exactly the framed hero's outer
+     stroke boundary, so the screen reads as continuing out from behind the
+     picture. It no longer stands on the near group's ground line; that is
+     the point of hanging it here. */
   .home-pines::after {
     background-image: url("../img/tohaku-pines-right.svg");
     background-size: auto var(--pine-far-h);
-    background-position: right 4vw bottom;
+    background-position: right top;
     opacity: var(--pine-far-ink);
+    /* the fade is cut to the group's own height, not the band's, so it
+       lands on the drawing's lower edge wherever that falls */
+    -webkit-mask-image: var(--pine-fade-far);
+    mask-image: var(--pine-fade-far);
+    -webkit-mask-size: 100% var(--pine-far-h);
+    mask-size: 100% var(--pine-far-h);
+    -webkit-mask-position: right top;
+    mask-position: right top;
   }
 
   /* Dark mode: the same two files become alpha masks over the ink colour,
-     one per pseudo-element. The box's own fade still applies on top. */
-  /* The desktop dark rule ([data-theme=...] .home-pines) outranks the
+     one per pseudo-element. That takes each group's mask slot, so the fade
+     at its lower edge cannot also be a mask here — it moves into the fill
+     instead: the ink is painted as a gradient that runs out at the same
+     percentage, which the group's own mask then cuts to the drawing. Same
+     result, one mask layer.
+
+     The desktop dark rule ([data-theme=...] .home-pines) outranks the
      mobile .home-pines rule above, so the box's ink fill and its whole-
      drawing mask have to be undone here by name — left in place they mask
      the two groups a second time, with the desktop file's shape, and the
@@ -430,24 +466,23 @@ a { color: inherit; }
     --pine-near-ink: 0.34;
     --pine-far-ink: 0.22;
     background-color: transparent;
-    -webkit-mask-image: var(--pine-fade);
-    mask-image: var(--pine-fade);
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
-    -webkit-mask-position: 0 0;
-    mask-position: 0 0;
+    -webkit-mask-image: none;
+    mask-image: none;
     opacity: 1;
   }
 
   [data-theme="dark"] .home-pines::before,
   [data-theme="dark"] .home-pines::after {
-    background-image: none;
-    background-color: var(--ink);
+    background-color: transparent;
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
   }
 
   [data-theme="dark"] .home-pines::before {
+    background-image: linear-gradient(to bottom,
+                        var(--ink) 0, var(--ink) 92%, transparent 100%);
+    background-size: 100% 100%;
+    background-position: 0 0;
     -webkit-mask-image: url("../img/tohaku-pines-left.svg");
     mask-image: url("../img/tohaku-pines-left.svg");
     -webkit-mask-size: auto var(--pine-h);
@@ -457,12 +492,16 @@ a { color: inherit; }
   }
 
   [data-theme="dark"] .home-pines::after {
+    background-image: linear-gradient(to bottom,
+                        var(--ink) 0, var(--ink) 82%, transparent 100%);
+    background-size: 100% var(--pine-far-h);
+    background-position: right top;
     -webkit-mask-image: url("../img/tohaku-pines-right.svg");
     mask-image: url("../img/tohaku-pines-right.svg");
     -webkit-mask-size: auto var(--pine-far-h);
     mask-size: auto var(--pine-far-h);
-    -webkit-mask-position: right 4vw bottom;
-    mask-position: right 4vw bottom;
+    -webkit-mask-position: right top;
+    mask-position: right top;
   }
 
   /* Full-width frame: stroke = 5% of image width with the frame spanning
