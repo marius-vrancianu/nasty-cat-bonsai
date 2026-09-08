@@ -78,12 +78,21 @@ INK = "#222"
 # one bent.
 MIST_LEVELS = 5
 
-# What the back pines keep of their own coverage. Below 1 only because the
-# CSS opacities went up to pay for the front trees: the pines are wanted at
-# the tone they had, and 0.72 against main.css's 0.95 and 0.80 lands them
-# within a sixth of it in both modes (0.86 of it on paper, 1.05 masked).
-# Raising the CSS opacities without lowering this fogs the drawing again.
-MIST_KEEP = 0.72
+# What the back pines are painted at, as a multiple of their own coverage in
+# the trace. Two figures are worth knowing before touching it: 1 paints them
+# at the coverage the trace gives them, and 0.72 is where that lands them at
+# the tone the *painting* has once main.css's 0.95 and 0.80 are applied - the
+# raised opacities have to be divided back out, or the pines come up with the
+# trees. 1.44 is that painting-matched figure doubled, which is a deliberate
+# emphasis rather than a match: the back pines carry the depth here, and the
+# screen wants them read as trees rather than glimpsed.
+#
+# It is not free. The five levels below the knee draw the halo around the
+# front trees as well as the back pines - tone cannot tell the two apart -
+# so raising this softens the front trees' edges by the same factor. At 1.44
+# that costs a little; past about 1.8 the halo reads as a wash between the
+# branch masses and the depth the emphasis was buying goes back out.
+MIST_GAIN = 1.44
 
 # How hard the front trees are sharpened. Above the knee the levels are put
 # through an S-curve of this strength - 0 leaves them evenly spaced, 1 is a
@@ -271,15 +280,15 @@ def bend(cum, knee):
     """The tone curve: hold the back pines, sharpen the front trees.
 
     At or below the knee - the top of the back pines' range - coverage is
-    only scaled by MIST_KEEP, so those levels keep their spacing and lose
-    just what the raised CSS opacities give back. Above it the remaining
+    only scaled by MIST_GAIN, so those levels keep their spacing and move
+    together, up or down. Above it the remaining
     levels are stretched across what is left and run through an S-curve of
     strength FRONT_S, which spreads the front trees' midtones and closes up
     their darkest few. The two halves meet at the knee by construction, and
     coverage 1 stays 1 whatever the constants say."""
     if cum <= knee:
-        return MIST_KEEP * cum
-    foot = MIST_KEEP * knee
+        return MIST_GAIN * cum
+    foot = MIST_GAIN * knee
     t = (cum - knee) / (1.0 - knee)
     t = (1.0 - FRONT_S) * t + FRONT_S * (t * t * (3.0 - 2.0 * t))
     return foot + (1.0 - foot) * t

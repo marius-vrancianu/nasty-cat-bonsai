@@ -198,14 +198,15 @@ a { color: inherit; }
      where the old one sat.
 
      Both figures are set against gen-tohaku-pines.py's tone curve, which
-     holds the back pines where they are and sharpens only the front trees
-     (see that script). Sharpening them costs ink at the file's dark end, and
-     these two are what buys it back: 0.8 → 0.95 here, 0.55 → 0.80 masked.
-     MIST_KEEP is then set against exactly these numbers, so the back pines
-     land within a sixth of their old tone in both modes — raise either
-     opacity without lowering MIST_KEEP and the mist comes back up with the
-     trees, which is the fog the curve exists to remove. Both figures want
-     redoing if the curve is retuned. */
+     splits the drawing at a knee and treats the back pines and the front
+     trees apart (see that script). Sharpening the front trees costs ink at
+     the file's dark end, and these two are what buys it back: 0.8 → 0.95
+     here, 0.55 → 0.80 masked. MIST_GAIN is set against exactly these
+     numbers — it is a multiple of the trace's own coverage, so whatever the
+     back pines are meant to sit at, these opacities are already divided into
+     it. Move either one and MIST_GAIN moves the back pines with it, which is
+     not what either figure is for. Both want redoing if the curve is
+     retuned. */
   opacity: 0.95;
 }
 
@@ -477,8 +478,8 @@ a { color: inherit; }
        edge, which is the framed hero's outer stroke boundary, and the join
        has to be exact — a fade there would leave it floating a few pixels
        clear of the picture. The near group meets the same edge with its
-       palest mist (0.0544 of the ink before the group's own opacity), so it
-       costs nothing to leave that hard too. */
+       palest mist (0.1088 of the ink before the group's own opacity), so it
+       costs little to leave that hard too. */
     --pine-fade-near: linear-gradient(to bottom,
                         #000 0, #000 92%, transparent 100%);
     --pine-fade-far: linear-gradient(to bottom,
