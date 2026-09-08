@@ -12,7 +12,7 @@
   --ink: #222222;            /* primary text */
   --rust: #9a2104;           /* headings, icons (from the hero title) */
   --rust-hover: #a5361f;     /* link hover accent */
-  --teal: #2e6b6b;           /* secondary accent (broken pot) */
+  --olive: #5b663c;          /* secondary accent (olive drab) */
   --hairline: rgba(28, 26, 23, 0.12);
   --hairline-strong: rgba(28, 26, 23, 0.2);
   --font: "Proza Libre", Georgia, serif;
@@ -22,17 +22,23 @@
 
 /* Dark scheme: paper and ink swap — paper takes the light theme's ink
    color, ink lightens to a washi tone, and the rust accent becomes a
-   soft plant-y teal (the light theme keeps its rust). Both teals are
+   soft military olive (the light theme keeps its rust). Both olives are
    tuned to sit just past WCAG AA (≥ 4.5:1) against the #222222 paper —
-   don't darken them without rechecking contrast. */
+   don't darken them without rechecking contrast.
+
+   The two accents sit at the same lightness and are told apart by hue
+   alone, as the teal pair they replaced was: --rust is the warm
+   yellow-olive of the palette anchor (H≈55), --olive the cooler moss
+   drab (H≈76). Keep that hue gap if you retune either — matching their
+   lightness is what makes the focus states read as a change. */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
   --washi: #222222;
   --ink: #d7cab0;
-  --rust: #2d9c7c;       /* 4.67:1 on #222222 */
-  --rust-hover: #36ac88; /* 5.62:1 */
-  --teal: #449c9c;       /* 4.91:1 — captions, quotes, hovers */
+  --rust: #928d5b;       /* 4.68:1 on #222222 */
+  --rust-hover: #a19b68; /* 5.61:1 */
+  --olive: #859658;      /* 4.93:1 — captions, quotes, hovers */
   --hairline: rgba(215, 202, 176, 0.16);
   --hairline-strong: rgba(215, 202, 176, 0.28);
 }
@@ -259,7 +265,7 @@ a { color: inherit; }
 }
 
 .home-social a:hover,
-.home-social a:focus-visible { color: var(--teal); }
+.home-social a:focus-visible { color: var(--olive); }
 
 .home-social svg {
   width: clamp(22px, 3.8vh, 34px);
@@ -416,7 +422,7 @@ a { color: inherit; }
 }
 
 .theme-toggle:hover,
-.theme-toggle:focus-visible { color: var(--teal); }
+.theme-toggle:focus-visible { color: var(--olive); }
 
 .theme-toggle .icon-sun { display: none; }
 
@@ -492,7 +498,7 @@ a { color: inherit; }
 }
 
 .footer-nav a:hover,
-.footer-nav a:focus-visible { color: var(--teal); }
+.footer-nav a:focus-visible { color: var(--olive); }
 
 /* Phones: the nav words take their own centered row, everything else
    fits on one tight row beneath — two quiet lines in total. */
@@ -512,7 +518,7 @@ a { color: inherit; }
 }
 
 .site-footer a:hover,
-.site-footer a:focus-visible { color: var(--teal); }
+.site-footer a:focus-visible { color: var(--olive); }
 
 /* ==========================================================================
    Long-form text (about page, posts)
@@ -563,7 +569,7 @@ a { color: inherit; }
 
 .post blockquote p {
   font-style: italic;
-  color: var(--teal);
+  color: var(--olive);
 }
 
 .post-date {
@@ -578,7 +584,7 @@ a { color: inherit; }
 
 .post-figure figcaption {
   font-size: 14px;
-  color: var(--teal);
+  color: var(--olive);
   margin-top: 10px;
   line-height: 1.5;
 }
@@ -635,7 +641,7 @@ a { color: inherit; }
   border: 1px solid var(--hairline);
   background-image: repeating-linear-gradient(
     135deg,
-    var(--teal) 0px, var(--teal) 2px,
+    var(--olive) 0px, var(--olive) 2px,
     var(--washi) 2px, var(--washi) 18px
   );
   overflow: hidden;
@@ -703,7 +709,7 @@ a { color: inherit; }
 
 .blog-filter-status {
   font-size: 15px;
-  color: var(--teal);
+  color: var(--olive);
   margin: -12px 0 28px;
 }
 
@@ -788,7 +794,7 @@ a { color: inherit; }
 }
 
 .tag-chip:hover,
-.tag-chip:focus-visible { color: var(--teal); border-color: var(--teal); }
+.tag-chip:focus-visible { color: var(--olive); border-color: var(--olive); }
 
 @media (max-width: 520px) {
   .post-card-thumb { flex-basis: 100%; width: 100%; }
@@ -876,7 +882,7 @@ a { color: inherit; }
 
 .gallery-status {
   font-size: 15px;
-  color: var(--teal);
+  color: var(--olive);
   padding: 8px 0 40px;
 }
 
@@ -997,7 +1003,7 @@ html.lightbox-open body {
 
 .lightbox-species { color: var(--rust); font-size: 20px; }
 .lightbox-meta    { font-size: 14px; margin-top: 4px; }
-.lightbox-tree    { font-size: 13px; margin-top: 6px; color: var(--teal); font-style: italic; }
+.lightbox-tree    { font-size: 13px; margin-top: 6px; color: var(--olive); font-style: italic; }
 .lightbox-notes   { font-size: 15px; margin-top: 10px; line-height: 1.6; }
 
 /* ==========================================================================
@@ -1053,7 +1059,7 @@ html.lightbox-open body {
 }
 
 .consent-decline:hover,
-.consent-decline:focus-visible { color: var(--teal); border-color: var(--teal); }
+.consent-decline:focus-visible { color: var(--olive); border-color: var(--olive); }
 
 .cookie-settings {
   font: inherit;
@@ -1067,11 +1073,11 @@ html.lightbox-open body {
 }
 
 .cookie-settings:hover,
-.cookie-settings:focus-visible { color: var(--teal); }
+.cookie-settings:focus-visible { color: var(--olive); }
 
 .consent-text a { color: var(--rust); }
 .consent-text a:hover,
-.consent-text a:focus-visible { color: var(--teal); }
+.consent-text a:focus-visible { color: var(--olive); }
 
 .footer-text-link {
   font-size: 13px;

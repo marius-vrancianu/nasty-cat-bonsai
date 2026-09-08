@@ -7,7 +7,7 @@
 
    The widget renders into an iframe built with srcdoc — same-origin by
    definition — so once it exists we inject a small stylesheet that gives
-   the form fields the site's accent strokes (rust in light, teal in
+   the form fields the site's accent strokes (rust in light, olive in
    dark; Cusdis' own gray borders disappear against the washi paper).
    The widget toggles a .dark wrapper class internally, so the injected
    CSS reacts to theme switches by itself. */
@@ -24,8 +24,8 @@
     "input, textarea { border-color: #9a2104 !important; border-radius: 3px; }" +
     "button { background: transparent !important; border: 1px solid #9a2104 !important;" +
     " border-radius: 3px; color: #9a2104 !important; }" +
-    ".dark input, .dark textarea { border-color: #2d9c7c !important; }" +
-    ".dark button { border-color: #2d9c7c !important; color: #2d9c7c !important; }";
+    ".dark input, .dark textarea { border-color: #928d5b !important; }" +
+    ".dark button { border-color: #928d5b !important; color: #928d5b !important; }";
 
   function injectSkin(iframe) {
     try {
