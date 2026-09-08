@@ -281,10 +281,12 @@ a { color: inherit; }
   /* Pines become the backdrop behind the three links, as the screen's own
      two groups standing either side of them: the near group
      (tohaku-pines-left.svg) on the left, the far one
-     (tohaku-pines-right.svg) on the right. Both are sized to the band's
-     full height, crown on its top edge and roots on its bottom, and because
-     every file ends at the drawing's one ground line they stand level even
-     though each fills the band at its own scale. The far group starts lower
+     (tohaku-pines-right.svg) on the right. Both sit with their roots on the
+     band's bottom edge, and because every file ends at the drawing's one
+     ground line they stand level even though each fills the band at its own
+     scale. The far group is sized to the band's full height, crown on its
+     top edge; the near one to 92% of it, so its crown stops a little short
+     of the top and it reads as the smaller of the two. The far group starts lower
      in the painting than the near one, so were the two cut to a shared top
      it would spend 9% of the band on empty sky and read small; cut to its
      own it comes up a tenth larger and reaches the top.
@@ -298,15 +300,17 @@ a { color: inherit; }
      where the drawing is roots and faint ground and the icons read straight
      through it. Everything above it — where the links are — is unchanged.
 
-     The widths follow from that height (1.092x and 0.559x it, see
-     gen-tohaku-pines.py's output): 282px and 144px. The near group carries
-     its mist on its left and its dark trees in the middle of that width, so
-     anchored flush left its trunks would stand under the links. Sliding it
-     88px off the left edge — the screen continuing past the frame, as a
-     byōbu does — puts those trees back where the old backdrop's stood (dark
-     from 30px in, against 44px before) and leaves the middle of the band to
-     the links: about 75px clear on a 390px phone, more as the screen
-     widens.
+     The widths follow from each group's own height (1.092x and 0.559x it,
+     see gen-tohaku-pines.py's output): the near group is 259px wide at its
+     237px height, the far one 144px at the band's full 258px. The near
+     group carries its mist on its left and its dark trees in the middle of
+     that width, so anchored flush left its trunks would stand under the
+     links. It is slid 101px off the left edge instead — the screen
+     continuing past the frame, as a byōbu does — which keeps its trunks
+     out from under the links and leaves the middle of the band to them. The
+     far group is inset 14px from the right edge rather than run flush to
+     it, so the two groups stand a little closer in and the band's clear
+     middle stays centered on the links.
 
      The band starts at the framed hero's bottom edge (frame height ≈
      112.19vw, see the .hero-frame math) and stops just above the social
@@ -324,8 +328,8 @@ a { color: inherit; }
     aspect-ratio: auto;
     background-image: url("../img/tohaku-pines-left.svg"),
                       url("../img/tohaku-pines-right.svg");
-    background-size: auto 100%, auto 100%;
-    background-position: -88px bottom, right bottom;
+    background-size: auto 92%, auto 100%;
+    background-position: -100.96px bottom, right 14.42px bottom 0;
     opacity: 0.35;
   }
 
@@ -334,10 +338,10 @@ a { color: inherit; }
                         url("../img/tohaku-pines-right.svg");
     mask-image: url("../img/tohaku-pines-left.svg"),
                 url("../img/tohaku-pines-right.svg");
-    -webkit-mask-size: auto 100%, auto 100%;
-    mask-size: auto 100%, auto 100%;
-    -webkit-mask-position: -88px bottom, right bottom;
-    mask-position: -88px bottom, right bottom;
+    -webkit-mask-size: auto 92%, auto 100%;
+    mask-size: auto 92%, auto 100%;
+    -webkit-mask-position: -100.96px bottom, right 14.42px bottom 0;
+    mask-position: -100.96px bottom, right 14.42px bottom 0;
     opacity: 0.32;
   }
 
