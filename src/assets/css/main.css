@@ -12,7 +12,7 @@
   --ink: #222222;            /* primary text */
   --rust: #9a2104;           /* headings, icons (from the hero title) */
   --rust-hover: #a5361f;     /* link hover accent */
-  --olive: #545b3c;          /* secondary accent, 5.19:1 on the paper */
+  --olive: #545c24;          /* secondary accent, 5.20:1 on the paper */
   --hairline: rgba(28, 26, 23, 0.12);
   --hairline-strong: rgba(28, 26, 23, 0.2);
   --font: "Proza Libre", Georgia, serif;
@@ -27,7 +27,9 @@
    don't darken them without rechecking contrast.
 
    Every olive in the palette — this theme's three and the light theme's
-   one — is the same green, H=72 S=20, taken from #6e764e. They differ
+   one — is the same green, H=69 S=44, the hue and saturation of army
+   green (#4b5320); the light theme's shade is that colour a touch
+   lightened, to clear AA on the paper. They differ
    only in lightness, and each is solved to the contrast it wants against
    its own ground rather than to a shared hex: one colour cannot clear AA
    on both #e3dbca paper and #222222 ink, since the best any single shade
@@ -37,9 +39,9 @@
    which is why the secondary accent is the brightest of them and not the
    dimmest:
 
-     --rust        4.69:1  headings and links, large or inline
-     --rust-hover  6.19:1  a clear step up from --rust on hover
-     --olive       7.50:1  13-15px captions, quotes and status lines
+     --rust        4.67:1  headings and links, large or inline
+     --rust-hover  6.21:1  a clear step up from --rust on hover
+     --olive       7.52:1  13-15px captions, quotes and status lines
 
    Small text needs more contrast than large text to read as easily — the
    same reason AA asks 4.5:1 of body copy and only 3:1 of headings — so
@@ -47,7 +49,7 @@
 
    That ordering also buys back the focus states. They work by swapping
    --rust for --olive, so the two must not land on the same luminance:
-   they are 1.60:1 apart now, against the 1.05:1 they sat at while both
+   they are 1.61:1 apart now, against the 1.05:1 they sat at while both
    were mid-tone, and the swap reads as a real change. Keep a gap there if
    you retune either. In the light theme the same swap crosses from rust
    red to olive, so hue carries it. */
@@ -56,9 +58,9 @@
 
   --washi: #222222;
   --ink: #d7cab0;
-  --rust: #87905f;       /* 4.69:1 on #222222 */
-  --rust-hover: #9da679; /* 6.19:1 */
-  --olive: #aeb690;      /* 7.50:1 */
+  --rust: #859239;       /* 4.67:1 on #222222 */
+  --rust-hover: #9aaa42; /* 6.21:1 */
+  --olive: #aabb4f;      /* 7.52:1 */
   --hairline: rgba(215, 202, 176, 0.16);
   --hairline-strong: rgba(215, 202, 176, 0.28);
 }
