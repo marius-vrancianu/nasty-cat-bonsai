@@ -538,6 +538,14 @@ a { color: inherit; }
     text-align: center;
     gap: 4px;
     padding: 20px 16px 36px;
+    /* Grow into whatever the hero and the links leave of the viewport, so
+       the social row below has room to centre itself in it (see
+       .home-social). flex-grow alone, not the flex shorthand: a 0 basis
+       would let the nav be sized from nothing and squeeze the links on a
+       short window. On a window shorter than the content there is nothing
+       to grow into and this does nothing at all, which is the common case
+       on a phone once the browser's own chrome is counted. */
+    flex-grow: 1;
   }
 
   .home-nav > a {
@@ -547,9 +555,24 @@ a { color: inherit; }
 
   /* 26px between six items overflows a 320px screen by ~17px, which puts
      a horizontal scrollbar on the page and cuts the first icon and the
-     last link; the gap closes up on narrow phones instead. */
+     last link; the gap closes up on narrow phones instead.
+
+     The auto margins centre the row in whatever height the nav has spare
+     once the links are laid out — on a tall window that is the band of
+     paper that used to collect below the icons, now split evenly above and
+     below them. Where there is no spare height both margins resolve to 0
+     and the row sits directly under the links, as before.
+
+     The 18px clearance under the links is padding rather than the margin
+     it used to be: an auto margin would swallow it. Below the row the
+     nav's own 36px padding still applies, so the icons sit about 14px
+     above the true centre of the spare band — deliberate, and worth less
+     than shortening the page's bottom margin on the short windows where
+     there is no spare band at all. */
   .home-social {
-    margin-top: 18px;
+    margin-top: auto;
+    margin-bottom: auto;
+    padding-top: 18px;
     gap: clamp(15px, 6vw, 26px);
   }
 
