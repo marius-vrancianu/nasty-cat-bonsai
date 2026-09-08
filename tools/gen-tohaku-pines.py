@@ -112,6 +112,22 @@ CREDIT = ("After Hasegawa Tohaku, Pine Trees (Shorin-zu byobu, right screen), "
 EDGE_BAND = 26                       # px: a border rule lies within this of an edge
 SEALS = (2975, 645, 3050, 795)       # the seal block, in display coordinates
 
+# The scan's right margin. Past the silk the mount shows, carrying the border
+# rules and the two seals, and the silk is discoloured where it meets them.
+# The tracer read all of that as a pale wash anchored to that edge - a band up
+# to 105px wide, too wide for EDGE_BAND and reaching well below SEALS, so
+# neither rule above catches it.
+#
+# Nothing in the painting is both pale and anchored to that edge. What does
+# reach it is the leaning pine's trunk, which is dark, and each group's own
+# outer contour, which spans the whole group (550-590px) rather than a band.
+# So: a subpath at or below MIST_LEVELS whose box touches the right edge and
+# is narrower than this is the mount, not the painting. Five subpaths go,
+# four of them on the palest layer. They were always there - MIST_GAIN's
+# doubling is what turned them into a visible grey block behind the leaning
+# pine's feet, worst in dark mode where the mask paints them in ink.
+MOUNT_BAND = 150                     # px
+
 # The screen's two groups are separated by ~650px of bare silk; nothing the
 # tracer drew crosses this line (asserted below).
 SPLIT_X = 2050
@@ -261,8 +277,9 @@ def box_of(subs, xf):
     return out
 
 
-def keep(sub, xf, W, H):
-    """False for the scan's border rules and the collector's seals."""
+def keep(sub, xf, W, H, level):
+    """False for the scan rather than the painting: the border rules, the
+    collector's seals, and the mount wash down the right margin."""
     b = box_of([sub], xf)
     if b[2] - b[0] > 0.9 * W and b[3] - b[1] > 0.9 * H:
         return False                                   # the border ring itself
@@ -272,6 +289,9 @@ def keep(sub, xf, W, H):
     sx0, sy0, sx1, sy1 = SEALS
     if b[0] >= sx0 and b[2] <= sx1 and b[1] >= sy0 and b[3] <= sy1:
         return False
+    if (level <= MIST_LEVELS and b[2] >= W - EDGE_BAND
+            and b[2] - b[0] < MOUNT_BAND):
+        return False                                   # the mount, see above
     return True
 
 
@@ -341,10 +361,10 @@ def main():
     ops = opacities(greys, washi=243, floor=greys[-1])
 
     left, right = [], []
-    for _, subs in layers:
+    for level, (_, subs) in enumerate(layers, 1):
         lo, ro = [], []
         for s in subs:
-            if not keep(s, xf, W, H):
+            if not keep(s, xf, W, H, level):
                 continue
             b = box_of([s], xf)
             assert not (b[0] < SPLIT_X < b[2]), "a subpath crosses the split"
