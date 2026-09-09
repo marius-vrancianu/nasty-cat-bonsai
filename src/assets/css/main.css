@@ -192,22 +192,22 @@ a { color: inherit; }
   background-repeat: no-repeat;
   z-index: 0;
   pointer-events: none;
-  /* The traced screen is a wash of soft greys where the drawn backdrop it
-     replaces was a few solid masses, so at the panel's scale it lands about
-     40% lighter for the same opacity; the lift here puts its weight back
-     where the old one sat.
+  /* 0.5 on paper and 0.4 masked, and the mobile band below uses the same
+     two numbers. The backdrop is one drawing at one weight whatever the
+     layout; the split into two files there buys position, nothing else.
+     Keep the figures in step — desktop used to run at 0.95 and 0.80 against
+     mobile's 0.43, and at this panel's width that read as too much ink
+     beside the hero.
 
-     Both figures are set against gen-tohaku-pines.py's tone curve, which
-     splits the drawing at a knee and treats the back pines and the front
-     trees apart (see that script). Sharpening the front trees costs ink at
-     the file's dark end, and these two are what buys it back: 0.8 → 0.95
-     here, 0.55 → 0.80 masked. MIST_GAIN is set against exactly these
-     numbers — it is a multiple of the trace's own coverage, so whatever the
-     back pines are meant to sit at, these opacities are already divided into
-     it. Move either one and MIST_GAIN moves the back pines with it, which is
-     not what either figure is for. Both want redoing if the curve is
-     retuned. */
-  opacity: 0.95;
+     Dark sits below light rather than above it because a pale layer on a
+     near-black ground gains apparent weight faster than the same layer on
+     paper. That asymmetry is the whole reason gen-tohaku-pines.py bends the
+     tone curve at all.
+
+     These two set the drawing's overall weight and nothing else. What the
+     back pines carry against the front trees is fixed inside the file by
+     MIST_GAIN, so it does not move when these do. */
+  opacity: 0.5;
 }
 
 [data-theme="dark"] .home-pines {
@@ -221,7 +221,7 @@ a { color: inherit; }
   mask-position: bottom center;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  opacity: 0.8;
+  opacity: 0.4;
 }
 
 /* Washi-colored mat around the hero. Stroke width = 5% of the displayed
@@ -337,12 +337,6 @@ a { color: inherit; }
      smudge. Whatever else changes here, keep the two bound to one figure;
      never give them separate heights.
 
-     Aerial recession does the rest of the work: the far group carries less
-     mist than the near one in the trace — its ink is nearly all the one
-     dark leaning pine — so at a shared opacity it still comes forward. It
-     is painted about a third lighter (--pine-far-ink against
-     --pine-near-ink), which is what pushes it back behind the links.
-
      The scene scales with the viewport rather than sitting at a fixed
      pixel size: at 258px — the band's full height — the two groups take
      1.0933 and 0.5100 of that in width, close enough on a wide phone but
@@ -418,8 +412,10 @@ a { color: inherit; }
        later 10% applies to both, so it leaves the ratio alone.) */
     --pine-far-h: calc(var(--pine-h) * 0.79334);
     --pine-far-w: calc(var(--pine-far-h) * 0.58545);
-    --pine-near-ink: 0.43;
-    --pine-far-ink: 0.29;
+    /* One figure for both groups, equal to .home-pines' own above: the two
+       files are a positioning device, not two subjects, so nothing here
+       should tell them apart by weight. */
+    --pine-ink: 0.5;
 
     --pine-nav-h: 314px;    /* 296px from 430px up, where the row unwraps */
     /* The band's height: from the framed hero's bottom edge down to the
@@ -529,7 +525,7 @@ a { color: inherit; }
     background-image: url("../img/tohaku-pines-left.svg");
     background-size: var(--pine-near-w) var(--pine-near-h);
     background-position: calc(var(--pine-near-w) * -0.45) bottom;
-    opacity: var(--pine-near-ink);
+    opacity: var(--pine-ink);
     -webkit-mask-image: var(--pine-fade-near);
     mask-image: var(--pine-fade-near);
     -webkit-mask-size: 100% 100%;
@@ -574,7 +570,7 @@ a { color: inherit; }
     background-image: url("../img/tohaku-pines-right.svg");
     background-size: var(--pine-far-w) var(--pine-far-h);
     background-position: right top;
-    opacity: var(--pine-far-ink);
+    opacity: var(--pine-ink);
     /* the fade is cut to the group's own height, not the band's, so it
        lands on the drawing's lower edge wherever that falls */
     -webkit-mask-image: var(--pine-fade-far);
@@ -602,8 +598,7 @@ a { color: inherit; }
      the two groups a second time, with the desktop file's shape, and the
      band all but disappears. */
   [data-theme="dark"] .home-pines {
-    --pine-near-ink: 0.49;
-    --pine-far-ink: 0.32;
+    --pine-ink: 0.4;
     background-color: transparent;
     -webkit-mask-image: none;
     mask-image: none;

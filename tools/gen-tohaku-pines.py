@@ -79,13 +79,12 @@ INK = "#222"
 MIST_LEVELS = 5
 
 # What the back pines are painted at, as a multiple of their own coverage in
-# the trace. Two figures are worth knowing before touching it: 1 paints them
-# at the coverage the trace gives them, and 0.72 is where that lands them at
-# the tone the *painting* has once main.css's 0.95 and 0.80 are applied - the
-# raised opacities have to be divided back out, or the pines come up with the
-# trees. 1.44 is that painting-matched figure doubled, which is a deliberate
-# emphasis rather than a match: the back pines carry the depth here, and the
-# screen wants them read as trees rather than glimpsed.
+# the trace. 1 would reproduce the trace; above it they gain against the front
+# trees, and that ratio - not any absolute tone - is what this constant sets.
+# main.css's opacities scale the finished drawing as a whole and cancel out of
+# it entirely, so they can be retuned without touching this. 1.44 reads the
+# back pines as trees rather than as a glimpse, which is the point: they are
+# what carries the screen's depth.
 #
 # It is not free. The five levels below the knee draw the halo around the
 # front trees as well as the back pines - tone cannot tell the two apart -
