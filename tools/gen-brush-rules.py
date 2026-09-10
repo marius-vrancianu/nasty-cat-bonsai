@@ -9,8 +9,10 @@ PDF-compatible stream and nothing here reads the private AI part - so the
 whole file is one page whose content stream is 1243 filled shapes, each a
 separate stroke wrapped in its own q/cm ... f* Q block.
 
-Four of those become the rules on the home page: one long vertical for the
-line between the picture and the nav, and three horizontals, one per link.
+Seven of those become the marks on the home page. The wide layout gets one
+long vertical for the line between the picture and the nav and three
+horizontals, one per link; the narrow one, which has no vertical to hang a
+rule off, gets three underlines instead, each under part of its word.
 The rest of the sheet is left alone, which is why the source is kept whole
 rather than trimmed to what is used - picking different strokes later is a
 matter of changing the numbers in PICKS.
@@ -66,11 +68,38 @@ PICKS = {
                              stops=[(0.45, 1.0), (1.0, 0.0)]),
     "brush-rule-3.svg": dict(shape=208, axis="h", target=(290, 3),
                              stops=[(0.45, 1.0), (1.0, 0.0)]),
+
+    # The mobile underlines: the same three strokes under part of each word,
+    # where there is no vertical for a rule to hang off. Two differences.
+    # They carry no fade - a rule crossing open paper has to die out
+    # somewhere, but an underline ends where its word does, and the stroke's
+    # own thinning tail is a better ending than a ramp laid over it. And the
+    # targets are the spans they actually cover, a few dozen pixels rather
+    # than a few hundred, which is what DROP_PX and its neighbours measure
+    # against. That much shorter box also puts these far closer to the
+    # sheet's own proportions than the desktop rules, which stretch a stroke
+    # of aspect 12 across an aspect of 27 - so the brush reads more plainly
+    # here, on the smaller screen, than it does on the larger one.
+    #
+    # That is also why they wander less. A rule crossing open paper can bend
+    # a third of its own weight and read as a brush; the same bend under a
+    # word reads as an underline that has slipped, because the word above it
+    # is a straight edge to measure against. And the third stroke is not the
+    # one under gallery on the wide layout: #208's dry tail is a fine ending
+    # to a 300px rule and a mess in 62px, where the flecks are most of it.
+    "brush-underline-1.svg": dict(shape=1,  axis="h", target=(85, 7),
+                                  stops=[(0.0, 1.0), (1.0, 1.0)], wander=0.12),
+    "brush-underline-2.svg": dict(shape=2,  axis="h", target=(55, 7),
+                                  stops=[(0.0, 1.0), (1.0, 1.0)], wander=0.12),
+    "brush-underline-3.svg": dict(shape=36, axis="h", target=(62, 7),
+                                  stops=[(0.0, 1.0), (1.0, 1.0)], wander=0.12),
 }
 
-WANDER = 0.34    # share of the rule's BOX given over to the centreline moving,
-                 # the rest being the stroke itself; --rule-w in main.css
-                 # divides the asked-for weight by (1 - this) to size the box
+WANDER = 0.34    # share of a mark's BOX given over to the centreline moving,
+                 # the rest being the stroke itself. main.css sizes each box
+                 # by dividing the asked-for weight by (1 - this); the two
+                 # must agree, so this prints the figure for every file it
+                 # writes. PICKS may override it - the underlines do.
 BINS = 200       # samples taken along a stroke to find that centreline
 CURVE_STEPS = 8  # pieces each curve is cut into to take those samples
 SMOOTH = 9       # bins averaged over, so amplifying it does not amplify noise
@@ -281,7 +310,7 @@ def envelope(polys, along, bins=BINS):
     return u0, u1, centre, span
 
 
-def placer(shape, axis, target):
+def placer(shape, axis, target, wander):
     """A map from sheet coordinates into the box the rule is drawn in.
 
     A plain squash of the bounding box loses the stroke almost entirely.
@@ -306,14 +335,14 @@ def placer(shape, axis, target):
     along = 0 if axis == "h" else 1                   # index of the long axis
     tu, tv = (target[0], target[1]) if axis == "h" else (target[1], target[0])
     u0, u1, centre, span = envelope(flatten(shape), along)
-    box = tv / (1.0 - WANDER)               # the stroke, plus room to move
+    box = tv / (1.0 - wander)               # the stroke, plus room to move
     ranked = sorted(centre)
     lo = ranked[int(0.05 * len(ranked))]
     hi = ranked[int(0.95 * len(ranked))]
     home = (hi + lo) / 2.0
 
     thick = tv / max(span)
-    drift = (box * WANDER / (hi - lo)) if hi - lo > 1e-9 else 0.0
+    drift = (box * wander / (hi - lo)) if hi - lo > 1e-9 else 0.0
 
     def place(p):
         q = (p[0], PAGE_H - p[1])
@@ -380,8 +409,8 @@ def draw(subpaths, place):
     return "".join(d)
 
 
-def build(shape, axis, target, stops):
-    place, box = placer(shape, axis, target)
+def build(shape, axis, target, stops, wander):
+    place, box = placer(shape, axis, target, wander)
     target = (target[0], box) if axis == "h" else (box, target[1])
 
     kept = []
@@ -411,14 +440,14 @@ def main():
     art = shapes(content_stream(open(SRC, "rb").read()))
     print("%d filled shapes in the sheet" % len(art))
     for name, spec in PICKS.items():
+        wander = spec.get("wander", WANDER)
         svg, before, after, w, h = build(
-            art[spec["shape"]], spec["axis"], spec["target"], spec["stops"])
+            art[spec["shape"]], spec["axis"], spec["target"], spec["stops"], wander)
         path = os.path.normpath(os.path.join(OUT, name))
         with open(path, "w") as fh:
             fh.write(svg)
-        print("  %-16s shape %-4d %6.1f x %-6.1f  %4d -> %-4d subpaths  %6.1f kB"
-              % (name, spec["shape"], w, h, before, after, len(svg) / 1024.0))
-    print("box is the asked-for weight / %.2f = x%.3f" % (1 - WANDER, 1 / (1 - WANDER)))
+        print("  %-21s shape %-4d %4d -> %-3d subpaths %6.1f kB   box = weight / %.2f"
+              % (name, spec["shape"], before, after, len(svg) / 1024.0, 1 - wander))
 
 
 if __name__ == "__main__":

@@ -29,10 +29,14 @@ bodyClass: home-body
     {#- Wrapped so the three links stack on their own, clear of the social
         row below: the nav's width is set by that row, which is twice as
         wide, and the rules below are measured against each word. #}
+    {#- The spans carry the narrow layout's underlines, which run under part
+        of a word rather than all of it — see .home-links .stroke. They mark
+        no meaning and do nothing in the wide layout; the text reads
+        unbroken either way. #}
     <div class="home-links">
-      <a href="/about/">about</a>
-      <a href="/blog/">blog</a>
-      <a href="/gallery/">gallery</a>
+      <a href="/about/"><span class="stroke">about</span></a>
+      <a href="/blog/"><span class="stroke">blo</span>g</a>
+      <a href="/gallery/">g<span class="stroke">alle</span>ry</a>
     </div>
     <div class="home-social">
       <a href="{{ site.social.facebook }}" aria-label="Facebook" target="_blank" rel="noopener">

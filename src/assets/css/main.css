@@ -27,8 +27,12 @@
      the middle. The 0.66 is what tools/gen-brush-rules.py leaves for ink
      after its wander budget; it prints the figure, and the two must agree
      or the rule is drawn at the wrong weight. */
-  --rule-ink: calc(var(--device-px) * 3);
+  --rule-ink: calc(var(--device-px) * 7);
   --rule-w: calc(var(--rule-ink) / 0.66);
+  /* The narrow layout's underlines are the same weight but wander less, so
+     their box is nearer the stroke — the generator prints the divisor for
+     every file it writes, and these two lines have to match it. */
+  --ul-w: calc(var(--rule-ink) / 0.88);
   --font: "Proza Libre", Georgia, serif;
   --measure: 680px;          /* comfortable reading width */
   --pad-x: clamp(20px, 5vw, 56px);
@@ -851,8 +855,51 @@ a { color: inherit; }
   }
 
   /* No rule here: the links sit under the picture rather than beside it, so
-     there is no vertical line for one to hang off. */
+     there is no vertical line for one to hang off. The words are underlined
+     instead — and only partly, so that the mark reads as one made over the
+     word rather than as a border under it: all of "about", "blo" of "blog",
+     "alle" of "gallery". The spans in index.njk set those spans of letters;
+     a span is inline, so its box is exactly the letters it holds.
+
+     These strokes carry no fade of their own, so they end where the brush
+     thinned out. Sitting a touch above the line box's foot puts them where
+     an underline goes, just clear of the baseline, rather than below the
+     descenders. They also wander less than the rules opposite — a word is a
+     straight edge to measure against, so a bend that reads as brushwork
+     across open paper reads here as an underline that has slipped. */
   .home-links > a::after { display: none; }
+
+  .home-links .stroke { position: relative; }
+
+  .home-links .stroke::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--ul-w) / -2 + 0.1em);
+    height: var(--ul-w);
+    background: var(--rust);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    pointer-events: none;
+  }
+
+  .home-links > a:nth-child(1) .stroke::after {
+    -webkit-mask-image: url("../img/brush-underline-1.svg");
+    mask-image: url("../img/brush-underline-1.svg");
+  }
+
+  .home-links > a:nth-child(2) .stroke::after {
+    -webkit-mask-image: url("../img/brush-underline-2.svg");
+    mask-image: url("../img/brush-underline-2.svg");
+  }
+
+  .home-links > a:nth-child(3) .stroke::after {
+    -webkit-mask-image: url("../img/brush-underline-3.svg");
+    mask-image: url("../img/brush-underline-3.svg");
+  }
 
   /* 26px between six items overflows a 320px screen by ~17px, which puts
      a horizontal scrollbar on the page and cuts the first icon and the
