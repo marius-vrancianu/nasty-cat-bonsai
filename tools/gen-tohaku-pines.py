@@ -54,10 +54,10 @@ The two split files are what the mobile layout stands either side of the
 nav links. Every file ends at the drawing's lowest ink, so whatever height
 the CSS gives them they stand on one ground line; on the other three sides
 each is cut to its own, so a band fills with tree rather than with the sky
-above a group that happens to start lower. Keep .home-pines' aspect-ratio
-equal to the desktop viewBox's ratio, which this script prints along with
-each split file's own width-to-height - the numbers the mobile rules are
-written against.
+above a group that happens to start lower. .home-pines derives its width from
+its height through the desktop viewBox's ratio, which this script prints along
+with each split file's own width-to-height - the numbers the CSS is written
+against. Keep them equal or the drawing stretches.
 
 Standard library only.
 """
@@ -404,7 +404,7 @@ def main():
     print("ink: left x %.0f..%.0f, right x %.0f..%.0f, y %.0f..%.0f"
           % (lbox[0], lbox[2], rbox[0], rbox[2], y0, y1))
     print("tohaku-pines.svg       %6.0f KB  viewBox %s\n"
-          "  ratio %.4f = %.0f/%.0f - set .home-pines' aspect-ratio to it"
+          "  ratio %.4f = %.0f/%.0f - .home-pines' width calc uses it"
           % (len(uni) / 1024, vb, width / height, round(width), round(height)))
     for name in ("left", "right"):
         svg, ratio = outs[name]

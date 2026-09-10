@@ -142,50 +142,49 @@ a { color: inherit; }
    an alpha mask over the ink color, recoloring the #222222 strokes to washi
    ink while keeping every stroke's transparency.
 
-   On desktop the screen spans the empty panel beside the hero edge to
-   edge: flush to the window on the right, and as wide as the panel — the
-   window less the hero frame (≈89.14dvh, see .hero-frame). No height is
-   given — `aspect-ratio` derives it from that width and the box grows up
-   from `bottom`, so the pines rescale with the window's width, not just its
-   height.
+   On desktop the drawing is the hero's opposite number rather than a filler
+   for the panel beside it. The box takes the picture's own two figures —
+   4.052dvh off the bottom and 91.896dvh tall, which are .hero-frame's stroke
+   and the height inside it — so the two stand on one line, top and foot, with
+   the same stroke of washi above each. Width follows from that height and the
+   drawing's own ratio, so nothing is stretched to fit anything.
 
-   On a wide, short window that panel is wide enough to make the box taller
-   than the window, and the crowns run off the top. So the width is a min()
-   of the panel and the width the ratio allows in the height there is: past
-   that point the pines stop filling the panel and stay whole instead,
-   leaving washi between them and the hero rather than a beheaded pine at
-   the window's top edge. The height they are allowed is the window less the
-   frame's stroke at the top (so the drawing tops out level with the nav's
-   first link) and less the box's own offset from the bottom.
+   Two consequences, both wanted. The drawing comes out wider than the panel
+   and runs left behind the hero, which is what .hero-frame's transparent
+   background lets you see in the stroke around the picture. And its foot
+   lands at the picture's foot, below the social row's top edge, so the icons
+   stand on the ground line instead of above it. In dark that lifts the paper
+   behind them from rgb(38,39,35) to rgb(44,44,42) and takes the olive's worst
+   contrast to 4.11:1 — clear of the 3:1 AA asks of icons, under the 4.5:1 the
+   palette is otherwise solved to. Raising the box by the social row's height
+   buys that back, if it ever matters more than the alignment.
 
-   The trunks stop above the social row rather than running down behind the
-   icons: that row is pinned to the hero frame's bottom edge (4.052dvh) and
-   is as tall as the taller of its icons (clamp(22px, 3.8vh, 34px), see
-   .home-social svg) and its 30px text links — i.e. clamp(30px, 3.8vh,
-   34px) — so the bottom edge sits those two plus a 12px gap up from the
-   window's bottom.
+   Driving the width from the height also retires the failure the old min()
+   guarded: sized from the panel, a wide short window made the box taller than
+   the window and beheaded the crowns. Tied to the window's height it cannot
+   overflow at any proportion. Past about 21:9 the drawing stops reaching the
+   hero and a little washi opens between them — that gap falls behind the nav
+   links, where it reads as margin.
 
    The SVG's viewBox is cut to the drawing (gen-tohaku-pines.py measures it
    and prints the numbers), so the leftmost tree sits on the box's left edge,
    the right group runs off its right edge with no built-in margin, and the
    tall pale crowns reach the top edge — the screen's bare middle panels are
    squeezed out to bring the two groups that close, and nothing is cropped to
-   reach a ratio. `background-size: 100% 100%` then fills the box exactly,
-   leaving no gap at either side whatever the window's proportions. So the
-   aspect-ratio below is not a design choice but the drawing's own, and must
-   be kept equal to the viewBox's — matched, the fill is a plain scale; if
-   the two ever drift apart the drawing stretches slightly rather than
-   letterboxing whitespace back in. */
+   reach a ratio. `background-size: 100% 100%` then fills the box exactly. The
+   2000/1287 in the width below is the viewBox's own ratio, not a design
+   choice, and must be kept equal to it — matched, the fill is a plain scale;
+   drifted, the drawing stretches slightly rather than letterboxing whitespace
+   back in. */
 .home-pines {
   position: absolute;
-  bottom: calc(100vh * 0.04052 + clamp(30px, 3.8vh, 34px) + 12px);
-  bottom: calc(100dvh * 0.04052 + clamp(30px, 3.8vh, 34px) + 12px);
+  bottom: calc(100vh * 0.04052);
+  bottom: calc(100dvh * 0.04052);
   right: 0;
-  width: min(100% - 100vh * 0.8914,
-             (100vh * 0.91896 - clamp(30px, 3.8vh, 34px) - 12px) * 2000 / 1287);
-  width: min(100% - 100dvh * 0.8914,
-             (100dvh * 0.91896 - clamp(30px, 3.8vh, 34px) - 12px) * 2000 / 1287);
-  aspect-ratio: 2000 / 1287;
+  height: calc(100vh * 0.91896);
+  height: calc(100dvh * 0.91896);
+  width: calc(100vh * 0.91896 * 2000 / 1287);
+  width: calc(100dvh * 0.91896 * 2000 / 1287);
   background-image: url("../img/tohaku-pines.svg");
   background-size: 100% 100%;
   background-position: bottom center;
@@ -224,11 +223,19 @@ a { color: inherit; }
   opacity: 0.4;
 }
 
-/* Washi-colored mat around the hero. Stroke width = 5% of the displayed
-   image width; with the 1134x1286 image (ratio r=0.8818) and the frame
-   filling the full viewport height, solving
+/* The mat around the hero. Stroke width = 5% of the displayed image width;
+   with the 1134x1286 image (ratio r=0.8818) and the frame filling the full
+   viewport height, solving
      stroke = 0.05 · r · (100dvh − 2·stroke)
-   gives stroke ≈ 4.052dvh, and a total frame width of ≈ 89.14dvh. */
+   gives stroke ≈ 4.052dvh, and a total frame width of ≈ 89.14dvh.
+
+   The stroke is transparent rather than washi so the pines behind it run up
+   to the picture's edge (see .home-pines) instead of stopping a stroke-width
+   short — which is what makes the two read as one scene. Only the right-hand
+   side of the stroke has drawing behind it; the left and the foot stay bare
+   paper either way. In dark the mat and the page already share --washi, so
+   this is the whole of what shows there. The padding still does the real
+   work: it is what holds the image off the window's edges. */
 .hero-frame {
   position: absolute;
   top: 0;
@@ -236,7 +243,7 @@ a { color: inherit; }
   height: 100%;
   padding: calc(100vh * 0.04052);
   padding: calc(100dvh * 0.04052);
-  background: var(--washi);
+  background: transparent;
   z-index: 1;
 }
 
