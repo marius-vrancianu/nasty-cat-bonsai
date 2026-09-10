@@ -227,7 +227,11 @@ a { color: inherit; }
    with the 1134x1286 image (ratio r=0.8818) and the frame filling the full
    viewport height, solving
      stroke = 0.05 · r · (100dvh − 2·stroke)
-   gives stroke ≈ 4.052dvh, and a total frame width of ≈ 89.14dvh.
+   gives stroke ≈ 4.052dvh. The right stroke is then doubled to 8.104dvh, so
+   the frame is 4.052 + 81.034 + 8.104 ≈ 93.19dvh wide (the image itself being
+   0.8818 × 91.896dvh). That extra stroke is the gap the rule below divides,
+   and .home-nav's left offset is the same 93.19dvh — the two must move
+   together or the links overlap the frame.
 
    The stroke is transparent rather than washi so the pines behind it run up
    to the picture's edge (see .home-pines) instead of stopping a stroke-width
@@ -241,10 +245,41 @@ a { color: inherit; }
   top: 0;
   left: 0;
   height: 100%;
-  padding: calc(100vh * 0.04052);
-  padding: calc(100dvh * 0.04052);
+  padding: calc(100vh * 0.04052) calc(100vh * 0.08104)
+           calc(100vh * 0.04052) calc(100vh * 0.04052);
+  padding: calc(100dvh * 0.04052) calc(100dvh * 0.08104)
+           calc(100dvh * 0.04052) calc(100dvh * 0.04052);
   background: transparent;
   z-index: 1;
+}
+
+/* A hairline of the accent down the middle of that doubled stroke, dividing
+   the picture from the links and the social row. --rust carries the colour the
+   theme wants without a second declaration: rust on paper, olive on ink.
+
+   Centred in the stroke, it lands at 4.052 + 81.034 + 4.052 ≈ 89.14dvh — which
+   is exactly where the frame's right edge sat before the stroke was doubled. So
+   the mark stays on a boundary the layout already had rather than inventing a
+   new one; that is why the stroke is doubled rather than the rule hand-placed.
+
+   It fades out over the top and bottom eighth instead of ending flat. A flat
+   end would stop level with the picture's corners and read as a second frame;
+   tapering leaves the corners to the picture and the crowns to the drawing
+   behind it. The mobile block switches it off — see there. */
+.hero-frame::after {
+  content: "";
+  position: absolute;
+  top: calc(100vh * 0.04052);
+  top: calc(100dvh * 0.04052);
+  bottom: calc(100vh * 0.04052);
+  bottom: calc(100dvh * 0.04052);
+  right: calc(100vh * 0.04052 - 0.5px);
+  right: calc(100dvh * 0.04052 - 0.5px);
+  width: 1px;
+  background: linear-gradient(to bottom,
+                transparent 0, var(--rust) 12%,
+                var(--rust) 88%, transparent 100%);
+  pointer-events: none;
 }
 
 /* The <picture> wrapper must not create its own box, so .home-hero keeps
@@ -258,9 +293,9 @@ a { color: inherit; }
   display: block;
 }
 
-/* The nav starts at the framed hero's right edge (≈ 89.14dvh, see
-   .hero-frame), i.e. exactly one stroke-width past the image, so the
-   gap to the links matches the frame's stroke on the other three sides.
+/* The nav starts at the framed hero's right edge (≈ 93.19dvh, see
+   .hero-frame), i.e. two stroke-widths past the image now that the right
+   stroke is doubled, with the rule down the middle of them.
    Vertically it spans the hero's content edges (inside the stroke):
    links start at the image's top edge, the social row is pushed to its
    bottom edge. */
@@ -270,8 +305,8 @@ a { color: inherit; }
   top: calc(100dvh * 0.04052);
   bottom: calc(100vh * 0.04052);
   bottom: calc(100dvh * 0.04052);
-  left: calc(100vh * 0.8914);
-  left: calc(100dvh * 0.8914);
+  left: calc(100vh * 0.9319);
+  left: calc(100dvh * 0.9319);
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -658,6 +693,12 @@ a { color: inherit; }
     width: 100%;
     height: auto;
   }
+
+  /* No rule here: the frame spans the full width, the links sit under the
+     picture rather than beside it, and there is no gap to divide. The frame
+     is `position: static` below too, so the rule would have nothing to
+     position against. */
+  .hero-frame::after { display: none; }
 
   .home-nav {
     /* relative (not static) so it stacks above the pines backdrop */
