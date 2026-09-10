@@ -146,11 +146,23 @@ a { color: inherit; }
 .home-body { overflow: hidden; }
 
 .home {
+  /* The nav's type size, shared because the pine backdrop is placed from it:
+     the rules run twice the width of their word, so where the drawing starts
+     is a multiple of this. See .home-pines. */
+  --nav-size: clamp(19px, 4.333vh, 48px);
   position: relative;
   height: 100vh;
   height: 100dvh;
   width: 100%;
   user-select: none;
+  /* The pine backdrop runs off the right edge on most windows and is meant
+     to be cropped there. .home-body's `overflow: hidden` is not enough for
+     that: hidden hides the scrollbar but still makes a scroll container, so
+     the page could be swiped 708px sideways onto bare washi — measured, not
+     assumed. `clip` makes no scroll container at all. It is set on the x
+     axis alone, which only `clip` allows: `hidden` on one axis forces the
+     other out of `visible`, and the narrow layout scrolls down the page. */
+  overflow-x: clip;
 }
 
 /* Pine backdrop — Hasegawa Tōhaku's "Pine Trees" screen as a vector
@@ -167,22 +179,32 @@ a { color: inherit; }
    the same stroke of washi above each. Width follows from that height and the
    drawing's own ratio, so nothing is stretched to fit anything.
 
-   Two consequences, both wanted. The drawing comes out wider than the panel
-   and runs left behind the hero, which is what .hero-frame's transparent
-   background lets you see in the stroke around the picture. And its foot
-   lands at the picture's foot, below the social row's top edge, so the icons
-   stand on the ground line instead of above it. In dark that lifts the paper
-   behind them from rgb(38,39,35) to rgb(44,44,42) and takes the olive's worst
-   contrast to 4.11:1 — clear of the 3:1 AA asks of icons, under the 4.5:1 the
-   palette is otherwise solved to. Raising the box by the social row's height
-   buys that back, if it ever matters more than the alignment.
+   Its foot lands at the picture's foot, so the drawing and the picture share
+   a ground line. Starting it out at the rules also repays a cost this comment
+   used to record: the drawing no longer lies under the social row, so in dark
+   the footer is back on bare ink and the olive measures 4.67:1 there instead
+   of 4.26:1 — the far side of the 4.5:1 the palette is otherwise solved to.
 
-   Driving the width from the height also retires the failure the old min()
+   Horizontally it starts where the longest brush rule ends, and that edge is
+   worth spelling out because CSS cannot measure text. Each rule reaches twice
+   the width of its own word (see .home-links > a::after, `right: -100%`), the
+   words all start on .home-nav's left edge, and the longest of the three is
+   "gallery" — so the rightmost rule ends 2 x 3.307em past 93.19dvh. Measured
+   at four window sizes that ratio holds to four decimals, and stating it in
+   em rather than dvh is what keeps it true once the type stops growing at the
+   clamp's ceiling: the anchor follows the type, whatever sets the type's size.
+   It does assume the words and the webfont, and would drift on the Georgia
+   fallback; the drift is a few pixels of gap or overlap, not a broken layout.
+
+   Then max() against the window's right edge. On an ordinary window the
+   drawing runs off to the right and is cropped there (.home-body hides the
+   overflow); on a wide enough one — past about 2630px at 1080 tall — the
+   whole width fits, and from there it sits flush right as it always did.
+
+   Driving the width from the height retires the failure the old min()
    guarded: sized from the panel, a wide short window made the box taller than
    the window and beheaded the crowns. Tied to the window's height it cannot
-   overflow at any proportion. Past about 21:9 the drawing stops reaching the
-   hero and a little washi opens between them — that gap falls behind the nav
-   links, where it reads as margin.
+   overflow vertically at any proportion.
 
    The SVG's viewBox is cut to the drawing (gen-tohaku-pines.py measures it
    and prints the numbers), so the leftmost tree sits on the box's left edge,
@@ -198,7 +220,10 @@ a { color: inherit; }
   position: absolute;
   bottom: calc(100vh * 0.04052);
   bottom: calc(100dvh * 0.04052);
-  right: 0;
+  left: max(calc(100vh * 0.9319 + 6.614 * var(--nav-size)),
+            calc(100% - 100vh * 0.91896 * 2000 / 1287));
+  left: max(calc(100dvh * 0.9319 + 6.614 * var(--nav-size)),
+            calc(100% - 100dvh * 0.91896 * 2000 / 1287));
   height: calc(100vh * 0.91896);
   height: calc(100dvh * 0.91896);
   width: calc(100vh * 0.91896 * 2000 / 1287);
@@ -251,13 +276,15 @@ a { color: inherit; }
    and .home-nav's left offset is the same 93.19dvh — the two must move
    together or the links overlap the frame.
 
-   The stroke is transparent rather than washi so the pines behind it run up
-   to the picture's edge (see .home-pines) instead of stopping a stroke-width
-   short — which is what makes the two read as one scene. Only the right-hand
-   side of the stroke has drawing behind it; the left and the foot stay bare
-   paper either way. In dark the mat and the page already share --washi, so
-   this is the whole of what shows there. The padding still does the real
-   work: it is what holds the image off the window's edges. */
+   The stroke is transparent rather than washi. That was to let the pines run
+   up to the picture's edge instead of stopping a stroke-width short, back
+   when the drawing was flush right and passed behind the frame; it now starts
+   out at the nav's rules and never reaches here, so the declaration shows
+   nothing either way — the page behind it is washi in light and shares
+   --washi with the mat in dark. It is kept because transparent is the honest
+   description of a mat with nothing in it, and because moving the drawing
+   back is then one line. The padding does the real work regardless: it is
+   what holds the image off the window's edges. */
 .hero-frame {
   position: absolute;
   top: 0;
@@ -374,7 +401,7 @@ a { color: inherit; }
   position: relative;
   text-decoration: none;
   color: var(--ink);
-  font-size: clamp(19px, 4.333vh, 48px);
+  font-size: var(--nav-size);
   line-height: 1.16;
   letter-spacing: 0.01em;
   padding: 0.443em 0;
