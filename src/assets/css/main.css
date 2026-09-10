@@ -20,14 +20,14 @@
      keeps it true, and this 1px is what a browser without it falls back
      to — today's behaviour. See that script for why it is needed. */
   --device-px: 1px;
-  /* The weight of the home page's brush rules: three physical pixels at
+  /* The weight of the home page's brush rules: five physical pixels at
      any zoom, measured on the stroke itself at its fullest.
      --rule-w is the box the stroke is masked into, which has to be wider,
      because the stroke wanders inside it rather than running straight down
      the middle. The 0.66 is what tools/gen-brush-rules.py leaves for ink
      after its wander budget; it prints the figure, and the two must agree
      or the rule is drawn at the wrong weight. */
-  --rule-ink: calc(var(--device-px) * 7);
+  --rule-ink: calc(var(--device-px) * 5);
   --rule-w: calc(var(--rule-ink) / 0.66);
   /* The narrow layout's underlines are the same weight but wander less, so
      their box is nearer the stroke — the generator prints the divisor for

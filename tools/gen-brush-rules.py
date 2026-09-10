@@ -26,8 +26,12 @@ olive on ink without a second copy of the file; and the fade that the plain
 so the mask carries both the shape of the brush and where it dies out.
 
 Each stroke is stretched to whatever box the stylesheet gives it
-(preserveAspectRatio="none" plus mask-size: 100% 100%), which is a violent
-squash: a horizontal is about 320x25 in the sheet and lands in roughly
+(preserveAspectRatio="none" plus mask-size: 100% 100%), so the weight a mark
+is finally drawn at is --rule-ink's, not this file's. The target in PICKS
+only sets proportions - how much of the box is ink and how much is room to
+wander - and the scale the thresholds below are measured against. Changing
+it re-tunes those; changing --rule-ink rescales the finished mark, grain and
+all. That stretch is a violent squash: a horizontal is about 320x25 in the sheet and lands in roughly
 290x3, and the vertical goes from 48x431 to 3x910. Nothing about the
 stroke's texture survives that except its silhouette, which is the point -
 what reads at three pixels is the taper, the slight wander off straight,
