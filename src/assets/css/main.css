@@ -15,6 +15,11 @@
   --olive: #545c2f;          /* secondary accent, 5.17:1 on the paper */
   --hairline: rgba(28, 26, 23, 0.12);
   --hairline-strong: rgba(28, 26, 23, 0.2);
+  /* One physical pixel, expressed in CSS pixels. The rules drawn with it
+     are a single device pixel at any zoom; the inline script in base.njk
+     keeps it true, and this 1px is what a browser without it falls back
+     to — today's behaviour. See that script for why it is needed. */
+  --device-px: 1px;
   --font: "Proza Libre", Georgia, serif;
   --measure: 680px;          /* comfortable reading width */
   --pad-x: clamp(20px, 5vw, 56px);
@@ -273,9 +278,9 @@ a { color: inherit; }
   top: calc(100dvh * 0.04052);
   bottom: calc(100vh * 0.04052);
   bottom: calc(100dvh * 0.04052);
-  right: calc(100vh * 0.04052 - 0.5px);
-  right: calc(100dvh * 0.04052 - 0.5px);
-  width: 1px;
+  right: calc(100vh * 0.04052 - var(--device-px) / 2);
+  right: calc(100dvh * 0.04052 - var(--device-px) / 2);
+  width: var(--device-px);
   background: linear-gradient(to bottom,
                 transparent 0, var(--rust) 12%,
                 var(--rust) 88%, transparent 100%);
@@ -325,7 +330,10 @@ a { color: inherit; }
   flex-direction: column;
   align-items: flex-start;
   width: max-content;
-  gap: clamp(8px, 2.25vh, 28px);
+  /* Named because the rules are placed from it: each one hangs half a gap
+     below its own box, which is what centres it between the two words. */
+  --nav-gap: clamp(8px, 2.25vh, 28px);
+  gap: var(--nav-gap);
 }
 
 /* Two thirds the size the words used to be, and with no inline padding at
@@ -357,15 +365,22 @@ a { color: inherit; }
    and shrinks with the type instead of being a number to maintain.
 
    It fades at the far end on the same ramp as the page rule, and is left
-   solid where it meets it. Desktop only — see the mobile block. */
+   solid where it meets it. Desktop only — see the mobile block.
+
+   Half a gap below its own box is the midpoint between its word and the
+   next: the boxes are as tall as their text plus equal padding, so the
+   space from one word down to the box edge and from the next word up to
+   its box edge are already equal, and the gap between them is all that is
+   left to halve. Each rule therefore sits the same distance under the word
+   it belongs to as it does above the one below. */
 .home-links > a::after {
   content: "";
   position: absolute;
-  bottom: 0;
+  bottom: calc(var(--nav-gap) / -2);
   left: calc(100vh * -0.04052);
   left: calc(100dvh * -0.04052);
   right: -100%;
-  height: 1px;
+  height: var(--device-px);
   background: linear-gradient(to right, var(--rust) 45%, transparent 100%);
   pointer-events: none;
 }

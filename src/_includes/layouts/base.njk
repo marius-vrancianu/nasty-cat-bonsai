@@ -3,6 +3,20 @@
 <head>
   <meta charset="utf-8">
   <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}</script>
+  {#- Publishes one physical pixel as --device-px, in CSS pixels, for the
+      hairline rules on the home page. A 1px box is snapped to the device
+      grid by rounding both of its edges, so wherever a CSS pixel is not a
+      whole number of physical ones — any browser zoom off 100%, or a 1.5x
+      display — the same declaration lands on 0, 1 or 2 physical pixels
+      depending only on where the box happens to fall. Measured at 90%
+      zoom, one of the three nav rules vanished outright and another
+      rendered faint; at 110% and 125% they came out unevenly 1px and 2px.
+      Rounding the ratio to a whole number of physical pixels first makes
+      the snap exact, so the line is the same weight at every zoom and is
+      the 1px it has always been at 100%. Inline and before the stylesheet
+      so no rule is ever painted at the wrong weight; without it the CSS
+      fallback is a plain 1px. #}
+  <script>(function(){var r=document.documentElement;function s(){var d=window.devicePixelRatio||1;r.style.setProperty("--device-px",(Math.round(d)||1)/d+"px")}s();addEventListener("resize",s)})()</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {#- Tints mobile browser chrome to match the paper. theme.js swaps the
       value when the visitor toggles dark mode (values mirror --washi). #}
