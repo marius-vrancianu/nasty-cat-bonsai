@@ -20,6 +20,11 @@
      keeps it true, and this 1px is what a browser without it falls back
      to — today's behaviour. See that script for why it is needed. */
   --device-px: 1px;
+  /* The weight of the home page's brush rules: three physical pixels,
+     whatever the zoom. The strokes are masks, so this is the box they are
+     squashed into rather than a line width — the ink inside reaches it
+     only where the brush was fullest. */
+  --rule-w: calc(var(--device-px) * 3);
   --font: "Proza Libre", Georgia, serif;
   --measure: 680px;          /* comfortable reading width */
   --pad-x: clamp(20px, 5vw, 56px);
@@ -258,9 +263,19 @@ a { color: inherit; }
   z-index: 1;
 }
 
-/* A hairline of the accent down the middle of that doubled stroke, dividing
-   the picture from the links and the social row. --rust carries the colour the
-   theme wants without a second declaration: rust on paper, olive on ink.
+/* A brush stroke of the accent down the middle of that doubled stroke,
+   dividing the picture from the links and the social row.
+
+   The mark is a mask, not a fill: the box is painted flat in --rust and a
+   stroke lifted off a sheet of vector brushwork decides where the paint
+   survives (tools/gen-brush-rules.py). That is what lets one file serve both
+   themes — the colour is the stylesheet's, so the same stroke is rust on
+   paper and olive on ink — and it is also how the fade at the ends arrives,
+   carried in the mask's own alpha rather than a gradient underneath.
+
+   Squashed from 48 units wide to three pixels, none of the brush's texture
+   survives; what reads at this size is the taper, the drift off true, and
+   the ragged end. That is the whole point of it over a ruled line.
 
    Centred in the stroke, it lands at 4.052 + 81.034 + 4.052 ≈ 89.14dvh — which
    is exactly where the frame's right edge sat before the stroke was doubled. So
@@ -278,12 +293,16 @@ a { color: inherit; }
   top: calc(100dvh * 0.04052);
   bottom: calc(100vh * 0.04052);
   bottom: calc(100dvh * 0.04052);
-  right: calc(100vh * 0.04052 - var(--device-px) / 2);
-  right: calc(100dvh * 0.04052 - var(--device-px) / 2);
-  width: var(--device-px);
-  background: linear-gradient(to bottom,
-                transparent 0, var(--rust) 12%,
-                var(--rust) 88%, transparent 100%);
+  right: calc(100vh * 0.04052 - var(--rule-w) / 2);
+  right: calc(100dvh * 0.04052 - var(--rule-w) / 2);
+  width: var(--rule-w);
+  background: var(--rust);
+  -webkit-mask-image: url("../img/brush-spine.svg");
+  mask-image: url("../img/brush-spine.svg");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   pointer-events: none;
 }
 
@@ -364,25 +383,51 @@ a { color: inherit; }
    overhangs by as much again as the word measures. It therefore stretches
    and shrinks with the type instead of being a number to maintain.
 
-   It fades at the far end on the same ramp as the page rule, and is left
-   solid where it meets it. Desktop only — see the mobile block.
+   Like the vertical, each is a brush stroke masking a flat fill of --rust,
+   and each of the three is a different stroke off the same sheet, so the
+   nav reads as three marks made by one hand rather than one mark stamped
+   three times. All three are fullest where they meet the vertical and thin
+   away to the right, which is the direction the fade runs anyway. The fade
+   itself is carried in the mask's alpha — see the generator. Desktop only:
+   the mobile block switches them off.
 
    Half a gap below its own box is the midpoint between its word and the
    next: the boxes are as tall as their text plus equal padding, so the
    space from one word down to the box edge and from the next word up to
    its box edge are already equal, and the gap between them is all that is
    left to halve. Each rule therefore sits the same distance under the word
-   it belongs to as it does above the one below. */
+   it belongs to as it does above the one below. Its own weight is added to
+   the offset so that it is the stroke's middle that lands there, not its
+   lower edge. */
 .home-links > a::after {
   content: "";
   position: absolute;
-  bottom: calc(var(--nav-gap) / -2);
+  bottom: calc((var(--nav-gap) + var(--rule-w)) / -2);
   left: calc(100vh * -0.04052);
   left: calc(100dvh * -0.04052);
   right: -100%;
-  height: var(--device-px);
-  background: linear-gradient(to right, var(--rust) 45%, transparent 100%);
+  height: var(--rule-w);
+  background: var(--rust);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   pointer-events: none;
+}
+
+.home-links > a:nth-child(1)::after {
+  -webkit-mask-image: url("../img/brush-rule-1.svg");
+  mask-image: url("../img/brush-rule-1.svg");
+}
+
+.home-links > a:nth-child(2)::after {
+  -webkit-mask-image: url("../img/brush-rule-2.svg");
+  mask-image: url("../img/brush-rule-2.svg");
+}
+
+.home-links > a:nth-child(3)::after {
+  -webkit-mask-image: url("../img/brush-rule-3.svg");
+  mask-image: url("../img/brush-rule-3.svg");
 }
 
 .home-links > a:hover,
