@@ -107,7 +107,8 @@ CURVE_STEPS = 8  # pieces each curve is cut into to take those samples
 SMOOTH = 9       # bins averaged over, so amplifying it does not amplify noise
 
 SPECKLE = 0.07   # share of a stroke's ink lifted back out as bare paper
-FLECK = 0.30     # no fleck smaller than this: it would not survive rounding
+FLECK = 0.14     # no fleck smaller than this: it would not survive rounding
+CLUMP = 6.0      # flecks per cluster, on average - see flecks()
 SEED = 8317      # fixed, so regenerating gives the same paper back
 
 DROP_PX = 0.35   # a subpath thinner than this once squashed draws nothing
@@ -392,42 +393,61 @@ def flecks(band, axis, seed):
     du = band[1][0] - band[0][0]
     budget = SPECKLE * sum(2.0 * h * du for _, _, h in band)
 
-    # Weighted toward the thin of the stroke, because that is where a brush
-    # running out of ink actually breaks up. Only the bins with ink enough
-    # to swallow a whole fleck can be drawn from at all, so the very tips
-    # stay solid - the two pull against each other, and the constant keeps
-    # the thick end from being skipped entirely.
+    # Cluster centres are drawn toward the thin of the stroke, because that
+    # is where a brush running out of ink actually breaks up. Only bins with
+    # ink enough to swallow a whole fleck can be drawn from at all, so the
+    # very tips stay solid - the two pull against each other, and the
+    # constant keeps the thick end from being skipped entirely.
     fat = max(h for _, _, h in band)
-    pool = [(u, v, h) for u, v, h in band if h >= 2.0 * FLECK]
+    pool = [i for i, (_, _, h) in enumerate(band) if h >= 2.0 * FLECK]
     if not pool:
         return []
-    weight = [(fat - h) + 0.2 * fat for _, _, h in pool]
+    weight = [(fat - band[i][2]) + 0.2 * fat for i in pool]
     total = sum(weight)
     out, used, guard = [], 0.0, 0
 
-    while used < budget and guard < 20000:
-        guard += 1
-        r, i = rng.uniform(0, total), 0
-        while i < len(pool) - 1 and r > weight[i]:
-            r -= weight[i]
-            i += 1
-        U, Vc, H = pool[i]
-        # Most flecks are pinpricks and a few are gaps: squaring a uniform
-        # draw gives that spread without a second constant to tune.
-        ry = H * (0.12 + 0.45 * rng.random() ** 2)
-        if ry < FLECK:
-            continue
-        rx = ry * rng.uniform(1.3, 3.0)
-        cy = Vc + rng.uniform(-1.0, 1.0) * (H - ry)
-        cx = U + rng.uniform(-0.5, 0.5) * du
-        pts = []
-        for k in range(5):
-            a = 2.0 * math.pi * (k + rng.uniform(-0.2, 0.2)) / 5.0
-            r = rng.uniform(0.7, 1.3)
-            p = (cx + math.cos(a) * rx * r, cy + math.sin(a) * ry * r)
-            pts.append(p if axis == "h" else (p[1], p[0]))
-        used += math.pi * rx * ry * 0.82         # a pentagon of those radii
-        out.append(pts)
+    while used < budget and guard < 40000:
+        # A cluster: somewhere on the stroke, and a run of flecks around it.
+        # Scattering them one by one and independently gives a texture that
+        # is even everywhere, which reads as dirt on the stroke rather than
+        # as the stroke being dry; a brush leaves patches. The spread is set
+        # by the stroke's own thickness because that, not its length, is the
+        # scale brush texture happens at, and the count is drawn from an
+        # exponential so that a few clusters are dense and most are a fleck
+        # or two - which is the difference between spatter and a pattern.
+        r, k = rng.uniform(0, total), 0
+        while k < len(pool) - 1 and r > weight[k]:
+            r -= weight[k]
+            k += 1
+        Uc, _, Hc = band[pool[k]]
+        for _ in range(1 + int(rng.expovariate(1.0 / CLUMP))):
+            guard += 1
+            if used >= budget or guard >= 40000:
+                break
+            u = Uc + rng.gauss(0.0, 2.0 * Hc)
+            i = int(u / band[-1][0] * (len(band) - 1) + 0.5)
+            if i < 0 or i >= len(band):
+                continue
+            U, Vc, H = band[i]
+            if H < 2.0 * FLECK:
+                continue                 # too little ink here to take one
+            # Half the size they were, so the same budget buys four times as
+            # many: mist rather than spots. Squaring a uniform draw spreads
+            # them, most pinpricks and a few gaps, without a second constant.
+            ry = H * (0.06 + 0.22 * rng.random() ** 2)
+            if ry < FLECK:
+                continue
+            rx = ry * rng.uniform(1.3, 3.0)
+            cy = Vc + max(-1.0, min(1.0, rng.gauss(0.0, 0.5))) * (H - ry)
+            cx = u
+            pts = []
+            for j in range(4):
+                a = 2.0 * math.pi * (j + rng.uniform(-0.25, 0.25)) / 4.0
+                g = rng.uniform(0.7, 1.3)
+                p = (cx + math.cos(a) * rx * g, cy + math.sin(a) * ry * g)
+                pts.append(p if axis == "h" else (p[1], p[0]))
+            used += 2.0 * rx * ry            # a jittered quad of those radii
+            out.append(pts)
     return out
 
 
