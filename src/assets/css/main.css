@@ -295,7 +295,9 @@ a { color: inherit; }
 
 /* The nav starts at the framed hero's right edge (≈ 93.19dvh, see
    .hero-frame), i.e. two stroke-widths past the image now that the right
-   stroke is doubled, with the rule down the middle of them.
+   stroke is doubled, with the rule down the middle of them. The three links
+   sit in .home-links inside it; the social row is the nav's own child, and
+   the two share this left edge — which is what the links are aligned to.
    Vertically it spans the hero's content edges (inside the stroke):
    links start at the image's top edge, the social row is pushed to its
    bottom edge. */
@@ -314,16 +316,62 @@ a { color: inherit; }
   gap: clamp(8px, 2.25vh, 28px);
 }
 
-.home-nav > a {
+/* The three links, stacked on their own so their rules can be measured
+   against each word. They cannot be direct children of .home-nav for that:
+   the nav's width is set by the social row, which is about twice as wide as
+   the longest word. */
+.home-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: max-content;
+  gap: clamp(8px, 2.25vh, 28px);
+}
+
+/* Two thirds the size the words used to be, and with no inline padding at
+   all, so each one starts on .home-nav's own left edge — level with the
+   first social icon underneath. The 0.443em block padding is what holds the
+   box at the 88px it has always been, so the three sit at the same tops as
+   before (40.2 / 150.6 / 260.9 at a 1920x993 viewport) even though the type
+   shrank. Keep those two in step if either changes: line-height 1.16 plus
+   twice the padding is the box. */
+.home-links > a {
+  position: relative;
   text-decoration: none;
   color: var(--ink);
-  font-size: clamp(28px, 6.5vh, 72px);
+  font-size: clamp(19px, 4.333vh, 48px);
+  line-height: 1.16;
   letter-spacing: 0.01em;
+  padding: 0.443em 0;
   transition: color 0.2s ease;
 }
 
-.home-nav > a:hover,
-.home-nav > a:focus-visible { color: var(--rust-hover); }
+/* Each link's rule. It reaches back one stroke to start ON the vertical line
+   .hero-frame::after draws, so the nav reads as an index written against that
+   line rather than as three marks that happen to sit near it — one vertical
+   on the page, three horizontals hung off it.
+
+   `right: -100%` is a percentage of this element's own width, and since the
+   link carries no inline padding that width is exactly the word: the rule
+   overhangs by as much again as the word measures. It therefore stretches
+   and shrinks with the type instead of being a number to maintain.
+
+   It fades at the far end on the same ramp as the page rule, and is left
+   solid where it meets it. Desktop only — see the mobile block. */
+.home-links > a::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: calc(100vh * -0.04052);
+  left: calc(100dvh * -0.04052);
+  right: -100%;
+  height: 1px;
+  background: linear-gradient(to right, var(--rust) 45%, transparent 100%);
+  pointer-events: none;
+}
+
+.home-links > a:hover,
+.home-links > a:focus-visible { color: var(--rust-hover); }
 
 .home-social {
   display: flex;
@@ -722,10 +770,25 @@ a { color: inherit; }
     flex-grow: 1;
   }
 
-  .home-nav > a {
+  /* The wrapper is neutralised here: stretched rather than the desktop
+     max-content, so each link still centres in the nav's own width exactly
+     as it did before the wrapper existed. Verified pixel-identical. */
+  .home-links {
+    align-self: stretch;
+    width: auto;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .home-links > a {
     font-size: 34px;
+    line-height: normal;
     padding: 7px 24px; /* still a ~48px-tall tap target */
   }
+
+  /* No rule here: the links sit under the picture rather than beside it, so
+     there is no vertical line for one to hang off. */
+  .home-links > a::after { display: none; }
 
   /* 26px between six items overflows a 320px screen by ~17px, which puts
      a horizontal scrollbar on the page and cuts the first icon and the
