@@ -36,7 +36,9 @@ edge cost bytes without drawing anything, so DROP_PX throws away every
 subpath too small to reach a fraction of a pixel once squashed.
 """
 
+import math
 import os
+import random
 import re
 import zlib
 
@@ -103,6 +105,10 @@ WANDER = 0.34    # share of a mark's BOX given over to the centreline moving,
 BINS = 200       # samples taken along a stroke to find that centreline
 CURVE_STEPS = 8  # pieces each curve is cut into to take those samples
 SMOOTH = 9       # bins averaged over, so amplifying it does not amplify noise
+
+SPECKLE = 0.07   # share of a stroke's ink lifted back out as bare paper
+FLECK = 0.30     # no fleck smaller than this: it would not survive rounding
+SEED = 8317      # fixed, so regenerating gives the same paper back
 
 DROP_PX = 0.35   # a subpath thinner than this once squashed draws nothing
 MIN_STEP = 0.12  # nor does a segment that goes nowhere once squashed
@@ -354,7 +360,75 @@ def placer(shape, axis, target, wander):
         V = box / 2.0 + (min(max(c, lo), hi) - home) * drift + (v - c) * thick
         return (U, V) if axis == "h" else (V, U)
 
-    return place, box
+    band = [((i + 0.5) / BINS * tu,
+             box / 2.0 + (min(max(centre[i], lo), hi) - home) * drift,
+             span[i] / 2.0 * thick)
+            for i in range(BINS)]
+    return place, box, band
+
+
+def flecks(band, axis, seed):
+    """Bare paper scattered back across the ink.
+
+    A brush laid on paper does not leave a solid shape: the paper's tooth
+    keeps some of it, and the ink that is left has grain. The strokes here
+    have that in the sheet, but at the scale these are drawn - a stroke 25
+    units deep squashed onto seven pixels - it is far below the pixels doing
+    the drawing, so what arrives is a flat ribbon of colour.
+
+    So it is put back at the size it can be seen at: small irregular gaps
+    lifted out of the ink, up to SPECKLE of its area. They are holes, not
+    marks, punched by the even-odd rule against the stroke around them - so
+    each one has to sit wholly inside the ink, or the half of it hanging off
+    the edge would have nothing to cancel against and would come out as a
+    blob stuck to the stroke instead of a gap in it. That is why the fleck
+    is sized against the local half-thickness and kept clear of the tapered
+    ends, where there is not enough ink to take one.
+
+    They are elongated along the stroke, the way a dragged brush breaks up,
+    and seeded, so the files regenerate byte for byte.
+    """
+    rng = random.Random(seed)
+    du = band[1][0] - band[0][0]
+    budget = SPECKLE * sum(2.0 * h * du for _, _, h in band)
+
+    # Weighted toward the thin of the stroke, because that is where a brush
+    # running out of ink actually breaks up. Only the bins with ink enough
+    # to swallow a whole fleck can be drawn from at all, so the very tips
+    # stay solid - the two pull against each other, and the constant keeps
+    # the thick end from being skipped entirely.
+    fat = max(h for _, _, h in band)
+    pool = [(u, v, h) for u, v, h in band if h >= 2.0 * FLECK]
+    if not pool:
+        return []
+    weight = [(fat - h) + 0.2 * fat for _, _, h in pool]
+    total = sum(weight)
+    out, used, guard = [], 0.0, 0
+
+    while used < budget and guard < 20000:
+        guard += 1
+        r, i = rng.uniform(0, total), 0
+        while i < len(pool) - 1 and r > weight[i]:
+            r -= weight[i]
+            i += 1
+        U, Vc, H = pool[i]
+        # Most flecks are pinpricks and a few are gaps: squaring a uniform
+        # draw gives that spread without a second constant to tune.
+        ry = H * (0.12 + 0.45 * rng.random() ** 2)
+        if ry < FLECK:
+            continue
+        rx = ry * rng.uniform(1.3, 3.0)
+        cy = Vc + rng.uniform(-1.0, 1.0) * (H - ry)
+        cx = U + rng.uniform(-0.5, 0.5) * du
+        pts = []
+        for k in range(5):
+            a = 2.0 * math.pi * (k + rng.uniform(-0.2, 0.2)) / 5.0
+            r = rng.uniform(0.7, 1.3)
+            p = (cx + math.cos(a) * rx * r, cy + math.sin(a) * ry * r)
+            pts.append(p if axis == "h" else (p[1], p[0]))
+        used += math.pi * rx * ry * 0.82         # a pentagon of those radii
+        out.append(pts)
+    return out
 
 
 def flat(pen, q):
@@ -409,8 +483,8 @@ def draw(subpaths, place):
     return "".join(d)
 
 
-def build(shape, axis, target, stops, wander):
-    place, box = placer(shape, axis, target, wander)
+def build(shape, axis, target, stops, wander, seed):
+    place, box, band = placer(shape, axis, target, wander)
     target = (target[0], box) if axis == "h" else (box, target[1])
 
     kept = []
@@ -429,9 +503,11 @@ def build(shape, axis, target, stops, wander):
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %g %g"'
         ' preserveAspectRatio="none">'
         '<linearGradient id="f" x1="%d" y1="%d" x2="%d" y2="%d">%s</linearGradient>'
-        '<path d="%s" fill="url(#f)"/></svg>'
+        '<path fill-rule="evenodd" d="%s" fill="url(#f)"/></svg>'
     ) % (target[0], target[1], coords[0], coords[1], coords[2], coords[3],
-         ramp, draw(kept, place))
+         ramp, draw(kept, place) + "".join(
+             "M" + " ".join("%g,%g" % (round(x, 2), round(y, 2)) for x, y in f) + "Z"
+             for f in flecks(band, axis, seed)))
     x0, y0, x1, y1 = bounds(shape)
     return svg, len(shape), len(kept), x1 - x0, y1 - y0
 
@@ -442,7 +518,8 @@ def main():
     for name, spec in PICKS.items():
         wander = spec.get("wander", WANDER)
         svg, before, after, w, h = build(
-            art[spec["shape"]], spec["axis"], spec["target"], spec["stops"], wander)
+            art[spec["shape"]], spec["axis"], spec["target"], spec["stops"],
+            wander, SEED + spec["shape"])
         path = os.path.normpath(os.path.join(OUT, name))
         with open(path, "w") as fh:
             fh.write(svg)
