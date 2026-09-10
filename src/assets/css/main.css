@@ -20,11 +20,15 @@
      keeps it true, and this 1px is what a browser without it falls back
      to — today's behaviour. See that script for why it is needed. */
   --device-px: 1px;
-  /* The weight of the home page's brush rules: three physical pixels,
-     whatever the zoom. The strokes are masks, so this is the box they are
-     squashed into rather than a line width — the ink inside reaches it
-     only where the brush was fullest. */
-  --rule-w: calc(var(--device-px) * 3);
+  /* The weight of the home page's brush rules: three physical pixels at
+     any zoom, measured on the stroke itself at its fullest.
+     --rule-w is the box the stroke is masked into, which has to be wider,
+     because the stroke wanders inside it rather than running straight down
+     the middle. The 0.66 is what tools/gen-brush-rules.py leaves for ink
+     after its wander budget; it prints the figure, and the two must agree
+     or the rule is drawn at the wrong weight. */
+  --rule-ink: calc(var(--device-px) * 3);
+  --rule-w: calc(var(--rule-ink) / 0.66);
   --font: "Proza Libre", Georgia, serif;
   --measure: 680px;          /* comfortable reading width */
   --pad-x: clamp(20px, 5vw, 56px);

@@ -45,27 +45,35 @@ OUT = os.path.join(HERE, os.pardir, "src", "assets", "img")
 PAGE_H = 491.975          # the sheet's MediaBox height, for the y-flip
 
 # Shape index in the content stream -> output. The three horizontals read
-# left to right as about / blog / gallery. They were chosen by squashing
-# every candidate to 3px and measuring the ink: all three are solid where
-# they meet the vertical, taper away to the right - the direction the fade
-# runs anyway - and no two are alike.
+# left to right as about / blog / gallery. All three are fullest where they
+# meet the vertical and thin away to the right, which is the direction the
+# fade runs anyway, and no two are alike: #1 leaves a hooked, loaded start,
+# #2 lifts and bends early, #208 runs dry and breaks into flecks.
 #
-# They also had to carry the same weight. Stretching a stroke's bounding
-# box to 3px equalises the widest point and nothing else, so strokes that
-# look alike on the sheet can differ by a third in the ink they actually
-# lay down. These three sit at 2.3, 2.4 and 2.5px of ink against a 3px box;
-# the first stroke tried here for blog measured 1.75 and read as the faint
-# one of the three, which looks like a mistake rather than like a hand.
+# They were picked for that character alone. An earlier round picked partly
+# on weight, because stretching a stroke's bounding box to the rule's
+# equalises its widest point and nothing else, so strokes that look alike
+# on the sheet can differ by a third in the ink they lay down. Normalising
+# the thickness against the measured envelope rather than the bounding box
+# settles that on its own - every stroke now fills the same share of the
+# box at its fullest - which frees the choice to be about the mark.
 PICKS = {
     "brush-spine.svg":  dict(shape=693, axis="v", target=(3, 910),
                              stops=[(0.0, 0.0), (0.12, 1.0), (0.88, 1.0), (1.0, 0.0)]),
     "brush-rule-1.svg": dict(shape=1,   axis="h", target=(290, 3),
                              stops=[(0.45, 1.0), (1.0, 0.0)]),
-    "brush-rule-2.svg": dict(shape=642, axis="h", target=(290, 3),
+    "brush-rule-2.svg": dict(shape=2,   axis="h", target=(290, 3),
                              stops=[(0.45, 1.0), (1.0, 0.0)]),
-    "brush-rule-3.svg": dict(shape=36,  axis="h", target=(290, 3),
+    "brush-rule-3.svg": dict(shape=208, axis="h", target=(290, 3),
                              stops=[(0.45, 1.0), (1.0, 0.0)]),
 }
+
+WANDER = 0.34    # share of the rule's BOX given over to the centreline moving,
+                 # the rest being the stroke itself; --rule-w in main.css
+                 # divides the asked-for weight by (1 - this) to size the box
+BINS = 200       # samples taken along a stroke to find that centreline
+CURVE_STEPS = 8  # pieces each curve is cut into to take those samples
+SMOOTH = 9       # bins averaged over, so amplifying it does not amplify noise
 
 DROP_PX = 0.35   # a subpath thinner than this once squashed draws nothing
 MIN_STEP = 0.12  # nor does a segment that goes nowhere once squashed
@@ -187,6 +195,139 @@ def bounds(subpaths):
     return min(xs), min(ys), max(xs), max(ys)
 
 
+def flatten(shape, steps=CURVE_STEPS):
+    """The shape as closed polylines, in SVG's y-down space.
+
+    Curves are subdivided evenly rather than adaptively: everything here is
+    about to be squashed to a few pixels, so eight pieces is already finer
+    than the result can show.
+    """
+    polys = []
+    for sub in shape:
+        pts, pen, start = [], None, None
+        for kind, ps in sub:
+            q = [(x, PAGE_H - y) for x, y in ps]
+            if kind == "M":
+                pen = start = q[0]
+                pts = [pen]
+            elif kind == "L":
+                pts.append(q[0])
+                pen = q[0]
+            elif kind == "C" and pen is not None:
+                a, b, c, d = pen, q[0], q[1], q[2]
+                for k in range(1, steps + 1):
+                    t = k / float(steps)
+                    m = 1.0 - t
+                    pts.append((m*m*m*a[0] + 3*m*m*t*b[0] + 3*m*t*t*c[0] + t*t*t*d[0],
+                                m*m*m*a[1] + 3*m*m*t*b[1] + 3*m*t*t*c[1] + t*t*t*d[1]))
+                pen = d
+            elif kind == "Z" and start is not None:
+                pts.append(start)
+                pen = start
+        if len(pts) > 2:
+            if pts[0] != pts[-1]:
+                pts.append(pts[0])          # outlines are filled, so closed
+            polys.append(pts)
+    return polys
+
+
+def envelope(polys, along, bins=BINS):
+    """The stroke's two edges, sampled across its length.
+
+    Read by crossing the outline with a line at each sample rather than by
+    binning its points: a long straight run of one edge puts no points in
+    the bins it passes over, so point-binning loses that edge exactly where
+    the stroke is calmest, and reports the other edge as the middle. The
+    centreline that comes out of that is noise, and this file's whole
+    purpose is to amplify the centreline.
+
+    Empty samples - where the brush has left the paper - borrow the nearest
+    neighbour, and the centreline is smoothed, since a sample or two of
+    jitter would come out as a kink once amplified.
+    """
+    segs = [(a, b) for poly in polys for a, b in zip(poly, poly[1:])]
+    us = [p[along] for poly in polys for p in poly]
+    u0, u1 = min(us), max(us)
+    step = (u1 - u0) / bins
+    lo = [None] * bins
+    hi = [None] * bins
+
+    for a, b in segs:
+        ua, ub = a[along], b[along]
+        if ua == ub:
+            continue
+        i0 = int((min(ua, ub) - u0) / step)
+        i1 = int((max(ua, ub) - u0) / step)
+        for i in range(max(0, i0), min(bins - 1, i1) + 1):
+            u = u0 + (i + 0.5) * step
+            if (ua - u) * (ub - u) > 0:
+                continue                    # the sample misses this segment
+            v = (a[1 - along]
+                 + (b[1 - along] - a[1 - along]) * (u - ua) / (ub - ua))
+            lo[i] = v if lo[i] is None else min(lo[i], v)
+            hi[i] = v if hi[i] is None else max(hi[i], v)
+
+    seen = [i for i in range(bins) if lo[i] is not None]
+    for i in range(bins):
+        if lo[i] is None:
+            j = min(seen, key=lambda k: abs(k - i))
+            lo[i], hi[i] = lo[j], hi[j]
+
+    mid = [(lo[i] + hi[i]) / 2.0 for i in range(bins)]
+    span = [hi[i] - lo[i] for i in range(bins)]
+    k = SMOOTH // 2
+    centre = [sum(mid[max(0, i-k):i+k+1]) / len(mid[max(0, i-k):i+k+1])
+              for i in range(bins)]
+    return u0, u1, centre, span
+
+
+def placer(shape, axis, target):
+    """A map from sheet coordinates into the box the rule is drawn in.
+
+    A plain squash of the bounding box loses the stroke almost entirely.
+    The wander of a brush across 25 units of sheet is a couple of units;
+    flattened into three pixels it is a fifth of one, and what is left is a
+    straight band of even weight - which is what a ruled line already was.
+
+    So the two are separated and scaled apart. The target is the stroke's
+    own weight: its thickest point comes out at exactly that. The wander is
+    then given room on top, in a box WANDER wider than the stroke, so that
+    asking for three pixels gives three pixels of ink that move about
+    rather than two pixels of ink with a pixel of margin. The stylesheet
+    has to size the box to match - see --rule-w, which divides by the same
+    figure this prints.
+
+    The centreline is clamped to its own 5th and 95th percentiles before
+    being scaled. A stroke that flicks hard at one end would otherwise set
+    the range on its own and leave the length of it, where the eye actually
+    reads the line, as straight as it was before; the ends are tapering to
+    nothing and fading out under the mask anyway.
+    """
+    along = 0 if axis == "h" else 1                   # index of the long axis
+    tu, tv = (target[0], target[1]) if axis == "h" else (target[1], target[0])
+    u0, u1, centre, span = envelope(flatten(shape), along)
+    box = tv / (1.0 - WANDER)               # the stroke, plus room to move
+    ranked = sorted(centre)
+    lo = ranked[int(0.05 * len(ranked))]
+    hi = ranked[int(0.95 * len(ranked))]
+    home = (hi + lo) / 2.0
+
+    thick = tv / max(span)
+    drift = (box * WANDER / (hi - lo)) if hi - lo > 1e-9 else 0.0
+
+    def place(p):
+        q = (p[0], PAGE_H - p[1])
+        u, v = q[along], q[1 - along]
+        t = (u - u0) / (u1 - u0) * (BINS - 1)
+        i = max(0, min(BINS - 2, int(t)))
+        c = centre[i] + (centre[i + 1] - centre[i]) * (t - i)
+        U = (u - u0) / (u1 - u0) * tu
+        V = box / 2.0 + (min(max(c, lo), hi) - home) * drift + (v - c) * thick
+        return (U, V) if axis == "h" else (V, U)
+
+    return place, box
+
+
 def flat(pen, q):
     """True if a cubic's handles sit on its own chord, to within FLAT_PX.
 
@@ -210,31 +351,24 @@ def flat(pen, q):
     return True
 
 
-def draw(subpaths, box, scale):
+def draw(subpaths, place):
     """One `d` attribute, in the box the stroke is drawn in.
 
-    Coordinates are squashed into the target box here rather than left in
-    the sheet's space and squashed by the viewBox, so that rounding them to
-    two decimals means a hundredth of a rendered pixel instead of a
-    hundredth of a sheet unit - across a 16x horizontal squash those are
-    three orders of magnitude apart, and the finer one is all bytes and no
-    ink. Rounding then makes whole segments degenerate, and curves whose
-    handles have collapsed onto their ends are just lines, so both are
-    written out.
+    Coordinates are placed into the target box here rather than left in the
+    sheet's space and squashed by the viewBox, so that rounding them to two
+    decimals means a hundredth of a rendered pixel instead of a hundredth
+    of a sheet unit - across a 16x squash those are three orders of
+    magnitude apart, and the finer one is all bytes and no ink. Rounding
+    then makes whole segments degenerate, and curves whose handles have
+    collapsed onto their ends are just lines, so both are written out.
     """
-    x0, y0, _, y1 = box
-    sx, sy = scale
-
-    def to(p):
-        return (round((p[0] - x0) * sx, 2), round((y1 - p[1]) * sy, 2))
-
     d, pen = [], None
     for sub in subpaths:
         for kind, pts in sub:
             if kind == "Z":
                 d.append("Z")
                 continue
-            q = [to(p) for p in pts]
+            q = [tuple(round(c, 2) for c in place(p)) for p in pts]
             if pen is not None and kind != "M" and all(
                     abs(p[0] - pen[0]) < MIN_STEP and abs(p[1] - pen[1]) < MIN_STEP
                     for p in q):
@@ -247,14 +381,15 @@ def draw(subpaths, box, scale):
 
 
 def build(shape, axis, target, stops):
-    x0, y0, x1, y1 = bounds(shape)
-    w, h = x1 - x0, y1 - y0
-    sx, sy = target[0] / w, target[1] / h
+    place, box = placer(shape, axis, target)
+    target = (target[0], box) if axis == "h" else (box, target[1])
 
     kept = []
     for sub in shape:
-        a, b, c, d = bounds([sub])
-        if (c - a) * sx < DROP_PX or (d - b) * sy < DROP_PX:
+        got = [place(p) for _, ps in sub for p in ps]
+        w = max(p[0] for p in got) - min(p[0] for p in got)
+        h = max(p[1] for p in got) - min(p[1] for p in got)
+        if w < DROP_PX or h < DROP_PX:
             continue                       # too small to reach a pixel
         kept.append(sub)
 
@@ -267,8 +402,9 @@ def build(shape, axis, target, stops):
         '<linearGradient id="f" x1="%d" y1="%d" x2="%d" y2="%d">%s</linearGradient>'
         '<path d="%s" fill="url(#f)"/></svg>'
     ) % (target[0], target[1], coords[0], coords[1], coords[2], coords[3],
-         ramp, draw(kept, (x0, y0, x1, y1), (sx, sy)))
-    return svg, len(shape), len(kept), w, h
+         ramp, draw(kept, place))
+    x0, y0, x1, y1 = bounds(shape)
+    return svg, len(shape), len(kept), x1 - x0, y1 - y0
 
 
 def main():
@@ -282,6 +418,7 @@ def main():
             fh.write(svg)
         print("  %-16s shape %-4d %6.1f x %-6.1f  %4d -> %-4d subpaths  %6.1f kB"
               % (name, spec["shape"], w, h, before, after, len(svg) / 1024.0))
+    print("box is the asked-for weight / %.2f = x%.3f" % (1 - WANDER, 1 / (1 - WANDER)))
 
 
 if __name__ == "__main__":
