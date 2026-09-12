@@ -20,18 +20,16 @@
      keeps it true, and this 1px is what a browser without it falls back
      to — today's behaviour. See that script for why it is needed. */
   --device-px: 1px;
-  /* The weight of the home page's brush rules: five physical pixels at
-     any zoom, measured on the stroke itself at its fullest.
-     --rule-w is the box the stroke is masked into, which has to be wider,
-     because the stroke wanders inside it rather than running straight down
-     the middle. The 0.66 is what tools/gen-brush-rules.py leaves for ink
-     after its wander budget; it prints the figure, and the two must agree
-     or the rule is drawn at the wrong weight. */
+  /* The weight of the home page's brushwork: five physical pixels at any
+     zoom, measured on the stroke itself at its fullest. --ul-w is the box
+     the stroke is masked into, which has to be wider, because the stroke
+     wanders inside it rather than running straight down the middle. The
+     0.88 is what tools/gen-brush-rules.py leaves for ink after the
+     underlines' wander budget; it prints the divisor for every file it
+     writes, and these lines have to match it or the mark is drawn at the
+     wrong weight. Only the narrow layout's underlines use it now — the
+     desktop rules the generator's wider 0.66 sheet served are gone. */
   --rule-ink: calc(var(--device-px) * 5);
-  --rule-w: calc(var(--rule-ink) / 0.66);
-  /* The narrow layout's underlines are the same weight but wander less, so
-     their box is nearer the stroke — the generator prints the divisor for
-     every file it writes, and these two lines have to match it. */
   --ul-w: calc(var(--rule-ink) / 0.88);
   --font: "Proza Libre", Georgia, serif;
   --measure: 680px;          /* comfortable reading width */
@@ -146,199 +144,45 @@ a { color: inherit; }
 .home-body { overflow: hidden; }
 
 .home {
-  /* The nav's type size, shared because the pine backdrop is placed from it:
-     the rules run twice the width of their word, so where the drawing starts
-     is a multiple of this. See .home-pines. */
+  /* The nav's type size, named so the layout can be measured against it. */
   --nav-size: clamp(19px, 4.333vh, 48px);
   position: relative;
   height: 100vh;
   height: 100dvh;
   width: 100%;
   user-select: none;
-  /* The pine backdrop runs off the right edge on most windows and is meant
-     to be cropped there. .home-body's `overflow: hidden` is not enough for
-     that: hidden hides the scrollbar but still makes a scroll container, so
-     the page could be swiped 708px sideways onto bare washi — measured, not
-     assumed. `clip` makes no scroll container at all. It is set on the x
-     axis alone, which only `clip` allows: `hidden` on one axis forces the
-     other out of `visible`, and the narrow layout scrolls down the page. */
+  /* Nothing here is meant to be swipeable sideways. `clip` rather than
+     `hidden` because hidden still makes a scroll container, which would let
+     any stray overflow be swiped onto bare washi; clip makes none at all. It
+     is set on the x axis alone, which only `clip` allows: `hidden` on one
+     axis forces the other out of `visible`, and the narrow layout scrolls
+     down the page. */
   overflow-x: clip;
-}
-
-/* Pine backdrop — Hasegawa Tōhaku's "Pine Trees" screen as a vector
-   (tohaku-pines.svg, cut from the traced painting by
-   tools/gen-tohaku-pines.py; re-run that script rather than editing the
-   SVG). A background-image in light mode; in dark mode the same SVG becomes
-   an alpha mask over the ink color, recoloring the #222222 strokes to washi
-   ink while keeping every stroke's transparency.
-
-   On desktop the drawing is the hero's opposite number rather than a filler
-   for the panel beside it. The box takes the picture's own two figures —
-   4.052dvh off the bottom and 91.896dvh tall, which are .hero-frame's stroke
-   and the height inside it — so the two stand on one line, top and foot, with
-   the same stroke of washi above each. Width follows from that height and the
-   drawing's own ratio, so nothing is stretched to fit anything.
-
-   Its foot lands at the picture's foot, so the drawing and the picture share
-   a ground line. Starting it out at the rules also repays a cost this comment
-   used to record: the drawing no longer lies under the social row, so in dark
-   the footer is back on bare ink and the olive measures 4.67:1 there instead
-   of 4.26:1 — the far side of the 4.5:1 the palette is otherwise solved to.
-
-   Horizontally it starts where the longest brush rule ends, and that edge is
-   worth spelling out because CSS cannot measure text. Each rule reaches twice
-   the width of its own word (see .home-links > a::after, `right: -100%`), the
-   words all start on .home-nav's left edge, and the longest of the three is
-   "gallery" — so the rightmost rule ends 2 x 3.307em past 93.19dvh. Measured
-   at four window sizes that ratio holds to four decimals, and stating it in
-   em rather than dvh is what keeps it true once the type stops growing at the
-   clamp's ceiling: the anchor follows the type, whatever sets the type's size.
-   It does assume the words and the webfont, and would drift on the Georgia
-   fallback; the drift is a few pixels of gap or overlap, not a broken layout.
-
-   Then max() against the window's right edge. On an ordinary window the
-   drawing runs off to the right and is cropped there (.home-body hides the
-   overflow); on a wide enough one — past about 2630px at 1080 tall — the
-   whole width fits, and from there it sits flush right as it always did.
-
-   Driving the width from the height retires the failure the old min()
-   guarded: sized from the panel, a wide short window made the box taller than
-   the window and beheaded the crowns. Tied to the window's height it cannot
-   overflow vertically at any proportion.
-
-   The SVG's viewBox is cut to the drawing (gen-tohaku-pines.py measures it
-   and prints the numbers), so the leftmost tree sits on the box's left edge,
-   the right group runs off its right edge with no built-in margin, and the
-   tall pale crowns reach the top edge — the screen's bare middle panels are
-   squeezed out to bring the two groups that close, and nothing is cropped to
-   reach a ratio. `background-size: 100% 100%` then fills the box exactly. The
-   2000/1287 in the width below is the viewBox's own ratio, not a design
-   choice, and must be kept equal to it — matched, the fill is a plain scale;
-   drifted, the drawing stretches slightly rather than letterboxing whitespace
-   back in. */
-.home-pines {
-  position: absolute;
-  bottom: calc(100vh * 0.04052);
-  bottom: calc(100dvh * 0.04052);
-  left: max(calc(100vh * 0.9319 + 6.614 * var(--nav-size)),
-            calc(100% - 100vh * 0.91896 * 2000 / 1287));
-  left: max(calc(100dvh * 0.9319 + 6.614 * var(--nav-size)),
-            calc(100% - 100dvh * 0.91896 * 2000 / 1287));
-  height: calc(100vh * 0.91896);
-  height: calc(100dvh * 0.91896);
-  width: calc(100vh * 0.91896 * 2000 / 1287);
-  width: calc(100dvh * 0.91896 * 2000 / 1287);
-  background-image: url("../img/tohaku-pines.svg");
-  background-size: 100% 100%;
-  background-position: bottom center;
-  background-repeat: no-repeat;
-  z-index: 0;
-  pointer-events: none;
-  /* 0.5 on paper and 0.4 masked, and the mobile band below uses the same
-     two numbers. The backdrop is one drawing at one weight whatever the
-     layout; the split into two files there buys position, nothing else.
-     Keep the figures in step — desktop used to run at 0.95 and 0.80 against
-     mobile's 0.43, and at this panel's width that read as too much ink
-     beside the hero.
-
-     Dark sits below light rather than above it because a pale layer on a
-     near-black ground gains apparent weight faster than the same layer on
-     paper. That asymmetry is the whole reason gen-tohaku-pines.py bends the
-     tone curve at all.
-
-     These two set the drawing's overall weight and nothing else. What the
-     back pines carry against the front trees is fixed inside the file by
-     MIST_GAIN, so it does not move when these do. */
-  opacity: 0.5;
-}
-
-[data-theme="dark"] .home-pines {
-  background-image: none;
-  background-color: var(--ink);
-  -webkit-mask-image: url("../img/tohaku-pines.svg");
-  mask-image: url("../img/tohaku-pines.svg");
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-  -webkit-mask-position: bottom center;
-  mask-position: bottom center;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  opacity: 0.4;
 }
 
 /* The mat around the hero. Stroke width = 5% of the displayed image width;
    with the 1134x1286 image (ratio r=0.8818) and the frame filling the full
    viewport height, solving
      stroke = 0.05 · r · (100dvh − 2·stroke)
-   gives stroke ≈ 4.052dvh. The right stroke is then doubled to 8.104dvh, so
-   the frame is 4.052 + 81.034 + 8.104 ≈ 93.19dvh wide (the image itself being
-   0.8818 × 91.896dvh). That extra stroke is the gap the rule below divides,
-   and .home-nav's left offset is the same 93.19dvh — the two must move
-   together or the links overlap the frame.
+   gives stroke ≈ 4.052dvh. The stroke is the same on all four sides, so the
+   frame is 4.052 + 81.034 + 4.052 ≈ 89.14dvh wide (the image itself being
+   0.8818 × 91.896dvh), and .home-nav's left offset is that same 89.14dvh —
+   the two must move together or the links overlap the picture.
 
-   The stroke is transparent rather than washi. That was to let the pines run
-   up to the picture's edge instead of stopping a stroke-width short, back
-   when the drawing was flush right and passed behind the frame; it now starts
-   out at the nav's rules and never reaches here, so the declaration shows
-   nothing either way — the page behind it is washi in light and shares
-   --washi with the mat in dark. It is kept because transparent is the honest
-   description of a mat with nothing in it, and because moving the drawing
-   back is then one line. The padding does the real work regardless: it is
-   what holds the image off the window's edges. */
+   The mat itself paints nothing: it is transparent, so what shows in it is
+   the page — washi in light, ink in dark. All it contributes is distance,
+   holding the picture off the window's edges and off the nav beside it by
+   one stroke on every side.
+*/
 .hero-frame {
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
-  padding: calc(100vh * 0.04052) calc(100vh * 0.08104)
-           calc(100vh * 0.04052) calc(100vh * 0.04052);
-  padding: calc(100dvh * 0.04052) calc(100dvh * 0.08104)
-           calc(100dvh * 0.04052) calc(100dvh * 0.04052);
+  padding: calc(100vh * 0.04052);
+  padding: calc(100dvh * 0.04052);
   background: transparent;
   z-index: 1;
-}
-
-/* A brush stroke of the accent down the middle of that doubled stroke,
-   dividing the picture from the links and the social row.
-
-   The mark is a mask, not a fill: the box is painted flat in --rust and a
-   stroke lifted off a sheet of vector brushwork decides where the paint
-   survives (tools/gen-brush-rules.py). That is what lets one file serve both
-   themes — the colour is the stylesheet's, so the same stroke is rust on
-   paper and olive on ink — and it is also how the fade at the ends arrives,
-   carried in the mask's own alpha rather than a gradient underneath.
-
-   Squashed from 48 units wide to three pixels, none of the brush's texture
-   survives; what reads at this size is the taper, the drift off true, and
-   the ragged end. That is the whole point of it over a ruled line.
-
-   Centred in the stroke, it lands at 4.052 + 81.034 + 4.052 ≈ 89.14dvh — which
-   is exactly where the frame's right edge sat before the stroke was doubled. So
-   the mark stays on a boundary the layout already had rather than inventing a
-   new one; that is why the stroke is doubled rather than the rule hand-placed.
-
-   It fades out over the top and bottom eighth instead of ending flat. A flat
-   end would stop level with the picture's corners and read as a second frame;
-   tapering leaves the corners to the picture and the crowns to the drawing
-   behind it. The mobile block switches it off — see there. */
-.hero-frame::after {
-  content: "";
-  position: absolute;
-  top: calc(100vh * 0.04052);
-  top: calc(100dvh * 0.04052);
-  bottom: calc(100vh * 0.04052);
-  bottom: calc(100dvh * 0.04052);
-  right: calc(100vh * 0.04052 - var(--rule-w) / 2);
-  right: calc(100dvh * 0.04052 - var(--rule-w) / 2);
-  width: var(--rule-w);
-  background: var(--rust);
-  -webkit-mask-image: url("../img/brush-spine.svg");
-  mask-image: url("../img/brush-spine.svg");
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  pointer-events: none;
 }
 
 /* The <picture> wrapper must not create its own box, so .home-hero keeps
@@ -352,11 +196,11 @@ a { color: inherit; }
   display: block;
 }
 
-/* The nav starts at the framed hero's right edge (≈ 93.19dvh, see
-   .hero-frame), i.e. two stroke-widths past the image now that the right
-   stroke is doubled, with the rule down the middle of them. The three links
-   sit in .home-links inside it; the social row is the nav's own child, and
-   the two share this left edge — which is what the links are aligned to.
+/* The nav starts at the framed hero's right edge (≈ 89.14dvh, see
+   .hero-frame), i.e. one stroke-width past the picture — the same distance
+   the mat holds on every other side. The three links sit in .home-links
+   inside it; the social row is the nav's own child, and the two share this
+   left edge — which is what the links are aligned to.
    Vertically it spans the hero's content edges (inside the stroke):
    links start at the image's top edge, the social row is pushed to its
    bottom edge. */
@@ -366,8 +210,8 @@ a { color: inherit; }
   top: calc(100dvh * 0.04052);
   bottom: calc(100vh * 0.04052);
   bottom: calc(100dvh * 0.04052);
-  left: calc(100vh * 0.9319);
-  left: calc(100dvh * 0.9319);
+  left: calc(100vh * 0.8914);
+  left: calc(100dvh * 0.8914);
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -375,19 +219,15 @@ a { color: inherit; }
   gap: clamp(8px, 2.25vh, 28px);
 }
 
-/* The three links, stacked on their own so their rules can be measured
-   against each word. They cannot be direct children of .home-nav for that:
-   the nav's width is set by the social row, which is about twice as wide as
-   the longest word. */
+/* The three links, stacked on their own rather than as direct children of
+   .home-nav, so they keep their own width: the nav's is set by the social
+   row, which is about twice as wide as the longest word. */
 .home-links {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   width: max-content;
-  /* Named because the rules are placed from it: each one hangs half a gap
-     below its own box, which is what centres it between the two words. */
-  --nav-gap: clamp(8px, 2.25vh, 28px);
-  gap: var(--nav-gap);
+  gap: clamp(8px, 2.25vh, 28px);
 }
 
 /* Two thirds the size the words used to be, and with no inline padding at
@@ -406,63 +246,6 @@ a { color: inherit; }
   letter-spacing: 0.01em;
   padding: 0.443em 0;
   transition: color 0.2s ease;
-}
-
-/* Each link's rule. It reaches back one stroke to start ON the vertical line
-   .hero-frame::after draws, so the nav reads as an index written against that
-   line rather than as three marks that happen to sit near it — one vertical
-   on the page, three horizontals hung off it.
-
-   `right: -100%` is a percentage of this element's own width, and since the
-   link carries no inline padding that width is exactly the word: the rule
-   overhangs by as much again as the word measures. It therefore stretches
-   and shrinks with the type instead of being a number to maintain.
-
-   Like the vertical, each is a brush stroke masking a flat fill of --rust,
-   and each of the three is a different stroke off the same sheet, so the
-   nav reads as three marks made by one hand rather than one mark stamped
-   three times. All three are fullest where they meet the vertical and thin
-   away to the right, which is the direction the fade runs anyway. The fade
-   itself is carried in the mask's alpha — see the generator. Desktop only:
-   the mobile block switches them off.
-
-   Half a gap below its own box is the midpoint between its word and the
-   next: the boxes are as tall as their text plus equal padding, so the
-   space from one word down to the box edge and from the next word up to
-   its box edge are already equal, and the gap between them is all that is
-   left to halve. Each rule therefore sits the same distance under the word
-   it belongs to as it does above the one below. Its own weight is added to
-   the offset so that it is the stroke's middle that lands there, not its
-   lower edge. */
-.home-links > a::after {
-  content: "";
-  position: absolute;
-  bottom: calc((var(--nav-gap) + var(--rule-w)) / -2);
-  left: calc(100vh * -0.04052);
-  left: calc(100dvh * -0.04052);
-  right: -100%;
-  height: var(--rule-w);
-  background: var(--rust);
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  pointer-events: none;
-}
-
-.home-links > a:nth-child(1)::after {
-  -webkit-mask-image: url("../img/brush-rule-1.svg");
-  mask-image: url("../img/brush-rule-1.svg");
-}
-
-.home-links > a:nth-child(2)::after {
-  -webkit-mask-image: url("../img/brush-rule-2.svg");
-  mask-image: url("../img/brush-rule-2.svg");
-}
-
-.home-links > a:nth-child(3)::after {
-  -webkit-mask-image: url("../img/brush-rule-3.svg");
-  mask-image: url("../img/brush-rule-3.svg");
 }
 
 .home-links > a:hover,
@@ -501,328 +284,6 @@ a { color: inherit; }
     flex-direction: column;
   }
 
-  /* Pines become the backdrop behind the three links, as the screen's own
-     two groups standing either side of them: the near group
-     (tohaku-pines-left.svg) on the left, the far one
-     (tohaku-pines-right.svg) hung from the top right. The near group stands
-     with its roots on the band's bottom edge, where the file's own ground
-     line puts them; the far group does not stand on that ground at all —
-     it hangs from the band's top edge, which is the framed hero's outer
-     stroke boundary, and runs flush to the window on the right.
-
-     Both are still sized from ONE figure, --pine-h, the height the near
-     group takes. The far group is 0.9106 as tall as the near one in the
-     painting (1171.9 of its 1286.9 source units) and is then taken to four
-     fifths of that again, so its height stays tied to the near group's
-     rather than floating free. Sizing each group to a fraction of the BAND
-     instead — which is what this rule used to do, 92% for the near group
-     and 100% for the far one — draws the far group 19% LARGER than the near
-     one and inverts the screen's depth: the distant pine comes out the
-     biggest, coarsest thing on the page and the near grove reads as a
-     smudge. Whatever else changes here, keep the two bound to one figure;
-     never give them separate heights.
-
-     The scene scales with the viewport rather than sitting at a fixed
-     pixel size: at 258px — the band's full height — the two groups take
-     1.0933 and 0.5100 of that in width, close enough on a wide phone but
-     enough to stand the trunks under the links on a narrow one. --pine-h
-     is therefore clamped against 62vw, so the clear middle the links sit
-     in keeps roughly its proportion from 320px up.
-
-     The near group carries its mist on its left and its dark trees in the
-     middle of its width, so anchored flush left its trunks would stand
-     under the links. It is slid 46% of its own width off the left edge
-     instead — the screen continuing past the frame, as a byōbu does. The
-     far group needs no such offset: reduced as it is, it stays narrow
-     enough (0.47 x --pine-h in width, against the near group's 1.09) to sit
-     flush in the top-right corner and still leave the band's middle to the
-     links.
-
-     The two groups are separate pseudo-elements rather than two background
-     layers on one box because they no longer share an opacity; the box
-     itself carries only the fade that keeps the drawing from being sliced
-     by its own edges (see below).
-
-     The band starts at the framed hero's bottom edge (frame height ≈
-     112.19vw, see the .hero-frame math) and ENDS ON THE FOOTER ICONS' TOP
-     EDGE, so the near group, which is anchored to the band's bottom, stands
-     on the icons rather than behind them.
-
-     That edge has to be computed, because the icons no longer sit at a
-     fixed offset: the social row centres itself in whatever height the page
-     has spare (see .home-social), so it moves with the window. The
-     arithmetic:
-
-       icons' top  =  230px + spare/2   below the band's top
-       spare       =  100dvh − 112.19vw − the nav's natural height
-
-     230px is the nav's own top padding (20) + three 60px links + their
-     three 4px gaps + the social row's 18px padding — measured identical at
-     every width from 320 to 767. The nav's natural height is 314px, except
-     that "cookie settings" stops wrapping to two lines at exactly 430px and
-     it becomes 296px, which is what --pine-nav-h carries. Both were
-     measured off the live page, not derived; re-measure them if the link
-     type, the icon size or the row's contents change. An error here is
-     halved before it reaches the band, since only spare/2 is used.
-
-     The formula is spelt out twice, in vh and dvh — the usual fallback —
-     and once more inside @supports below, because a custom property cannot
-     use that trick: an unsupported unit inside one is only caught when the
-     property is USED, and it takes the whole declaration down with it
-     rather than falling back to the line above. */
-  .home-pines {
-    /* The scale the far group is drawn at, and the pattern both groups
-       follow: sized from the viewport's WIDTH and clamped at both ends,
-       never from its height. A drawing that grows when the window gets
-       taller reads as a backdrop stretching rather than a tree at a
-       distance, and it undoes the difference in level the two groups exist
-       to create — so no size in this band may depend on the window's
-       height. The band's own height still does, but that is where the
-       drawing SITS, not how big it is. */
-    --pine-h: clamp(216px, 62vw, 258px);
-    /* The far group's height: 0.91063 (= 1171.9/1286.9, what the painting
-       gives it against the near group) x 0.8 x 1.1 x 1.1 x 0.9 = 0.79334
-       of --pine-h.
-       The 0.8 is a deliberate departure from the shared scale, not a slip:
-       hung from the top-right corner it reads as a far corner of the screen
-       rather than as a tree standing on the near group's ground, and the
-       reduction is what sells the distance. The two 1.1s take it back up a
-       tenth each from there, and the 0.9 a tenth back down.
-
-       The width is NOT the file's own proportion of that height. An earlier
-       pass widened the group 15% against the 10% it was heightened, so it
-       sits at 0.56 x 1.15/1.1 = 0.58545 of its height - a drawing stretched
-       4.55% wider than it is drawn. That is intended; keep the stretch in
-       this ratio rather than "fixing" the width back onto the height. (The
-       later 10% applies to both, so it leaves the ratio alone.) */
-    --pine-far-h: calc(var(--pine-h) * 0.79334);
-    --pine-far-w: calc(var(--pine-far-h) * 0.58545);
-    /* One figure for both groups, equal to .home-pines' own above: the two
-       files are a positioning device, not two subjects, so nothing here
-       should tell them apart by weight. */
-    --pine-ink: 0.5;
-
-    --pine-nav-h: 314px;    /* 296px from 430px up, where the row unwraps */
-    /* The band's height: from the framed hero's bottom edge down to the
-       footer icons' top edge, at every window height.
-
-       The band is the only thing here that follows the window, and it must:
-       it is what keeps the near group's roots on the icons wherever the
-       icons end up. The DRAWING inside it does not follow — see
-       --pine-near-h below.
-
-       The near group is sized from the WIDTH like the far one — see
-       --pine-near-h — and anchored to the BOTTOM. It was a fraction of the
-       band for a while, which tied its size to the window's height; nothing
-       does that any more. The bottom is the anchor that stays because the
-       near group's job is to stand on the icons while the far group hangs
-       from the hero, and it is that difference in level that reads as the
-       asymmetry. Only the crown moves as the band changes; the feet never
-       do. */
-    --pine-band-h: calc(230px + max(0px, 100vh - 100vw * 1.1219
-                                         - var(--pine-nav-h)) / 2);
-    /* Sized from the width, like --pine-h, but on its own curve so the near
-       group stays the larger of the two. The 228px ceiling is not taste: the
-       band is only 230px tall when the page has no spare height — the
-       ordinary case on a phone — and the band clips, so a taller drawing
-       would lose its crown to the band's top edge exactly there. Raise this
-       only alongside that 230. */
-    --pine-near-h: clamp(190px, 58vw, 228px);
-    --pine-near-w: calc(var(--pine-near-h) * 1.0933);
-
-    top: calc(100vw * 1.1219);
-    right: 0;
-    bottom: auto;
-    left: 0;
-    width: auto;
-    height: var(--pine-band-h);
-    aspect-ratio: auto;
-    background-image: none;
-    opacity: 1;
-    /* The far group is rotated (see .home-pines::after). Its ink is shifted
-       back inside the window, but the pseudo-element's own box is the full
-       width of the band and rotating that sweeps its transparent corners
-       past the window's right edge — about 12px of them. Transparent
-       overflow still counts towards the page's scroll width, so without
-       this the page gains a horizontal scrollbar. */
-    overflow: hidden;
-
-    /* Both files' ink runs to all four edges of their own box, so each
-       group's lower edge would otherwise cut roots along an invisible
-       straight line — for the near group a dark root mark under the social
-       row, for the far group, hung clear of the ground, a stray mark left
-       hanging in mid-band. Each fades at its OWN lower edge instead (see
-       the two rules below), which is why the fade cannot live here on the
-       band: the two edges are in different places now.
-
-       Neither fades at the top: the far group is hung from the band's top
-       edge, which is the framed hero's outer stroke boundary, and the join
-       has to be exact — a fade there would leave it floating a few pixels
-       clear of the picture. The near group meets the same edge with its
-       palest mist (0.1088 of the ink before the group's own opacity), so it
-       costs little to leave that hard too. */
-    --pine-fade-near: linear-gradient(to bottom,
-                        #000 0, #000 92%, transparent 100%);
-    --pine-fade-far: linear-gradient(to bottom,
-                       #000 0, #000 82%, transparent 100%);
-  }
-
-  .home-pines::before,
-  .home-pines::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-repeat: no-repeat;
-  }
-
-  /* Near group: 1.0933 x its height wide, and standing at the left edge of
-     the window with 45% of its width cropped off. The crop and the flush
-     edge are one declaration: the box's left edge is the window's, so
-     positioning the drawing at -45% of its own width puts that 45% outside
-     the box, where it is not painted.
-
-     The figure is a crop, not an offset — the drawing is anchored at the
-     window's left edge and loses what falls outside it, rather than being
-     slid leftwards with its far side still notionally in the layout. The
-     grove carries its mist on its left and its trunks in the middle of its
-     width, so the 45% takes the mist and leaves the trunks; too much less
-     and the trunks push under the links, too much more and only mist is
-     left in frame, which is what a 46% SLIDE used to do here.
-
-     Its height comes from the viewport's width (--pine-near-h) and is
-     anchored at the bottom: roots on the footer icons at every window
-     height, crown wherever that leaves it. Nothing about its size follows
-     the window's height.
-
-     Being shorter than the shortest band, it cannot overflow it either, so
-     no window is short enough to cut the crowns on the band's top edge —
-     the job the old --pine-h cap used to do.
-
-     What does go is the single scale — the far group is still sized from
-     --pine-h and no longer moves, so on a tall window the near group grows
-     past it (about 14% larger than the shared figure at 393x852). That
-     reads as MORE depth, not less, since it is the near group that grows;
-     the inversion this whole arrangement exists to prevent would be the far
-     group growing instead. Keep it that way round.
-
-     Its lower edge is the band's, so the fade spans the whole box. */
-  .home-pines::before {
-    background-image: url("../img/tohaku-pines-left.svg");
-    background-size: var(--pine-near-w) var(--pine-near-h);
-    background-position: calc(var(--pine-near-w) * -0.45) bottom;
-    opacity: var(--pine-ink);
-    -webkit-mask-image: var(--pine-fade-near);
-    mask-image: var(--pine-fade-near);
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
-  }
-
-  /* Far group: hung from the band's top-right corner — flush to the window
-     on the right, and with its top on the band's top edge, which is exactly
-     the framed hero's outer stroke boundary, so the screen reads as
-     continuing out from behind the picture. It no longer stands on the near
-     group's ground line; that is the point of hanging it here.
-
-     It is then turned 15 degrees anticlockwise. The rotation has to be a
-     transform on the box — a background image cannot be turned — with
-     transform-origin pinned to the corner the drawing is anchored to;
-     rotating about the box's own centre would swing the group out of the
-     band entirely.
-
-     Rotating about that corner alone is not enough, because it pins the
-     BOX's corner while what has to stay put is the INK's. The drawing does
-     not reach its own top-right corner — that part of the trace is empty
-     sky — so a plain rotation drops the crown 0.0818 of the group's height
-     below the band's top edge (the join with the picture visibly opens up)
-     and swings the trunk, which is the drawing's rightmost mass, 0.2545 of
-     that height past the window, where the band's clip eats it.
-
-     The translate below undoes exactly that: the figures are the rotated
-     ink's own bounding box, measured off the rasterised file at several
-     alpha thresholds (they hold to within 0.015 across them), so the
-     topmost ink lands on the band's top edge and the rightmost ink on the
-     window's edge. The horizontal figure is then pulled in 0.0263 from the
-     0.2545 the raw bounding box gives: the last of the trunk is a tail so
-     faint it renders below a tenth of a percent against the paper, and
-     keeping it in frame stood the visible trunk 6px short of the edge.
-     Rotated and shifted, the drawing spans about 150px in from the right
-     and bottoms out around 0.91 of its height, well inside the band. Both
-     figures were checked against the painted pixels rather than the
-     arithmetic, at 320/393/430. Re-measure them if the angle changes — they
-     are specific to 15 degrees. Its own bottom fade turns with it, since
-     the mask is applied before the transform. */
-  .home-pines::after {
-    background-image: url("../img/tohaku-pines-right.svg");
-    background-size: var(--pine-far-w) var(--pine-far-h);
-    background-position: right top;
-    opacity: var(--pine-ink);
-    /* the fade is cut to the group's own height, not the band's, so it
-       lands on the drawing's lower edge wherever that falls */
-    -webkit-mask-image: var(--pine-fade-far);
-    mask-image: var(--pine-fade-far);
-    -webkit-mask-size: 100% var(--pine-far-h);
-    mask-size: 100% var(--pine-far-h);
-    -webkit-mask-position: right top;
-    mask-position: right top;
-    transform-origin: 100% 0;
-    transform: translate(calc(var(--pine-far-h) * -0.2282),
-                         calc(var(--pine-far-h) * -0.0818))
-               rotate(-15deg);
-  }
-
-  /* Dark mode: the same two files become alpha masks over the ink colour,
-     one per pseudo-element. That takes each group's mask slot, so the fade
-     at its lower edge cannot also be a mask here — it moves into the fill
-     instead: the ink is painted as a gradient that runs out at the same
-     percentage, which the group's own mask then cuts to the drawing. Same
-     result, one mask layer.
-
-     The desktop dark rule ([data-theme=...] .home-pines) outranks the
-     mobile .home-pines rule above, so the box's ink fill and its whole-
-     drawing mask have to be undone here by name — left in place they mask
-     the two groups a second time, with the desktop file's shape, and the
-     band all but disappears. */
-  [data-theme="dark"] .home-pines {
-    --pine-ink: 0.4;
-    background-color: transparent;
-    -webkit-mask-image: none;
-    mask-image: none;
-    opacity: 1;
-  }
-
-  [data-theme="dark"] .home-pines::before,
-  [data-theme="dark"] .home-pines::after {
-    background-color: transparent;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-  }
-
-  [data-theme="dark"] .home-pines::before {
-    background-image: linear-gradient(to bottom,
-                        var(--ink) 0, var(--ink) 92%, transparent 100%);
-    background-size: 100% 100%;
-    background-position: 0 0;
-    -webkit-mask-image: url("../img/tohaku-pines-left.svg");
-    mask-image: url("../img/tohaku-pines-left.svg");
-    -webkit-mask-size: var(--pine-near-w) var(--pine-near-h);
-    mask-size: var(--pine-near-w) var(--pine-near-h);
-    -webkit-mask-position: calc(var(--pine-near-w) * -0.45) bottom;
-    mask-position: calc(var(--pine-near-w) * -0.45) bottom;
-  }
-
-  [data-theme="dark"] .home-pines::after {
-    background-image: linear-gradient(to bottom,
-                        var(--ink) 0, var(--ink) 82%, transparent 100%);
-    background-size: 100% var(--pine-far-h);
-    background-position: right top;
-    -webkit-mask-image: url("../img/tohaku-pines-right.svg");
-    mask-image: url("../img/tohaku-pines-right.svg");
-    -webkit-mask-size: var(--pine-far-w) var(--pine-far-h);
-    mask-size: var(--pine-far-w) var(--pine-far-h);
-    -webkit-mask-position: right top;
-    mask-position: right top;
-  }
-
   /* Full-width frame: stroke = 5% of image width with the frame spanning
      100vw → stroke = 0.05 · (100vw − 2·stroke) ≈ 4.545vw. */
   .hero-frame {
@@ -837,14 +298,7 @@ a { color: inherit; }
     height: auto;
   }
 
-  /* No rule here: the frame spans the full width, the links sit under the
-     picture rather than beside it, and there is no gap to divide. The frame
-     is `position: static` below too, so the rule would have nothing to
-     position against. */
-  .hero-frame::after { display: none; }
-
   .home-nav {
-    /* relative (not static) so it stacks above the pines backdrop */
     position: relative;
     z-index: 1;
     left: auto;
@@ -854,7 +308,10 @@ a { color: inherit; }
     align-items: center;
     text-align: center;
     gap: 4px;
-    padding: 20px 16px 36px;
+    /* The side padding is the hero's own stroke (see .hero-frame above), so
+       the links ranged right below line up with the picture's right edge
+       rather than with an inset of their own. */
+    padding: 20px calc(100vw * 0.04545) 36px;
     /* Grow into whatever the hero and the links leave of the viewport, so
        the social row below has room to centre itself in it (see
        .home-social). flex-grow alone, not the flex shorthand: a 0 basis
@@ -865,37 +322,40 @@ a { color: inherit; }
     flex-grow: 1;
   }
 
-  /* The wrapper is neutralised here: stretched rather than the desktop
-     max-content, so each link still centres in the nav's own width exactly
-     as it did before the wrapper existed. Verified pixel-identical. */
+  /* Stretched across the nav rather than the desktop max-content, so the
+     three words can be ranged against one of its edges. They are ranged
+     RIGHT: the picture above ends a stroke in from the window, and so do
+     they, which is the line the two share. The underlines travel with the
+     words, being drawn on the spans inside them. */
   .home-links {
     align-self: stretch;
     width: auto;
-    align-items: center;
+    align-items: flex-end;
+    text-align: right;
     gap: 4px;
   }
 
+  /* No inline padding, so each word's own right edge is what lands on the
+     nav's — anything here would push it off by that much. The block padding
+     still makes a ~48px-tall tap target. */
   .home-links > a {
     font-size: 34px;
     line-height: normal;
-    padding: 7px 24px; /* still a ~48px-tall tap target */
+    padding: 7px 0;
   }
 
-  /* No rule here: the links sit under the picture rather than beside it, so
-     there is no vertical line for one to hang off. The words are underlined
-     instead — and only partly, so that the mark reads as one made over the
-     word rather than as a border under it: all of "about", "blo" of "blog",
-     "alle" of "gallery". The spans in index.njk set those spans of letters;
-     a span is inline, so its box is exactly the letters it holds.
+  /* The words are underlined — and only partly, so that the mark reads as
+     one made over the word rather than as a border under it: all of
+     "about", "blo" of "blog", "alle" of "gallery". The spans in index.njk
+     set those spans of letters; a span is inline, so its box is exactly the
+     letters it holds.
 
      These strokes carry no fade of their own, so they end where the brush
      thinned out. Sitting a touch above the line box's foot puts them where
      an underline goes, just clear of the baseline, rather than below the
-     descenders. They also wander less than the rules opposite — a word is a
-     straight edge to measure against, so a bend that reads as brushwork
-     across open paper reads here as an underline that has slipped. */
-  .home-links > a::after { display: none; }
-
+     descenders. They wander little: a word is a straight edge to measure
+     against, so a bend that would read as brushwork across open paper reads
+     here as an underline that has slipped. */
   .home-links .stroke { position: relative; }
 
   .home-links .stroke::after {
@@ -952,30 +412,6 @@ a { color: inherit; }
   }
 
   .home-social svg { width: 26px; height: 26px; }
-}
-
-/* From 430px up the social row's "cookie settings" stops wrapping to two
-   lines, so the nav is 18px shorter and the page has that much more spare
-   height to share out. .home-pines' band, which ends on the icons, has to
-   know. (A separate rule rather than one nested in the block above: plain
-   CSS cannot put @media inside @media.) */
-@media (min-width: 430px) and (max-width: 767px) {
-  .home-pines { --pine-nav-h: 296px; }
-}
-
-/* The dvh half of the fallback for --pine-band-h. It cannot be written as a
-   second declaration next to the vh one the way a real property can: a
-   custom property swallows any unit at parse time and only fails when it is
-   used, and a var() that fails there does not fall back to the declaration
-   above it — it leaves the property unset. So the dvh form is gated on
-   support instead, and browsers without dvh keep the vh form. */
-@supports (height: 1dvh) {
-  @media (max-width: 767px) {
-    .home-pines {
-      --pine-band-h: calc(230px + max(0px, 100dvh - 100vw * 1.1219
-                                           - var(--pine-nav-h)) / 2);
-    }
-  }
 }
 
 /* ==========================================================================
