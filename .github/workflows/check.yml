@@ -1,0 +1,42 @@
+# Checks the home page's hill backdrop. This workflow NEVER publishes
+# anything — deploying is still the manual "Deploy to GitHub Pages" button,
+# and a red run here cannot stop you pressing it. It is here to catch the one
+# class of mistake the code cannot catch itself: the backdrop is placed
+# against things the browser measures at runtime (the foot of a link, the top
+# of the footer row), and a handful of figures in main.css are hand-measured
+# copies of those. When one drifts, nothing about CSS says so.
+name: Check the hills
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # Cheap and browserless: have the drawings and the figures in main.css
+      # drifted from tools/gen-hills.py? This is the whole of the first class
+      # of mistake, and it costs a second.
+      - name: The drawings match their generator
+        run: python3 tools/gen-hills.py --check
+
+      - run: npm run build
+
+      # Playwright is deliberately not a dependency of the site — see the top
+      # of tools/check-hills.mjs — so it is installed just for this job.
+      - name: Install a browser
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: The backdrop keeps its rules
+        run: node tools/check-hills.mjs

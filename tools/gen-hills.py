@@ -74,8 +74,100 @@ rather than invented:
   EASING OUT. Each flank's outermost segments taper — 0.22, then 0.10, then
   the flat — so the outline settles onto its ground rather than meeting it
   at a corner. That also makes the join with the stylesheet's continuation
-  (see INFINITE GROUND) invisible, since there is almost no angle left to
+  (see ONE GENERATOR, NOT TWO
+
+There is no separate wide and narrow generator, and there should not be: the
+SVG is the same drawing in both layouts, and cutting it in two would put the
+same ridge in two files for the drift between them to open up — which is the
+exact thing this script exists to prevent. What DOES differ between the
+layouts is where each hill is put and how big it is drawn, and that is the
+stylesheet's job, not this file's. The split that matters is shape here,
+placement there.
+
+The seam between the two used to be six numbers copied by hand into
+main.css. They are now WRITTEN there, into the marked block this script
+maintains (see CSS_PATH below), so the stylesheet can say
+
+    --h: calc((var(--hills-h) - var(--stroke)) / var(--h2-summit))
+
+and mean it, instead of restating 0.70 and hoping. Re-running this script is
+what keeps them in step; nothing else has to.
+
+HOW TO ASK FOR A CHANGE
+
+Three kinds, and they cost very different amounts.
+
+  SHAPE — "hill 2's head pointier", "flatten hill 1's tail", "another break
+  in that flank". One line in the table below, both layouts at once, and the
+  asserts catch a broken one. Cheapest thing here. Say it in slopes if you
+  can ("that last pull nearer 0.7") but "pointier" is fine; slope is what it
+  turns into.
+
+  PLACEMENT AGAINST THE PAGE — "hill 3's summit on the foot of the gallery
+  link", "hill 1's ground a stroke over the footer icons", "a sixth in from
+  the right". One rule in main.css, per layout. This is the vocabulary that
+  works: one FEATURE of one hill (summit, ground, heel, toe) onto one
+  LANDMARK the page already has (a window edge or fraction of it, the
+  picture's mat, an element's edge). Both halves are things that exist, so
+  the rule can be written once and stay true at every size.
+
+  PLACEMENT AGAINST ANOTHER HILL — "hill 2's head 180 units clear of hill
+  3's flank". Also cheap, but it belongs HERE, in `at` and the slopes, not
+  in the stylesheet: the frame is the only place the three hills share a
+  coordinate system. The stylesheet only ever sees one hill at a time.
+
+  What is expensive is asking for both at once — "a sixth in from the right
+  AND 180 clear of hill 3" — because the two can disagree at some window
+  size and something has to give. Say which one wins.
+
+INFINITE GROUND) invisible, since there is almost no angle left to
   break at the frame's edge.
+
+ONE GENERATOR, NOT TWO
+
+There is no separate wide and narrow generator, and there should not be: the
+SVG is the same drawing in both layouts, and cutting it in two would put the
+same ridge in two files for the drift between them to open up — which is the
+exact thing this script exists to prevent. What DOES differ between the
+layouts is where each hill is put and how big it is drawn, and that is the
+stylesheet's job, not this file's. The split that matters is shape here,
+placement there.
+
+The seam between the two used to be six numbers copied by hand into
+main.css. They are now WRITTEN there, into the marked block this script
+maintains (see CSS_PATH below), so the stylesheet can say
+
+    --h: calc((var(--hills-h) - var(--stroke)) / var(--h2-summit))
+
+and mean it, instead of restating 0.70 and hoping. Re-running this script is
+what keeps them in step; nothing else has to.
+
+HOW TO ASK FOR A CHANGE
+
+Three kinds, and they cost very different amounts.
+
+  SHAPE — "hill 2's head pointier", "flatten hill 1's tail", "another break
+  in that flank". One line in the table below, both layouts at once, and the
+  asserts catch a broken one. Cheapest thing here. Say it in slopes if you
+  can ("that last pull nearer 0.7") but "pointier" is fine; slope is what it
+  turns into.
+
+  PLACEMENT AGAINST THE PAGE — "hill 3's summit on the foot of the gallery
+  link", "hill 1's ground a stroke over the footer icons", "a sixth in from
+  the right". One rule in main.css, per layout. This is the vocabulary that
+  works: one FEATURE of one hill (summit, ground, heel, toe) onto one
+  LANDMARK the page already has (a window edge or fraction of it, the
+  picture's mat, an element's edge). Both halves are things that exist, so
+  the rule can be written once and stay true at every size.
+
+  PLACEMENT AGAINST ANOTHER HILL — "hill 2's head 180 units clear of hill
+  3's flank". Also cheap, but it belongs HERE, in `at` and the slopes, not
+  in the stylesheet: the frame is the only place the three hills share a
+  coordinate system. The stylesheet only ever sees one hill at a time.
+
+  What is expensive is asking for both at once — "a sixth in from the right
+  AND 180 clear of hill 3" — because the two can disagree at some window
+  size and something has to give. Say which one wins.
 
 INFINITE GROUND
 
@@ -116,6 +208,19 @@ its left three.
 """
 
 import os
+import re
+
+HERE = os.path.dirname(__file__)
+IMG_PATH = os.path.join(HERE, "..", "src", "assets", "img")
+CSS_PATH = os.path.join(HERE, "..", "src", "assets", "css", "main.css")
+
+# The stylesheet keeps a block of figures this script owns. Everything between
+# these two lines is rewritten on every run; everything outside is never
+# touched. Both must already be present — a missing marker is an error rather
+# than something to helpfully re-create, since it means someone has edited the
+# stylesheet in a way this script cannot reason about.
+MARK_A = "/* >>> figures written by tools/gen-hills.py — do not edit by hand */"
+MARK_B = "/* <<< end of the generated figures */"
 
 # --------------------------------------------------------------------------
 # The shared frame. 1000 units tall = the group's height = the tallest hill.
@@ -142,6 +247,7 @@ HILLS = {
     # it is still descending where the narrow layout's window ends, which is
     # what keeps it from reading as a plinth.
     "hill-1.svg": dict(
+        note="near, front",
         summit=760, at=-2000, ground=220,
         up=[(0.15, 130), (0.26, 180), (0.44, 230)],
         down=[(0.08, 24), (0.34, 190), (0.22, 150), (0.13, 110), (0.055, 66)],
@@ -153,6 +259,7 @@ HILLS = {
     # standing beside it reads as two hills — but it is the first thing to
     # check after moving anything here.
     "hill-2.svg": dict(
+        note="middle distance, right of centre",
         summit=700, at=1250, ground=190,
         up=[(0.14, 110), (0.24, 160), (0.52, 240)],
         down=[(0.13, 22), (0.48, 200), (0.29, 170), (0.12, 118)],
@@ -167,6 +274,7 @@ HILLS = {
     # and the last at 0.10 as it settles. End to end it is 6522 units for 860
     # of rise.
     "hill-3.svg": dict(
+        note="far, centred, tallest",
         summit=1000, at=0, ground=140,
         up=[(0.16, 130), (0.26, 200), (0.40, 300), (0.62, 230)],
         down=[(0.11, 22), (0.55, 230), (0.36, 240), (0.22, 210), (0.10, 158)],
@@ -229,29 +337,107 @@ def check(name, pts, ground):
         f"{name}: x not monotonic — a flank doubles back"
 
 
-def main():
-    out = os.path.join(os.path.dirname(__file__), "..", "src", "assets", "img")
-    print(f"frame {VB_W}x{VB_H} ({VB_W / VB_H:g} : 1), centre x={fmt(CENTRE)}, "
-          f"half-width {VB_W / VB_H / 2:g} heights\n")
+def num(v):
+    """A CSS number: no trailing zeros, no exponent, enough places for 5.787."""
+    return f"{v:.4f}".rstrip("0").rstrip(".") or "0"
 
+
+def figures(name, spec, pts):
+    """The handful of numbers the stylesheet needs about one hill, all of them
+    in units of that hill's own DRAWN HEIGHT — which is the only unit both
+    sides can agree on, since the stylesheet picks the height and this file
+    never sees it. A rule that wants a feature at some place on the page then
+    reads `<place> - var(--h) * var(--hN-<feature>)` and is done."""
+    tag = name.split(".")[0].replace("hill-", "h")   # hill-2.svg -> h2
+    ground = spec["ground"] / VB_H
+    return tag, [
+        ("summit", num(spec["summit"] / VB_H), "top, as a fraction of the height"),
+        ("ground", num(ground), "the level it settles onto"),
+        ("sky", num((1 - ground) * 100) + "%", "all of it above that ground"),
+        ("peak", num((CENTRE + spec["at"]) / VB_H), "summit, from the frame's left edge"),
+        ("heel", num(pts[1][0] / VB_H), "first corner off the left flat run"),
+        ("toe", num(pts[-2][0] / VB_H), "last corner before the right flat run"),
+    ]
+
+
+def css_with(blocks):
+    """The stylesheet as it SHOULD be: everything outside the two markers left
+    exactly as it is, everything between them rebuilt. Returning the whole
+    file rather than writing it is what lets --check compare without touching
+    anything."""
+    css = open(CSS_PATH).read()
+    for mark in (MARK_A, MARK_B):
+        if css.count(mark) != 1:
+            raise SystemExit(f"main.css: expected exactly one {mark!r}")
+    a, b = css.index(MARK_A), css.index(MARK_B)
+    if b < a:
+        raise SystemExit("main.css: the generated block's markers are inverted")
+
+    out = [MARK_A, ":root {",
+           "  /* The frame every hill file shares, in units of its own height. */",
+           f"  --hills-frame: {num(VB_W / VB_H)};",
+           f"  --hills-mid: {num(VB_W / VB_H / 2)};"]
+    for tag, rows, note in blocks:
+        out.append(f"\n  /* {tag} — {note} */")
+        for prop, val, why in rows:
+            out.append(f"  --{tag}-{prop}: {val};".ljust(28) + f"/* {why} */")
+    out += ["}", ""]
+    return css[:a] + "\n".join(out) + "\n" + css[b:]
+
+
+def build():
+    """Everything this script produces, as strings. Nothing is written here,
+    so the same code path serves both writing and checking — which is the
+    point: a --check that rebuilt things differently would be no check."""
+    svgs, blocks, report = {}, [], []
     for name, spec in sorted(HILLS.items()):
         pts = vertices(spec)
         check(name, pts, spec["ground"])
-        svg = (
+        svgs[name] = (
             f'<svg xmlns="http://www.w3.org/2000/svg" '
             f'viewBox="0 0 {VB_W} {VB_H}" width="{VB_W}" height="{VB_H}">'
             f'<path d="{ridge_path(pts)}"/></svg>'
         )
-        with open(os.path.join(out, name), "w") as f:
-            f.write(svg)
+        tag, rows = figures(name, spec, pts)
+        blocks.append((tag, rows, spec["note"]))
 
         g = spec["ground"] / VB_H
         span = pts[-2][0] - pts[1][0]
-        print(f"{name:12s} {len(svg):5d} bytes  {len(pts):2d} vertices  "
-              f"ground {g:.3f} (CSS: {100 - g * 100:g}%)  "
-              f"summit {spec['summit'] / VB_H:.3f} at {spec['at'] / VB_H:+.3f}  "
-              f"span {span:.0f} = {span / spec['summit']:.1f}x its height")
+        report.append(
+            f"{name:12s} {len(svgs[name]):5d} bytes  {len(pts):2d} vertices  "
+            f"ground {g:.3f}  summit {spec['summit'] / VB_H:.3f} "
+            f"at {spec['at'] / VB_H:+.3f}  "
+            f"span {span:.0f} = {span / spec['summit']:.1f}x its height")
+    return svgs, css_with(blocks), report
+
+
+def main(check_only=False):
+    svgs, css, report = build()
+    print(f"frame {VB_W}x{VB_H} ({VB_W / VB_H:g} : 1), centre x={fmt(CENTRE)}, "
+          f"half-width {VB_W / VB_H / 2:g} heights\n")
+    print("\n".join(report))
+
+    targets = [(os.path.join(IMG_PATH, n), t) for n, t in svgs.items()]
+    targets.append((CSS_PATH, css))
+
+    if check_only:
+        stale = [os.path.basename(f) for f, want in targets
+                 if not os.path.exists(f) or open(f).read() != want]
+        if stale:
+            print(f"\nSTALE: {', '.join(stale)}")
+            print("The drawings or the figures in main.css do not match this "
+                  "script.\nRun:  python3 tools/gen-hills.py")
+            raise SystemExit(1)
+        print("\nup to date: the three drawings and main.css's generated "
+              "figures all match this script")
+        return
+
+    for f, text in targets:
+        with open(f, "w") as fh:
+            fh.write(text)
+    print(f"\nwrote 3 drawings and main.css's generated block")
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main(check_only="--check" in sys.argv)

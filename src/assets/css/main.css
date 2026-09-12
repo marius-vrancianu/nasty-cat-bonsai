@@ -116,6 +116,54 @@
   --home-social: #565b33;
 }
 
+/* The hills' own geometry, in units of each hill's drawn height. These are
+   not design knobs: they describe the three SVG files, and the only way to
+   change them is to change tools/gen-hills.py and re-run it, which rewrites
+   everything between the two markers below. Hand-editing them makes the
+   stylesheet disagree with the drawings, which shows up as a seam rather
+   than as anything obviously wrong — which is exactly why they are generated.
+   `python3 tools/gen-hills.py --check` says whether they are still in step.
+
+   What the rules below do with them: a hill is drawn at some height --h, and
+   every figure here is a multiple of that height, so putting one of its
+   features somewhere on the page is
+
+       --x: calc(<the place> - var(--h) * var(--hN-<the feature>))
+
+   and nothing else needs to know what the drawing looks like. */
+/* >>> figures written by tools/gen-hills.py — do not edit by hand */
+:root {
+  /* The frame every hill file shares, in units of its own height. */
+  --hills-frame: 8.4;
+  --hills-mid: 4.2;
+
+  /* h1 — near, front */
+  --h1-summit: 0.76;        /* top, as a fraction of the height */
+  --h1-ground: 0.22;        /* the level it settles onto */
+  --h1-sky: 78%;            /* all of it above that ground */
+  --h1-peak: 2.2;           /* summit, from the frame's left edge */
+  --h1-heel: 0.1183;        /* first corner off the left flat run */
+  --h1-toe: 5.7868;         /* last corner before the right flat run */
+
+  /* h2 — middle distance, right of centre */
+  --h2-summit: 0.7;         /* top, as a fraction of the height */
+  --h2-ground: 0.19;        /* the level it settles onto */
+  --h2-sky: 81%;            /* all of it above that ground */
+  --h2-peak: 5.45;          /* summit, from the frame's left edge */
+  --h2-heel: 3.5361;        /* first corner off the left flat run */
+  --h2-toe: 7.6054;         /* last corner before the right flat run */
+
+  /* h3 — far, centred, tallest */
+  --h3-summit: 1;           /* top, as a fraction of the height */
+  --h3-ground: 0.14;        /* the level it settles onto */
+  --h3-sky: 86%;            /* all of it above that ground */
+  --h3-peak: 4.2;           /* summit, from the frame's left edge */
+  --h3-heel: 1.4973;        /* first corner off the left flat run */
+  --h3-toe: 8.0194;         /* last corner before the right flat run */
+}
+
+/* <<< end of the generated figures */
+
 * { box-sizing: border-box; }
 
 /* Present for screen readers and search engines, invisible on screen. */
@@ -248,20 +296,41 @@ a { color: inherit; }
   pointer-events: none;
 }
 
+/* Every hill is placed by exactly two properties, and this is the whole of
+   the mechanism — the narrow layout differs from the wide one only in what it
+   sets them to, and anything added to this backdrop later should join it.
+
+     --h  the height the drawing is drawn at
+     --x  where the image's LEFT EDGE goes
+
+   --x is a left edge rather than a feature because that is what mask-position
+   takes. To put a feature somewhere instead, subtract: the generated figures
+   give every feature as a multiple of the drawing's own height, so
+
+     --x: calc(<the place> - var(--h) * var(--h3-peak))
+
+   reads "hill 3's summit, there". See the generated block near the top.
+
+   The defaults here are the wide layout: every hill at the band's full height
+   with the frame centred, which is what makes the tallest tip land on the
+   window's centre line.
+
+   `mask-size: auto 100%` fills --h and takes the width from the file's own
+   ratio, so the drawing scales and is cropped but never squashed. The ground
+   layer is 100% 100% because it has to reach both window edges whatever that
+   width comes to. */
 .hills > span {
+  --h: 100%;
+  --x: center;
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 100%;
-  /* `auto 100%` fills the box's height and takes the width from the file's
-     own ratio: the drawing scales with the window's height and is cropped by
-     its width, never squashed. The ground layer is 100% 100% because it has
-     to reach both edges whatever that width comes to. */
+  height: var(--h);
   -webkit-mask-size: auto 100%, 100% 100%;
   mask-size: auto 100%, 100% 100%;
-  -webkit-mask-position: var(--hills-x) bottom, left bottom;
-  mask-position: var(--hills-x) bottom, left bottom;
+  -webkit-mask-position: var(--x) bottom, left bottom;
+  mask-position: var(--x) bottom, left bottom;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
 }
@@ -269,25 +338,31 @@ a { color: inherit; }
 .hill-1 {
   background: var(--hill-1);
   -webkit-mask-image: url("../img/hill-1.svg"),
-                      linear-gradient(to bottom, transparent 0 78%, #000 78%);
+                      linear-gradient(to bottom, transparent 0 var(--h1-sky),
+                                                 #000 var(--h1-sky));
   mask-image: url("../img/hill-1.svg"),
-              linear-gradient(to bottom, transparent 0 78%, #000 78%);
+              linear-gradient(to bottom, transparent 0 var(--h1-sky),
+                                         #000 var(--h1-sky));
 }
 
 .hill-2 {
   background: var(--hill-2);
   -webkit-mask-image: url("../img/hill-2.svg"),
-                      linear-gradient(to bottom, transparent 0 81%, #000 81%);
+                      linear-gradient(to bottom, transparent 0 var(--h2-sky),
+                                                 #000 var(--h2-sky));
   mask-image: url("../img/hill-2.svg"),
-              linear-gradient(to bottom, transparent 0 81%, #000 81%);
+              linear-gradient(to bottom, transparent 0 var(--h2-sky),
+                                         #000 var(--h2-sky));
 }
 
 .hill-3 {
   background: var(--hill-3);
   -webkit-mask-image: url("../img/hill-3.svg"),
-                      linear-gradient(to bottom, transparent 0 86%, #000 86%);
+                      linear-gradient(to bottom, transparent 0 var(--h3-sky),
+                                                 #000 var(--h3-sky));
   mask-image: url("../img/hill-3.svg"),
-              linear-gradient(to bottom, transparent 0 86%, #000 86%);
+              linear-gradient(to bottom, transparent 0 var(--h3-sky),
+                                         #000 var(--h3-sky));
 }
 
 /* The mat around the hero. Stroke width = 5% of the displayed image width;
@@ -425,11 +500,11 @@ a { color: inherit; }
      which part of each frame the window is looking at.
 
      Per-hill placement is possible at all because the frames are identical:
-     a hill's summit sits at a known fraction of its own drawn height from
-     its own left edge (4.20 heights for hill 3, 5.45 for hill 2, and for
-     hill 1 the 5.787 where its flank finally reaches its ground), so a
-     mask-position of that, negative, plus where the feature should land, is
-     the whole calculation. The numbers come from gen-hills.py's frame.
+     every feature of a hill sits at a known multiple of that hill's own
+     drawn height from its own left edge, so --x is where the feature should
+     land minus that multiple. Those multiples are not written here — they
+     are in the generated block near the top of this file, put there by
+     gen-hills.py, which is the only thing that knows the drawings.
 
      They are written against 100vw rather than a percentage because a
      percentage in mask-position does not offset — it aligns that percentage
@@ -485,58 +560,47 @@ a { color: inherit; }
 
   /* FAR: summit on the band's top edge — which is the foot of the "gallery"
      link, since that is where the band starts — and a sixth of the window in
-     from the left. Its height is the band's, so its summit (u = 1000, the
-     whole frame) lands on that edge by construction. Its left flank is the
-     steep one and runs off the window within about 75px; what the screen
-     gets is the head and the long right flank. */
+     from the left. Drawn at the band's own height, so its summit (the whole
+     frame, --h3-summit = 1) lands on that edge by construction. Its left
+     flank is the steep one and runs off the window within about 75px; what
+     the screen gets is the head and the long right flank. */
   .hills > .hill-3 {
-    height: var(--hills-h);
-    -webkit-mask-position: calc(var(--sixth) - var(--hills-h) * 4.2) bottom,
-                           left bottom;
-    mask-position: calc(var(--sixth) - var(--hills-h) * 4.2) bottom,
-                   left bottom;
+    --h: var(--hills-h);
+    --x: calc(var(--sixth) - var(--h) * var(--h3-peak));
   }
 
   /* MIDDLE: summit one stroke below the band's top, a sixth in from the
-     right. Its summit is 0.70 of its own frame, so the height that puts the
-     summit a stroke down is (band - stroke) / 0.70 — which comes to rather
-     more than the band itself, and that is fine: the extra is empty sky
-     above the summit, and nothing of the hill is drawn up there. */
+     right. Dividing by --h2-summit is what turns "put the summit there" into
+     a height — and it comes to rather more than the band itself, which is
+     fine: the excess is empty sky above the summit, and nothing of the hill
+     is drawn up there. */
   .hills > .hill-2 {
-    --h2-h: calc((var(--hills-h) - var(--stroke)) / 0.7);
-    height: var(--h2-h);
-    -webkit-mask-position:
-      calc(100vw - var(--sixth) - var(--h2-h) * 5.45) bottom, left bottom;
-    mask-position:
-      calc(100vw - var(--sixth) - var(--h2-h) * 5.45) bottom, left bottom;
+    --h: calc((var(--hills-h) - var(--stroke)) / var(--h2-summit));
+    --x: calc(100vw - var(--sixth) - var(--h) * var(--h2-peak));
   }
 
-  /* NEAR: the point where its flank finally settles onto its ground — the
-     last corner in the drawing, at 5.787 of its height from the frame's left
-     edge — is put on the window's RIGHT edge, and that ground is set one
-     stroke above the footer row's top. Both together fix the height: the
-     ground is 0.22 of the frame (see gen-hills.py), so the hill is drawn at
-     (foot + stroke) / 0.22, around 545px on a 393px phone against the band's
-     203.
+  /* NEAR: its toe — the last corner in the drawing, where the flank finally
+     settles onto its ground — goes on the window's RIGHT edge, and that
+     ground sits one stroke above the footer row. Both together fix the
+     height, which is what dividing by --h1-ground says: around 545px on a
+     393px phone, against the band's 203.
 
-     Being pinned that way, the hill is flat here by arithmetic rather than
-     by choice: the window covers the last 720-odd units of a 1200-unit
-     closing segment pitched at 0.055, so it rises about 22px right to left
-     and no amount of moving it sideways changes that. Steepening it means
+     The min() is a floor against the band. On a page with no room to spare —
+     a 320x568 screen, where the links' foot and the row's top are 4px apart —
+     one stroke over the row is HIGHER than the band's own top, and the hill
+     would climb over the links and bury the other two. Held at the band's top
+     instead it still covers the row, since the row's top is inside the band
+     wherever the band exists at all.
+
+     Pinned that way the hill is flat here by arithmetic rather than by
+     choice: the window covers the last 720-odd units of a 1200-unit closing
+     segment pitched at 0.055, so it rises about 22px right to left and no
+     amount of moving it sideways changes that. Steepening it means
      re-pitching that segment in gen-hills.py, which the wide layout also
      draws — so it is not a narrow-layout tweak. */
   .hills > .hill-1 {
-    /* Floored against the band: the ground wants to be one stroke over the
-       row, but on a page with no room to spare that is HIGHER than the band's
-       own top, and the hill would climb over the links and bury the other
-       two entirely. Held at the band's top instead it still covers the row —
-       the row's top is inside the band wherever the band exists at all. */
-    --h1-ground: min(calc(var(--foot) + var(--stroke)), var(--hills-h));
-    --h1-h: calc(var(--h1-ground) / 0.22);
-    height: var(--h1-h);
-    -webkit-mask-position: calc(100vw - var(--h1-h) * 5.787) bottom,
-                           left bottom;
-    mask-position: calc(100vw - var(--h1-h) * 5.787) bottom, left bottom;
+    --h: calc(min(var(--foot) + var(--stroke), var(--hills-h)) / var(--h1-ground));
+    --x: calc(100vw - var(--h) * var(--h1-toe));
   }
 
   /* Full-width frame: stroke = 5% of image width with the frame spanning

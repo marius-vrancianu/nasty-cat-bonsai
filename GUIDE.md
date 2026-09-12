@@ -387,8 +387,16 @@ used everywhere:
   text, `--rust` accent, `--teal` secondary).
 - Dark theme: the `:root[data-theme="dark"] { ... }` block right below it.
 
-Change a value there, commit, deploy — the whole site follows. The
-typeface is Proza Libre, self-hosted: the font files live in
+Change a value there, commit, deploy — the whole site follows.
+
+One block in that file is **generated and must not be hand-edited**: the
+figures between the two `gen-hills.py` marker comments near the top. They
+describe the shape of the hills drawn behind the homepage, and they are
+written by a script (`tools/gen-hills.py`). Editing them by hand makes the
+stylesheet disagree with the drawings, which shows as a faint seam rather
+than as anything obviously broken. Everything else in the file is yours.
+
+The typeface is Proza Libre, self-hosted: the font files live in
 `src/assets/fonts/` and are declared in `src/assets/css/fonts.css` (no
 visitor data goes to Google for font delivery). Swapping the typeface
 means replacing those files and declarations plus the `--font` variable
