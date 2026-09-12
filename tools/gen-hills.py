@@ -74,53 +74,7 @@ rather than invented:
   EASING OUT. Each flank's outermost segments taper — 0.22, then 0.10, then
   the flat — so the outline settles onto its ground rather than meeting it
   at a corner. That also makes the join with the stylesheet's continuation
-  (see ONE GENERATOR, NOT TWO
-
-There is no separate wide and narrow generator, and there should not be: the
-SVG is the same drawing in both layouts, and cutting it in two would put the
-same ridge in two files for the drift between them to open up — which is the
-exact thing this script exists to prevent. What DOES differ between the
-layouts is where each hill is put and how big it is drawn, and that is the
-stylesheet's job, not this file's. The split that matters is shape here,
-placement there.
-
-The seam between the two used to be six numbers copied by hand into
-main.css. They are now WRITTEN there, into the marked block this script
-maintains (see CSS_PATH below), so the stylesheet can say
-
-    --h: calc((var(--hills-h) - var(--stroke)) / var(--h2-summit))
-
-and mean it, instead of restating 0.70 and hoping. Re-running this script is
-what keeps them in step; nothing else has to.
-
-HOW TO ASK FOR A CHANGE
-
-Three kinds, and they cost very different amounts.
-
-  SHAPE — "hill 2's head pointier", "flatten hill 1's tail", "another break
-  in that flank". One line in the table below, both layouts at once, and the
-  asserts catch a broken one. Cheapest thing here. Say it in slopes if you
-  can ("that last pull nearer 0.7") but "pointier" is fine; slope is what it
-  turns into.
-
-  PLACEMENT AGAINST THE PAGE — "hill 3's summit on the foot of the gallery
-  link", "hill 1's ground a stroke over the footer icons", "a sixth in from
-  the right". One rule in main.css, per layout. This is the vocabulary that
-  works: one FEATURE of one hill (summit, ground, heel, toe) onto one
-  LANDMARK the page already has (a window edge or fraction of it, the
-  picture's mat, an element's edge). Both halves are things that exist, so
-  the rule can be written once and stay true at every size.
-
-  PLACEMENT AGAINST ANOTHER HILL — "hill 2's head 180 units clear of hill
-  3's flank". Also cheap, but it belongs HERE, in `at` and the slopes, not
-  in the stylesheet: the frame is the only place the three hills share a
-  coordinate system. The stylesheet only ever sees one hill at a time.
-
-  What is expensive is asking for both at once — "a sixth in from the right
-  AND 180 clear of hill 3" — because the two can disagree at some window
-  size and something has to give. Say which one wins.
-
-INFINITE GROUND) invisible, since there is almost no angle left to
+  (see INFINITE GROUND) invisible, since there is almost no angle left to
   break at the frame's edge.
 
 ONE GENERATOR, NOT TWO
