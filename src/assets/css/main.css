@@ -110,8 +110,10 @@
   --hill-3: #78756e;
   /* Dark keeps an olive here: the near hill it sits on is pale, so paper
      would vanish into it. This is its own value rather than --rust because
-     the icons answer to the hill under them, not to the link colour. */
-  --home-social: #888f51;
+     the icons answer to the hill under them, not to the link colour — and
+     it is darker than any olive in the palette for the same reason, since
+     here the ground is the light one. 5.13:1 on that hill. */
+  --home-social: #565b33;
 }
 
 * { box-sizing: border-box; }
@@ -239,8 +241,8 @@ a { color: inherit; }
      hill's tip lands on the window's own half-height line at every size. */
   height: 50vh;
   height: 50dvh;
-  /* Where the frame's centre line — the tallest tip — is put. Centred here;
-     the narrow layout moves it to the window's left edge. */
+  /* Where the frame's centre line — the tallest tip — is put. The narrow
+     layout does not use this: there the three are placed one by one. */
   --hills-x: center;
   z-index: 0;
   pointer-events: none;
@@ -416,68 +418,125 @@ a { color: inherit; }
     flex-direction: column;
   }
 
-  /* The hills, narrow. Three things change; the files and the strengths do
-     not.
+  /* The hills, narrow. The three no longer share one placement here: each is
+     given its own height and its own horizontal anchor, all of them hung off
+     a SIXTH of the window's width, which is the grid this layout is composed
+     on. The files do not change, and neither do the tones — what changes is
+     which part of each frame the window is looking at.
 
-     WHERE. The frame's centre — the tallest hill's tip — goes on the
-     window's LEFT edge instead of its middle, so the screen shows the right
-     half of the drawing: the far peak standing at the edge, the middle hill
-     out to its right, the near hill's flank under both. A mask-position of
-     half the image's width, negative, is what puts a centred drawing's
-     middle on the box's left edge; the image is 8.4 boxes wide at this
-     height, hence 4.2.
+     Per-hill placement is possible at all because the frames are identical:
+     a hill's summit sits at a known fraction of its own drawn height from
+     its own left edge (4.20 heights for hill 3, 5.45 for hill 2, and for
+     hill 1 the 5.787 where its flank finally reaches its ground), so a
+     mask-position of that, negative, plus where the feature should land, is
+     the whole calculation. The numbers come from gen-hills.py's frame.
 
-     HOW TALL. The band has to fit between the last link and the foot of the
-     page — "no hill behind the buttons" is the whole brief for this layout —
-     and on a phone the page is as tall as its content, so a box sized from
-     the window's height would grow into the links exactly when there is
-     least room. --room is that gap, worked out rather than measured live:
+     They are written against 100vw rather than a percentage because a
+     percentage in mask-position does not offset — it aligns that percentage
+     of the image with the same percentage of the box, which is a different
+     thing entirely and is not what any of these want. 100vw counts a
+     classic scrollbar that the box does not have, so on a desktop browser
+     narrowed below 768px the group can sit a few pixels right of true; on a
+     phone, where scrollbars are overlaid, the two agree exactly.
+
+     HOW TALL THE BAND IS. It has to fit between the last link and the foot
+     of the page — "no hill behind the buttons" is the whole brief for this
+     layout — and on a phone the page is as tall as its content, so a box
+     sized from the window's height would grow into the links exactly when
+     there is least room. --room is that gap, worked out rather than measured
+     live:
 
        links' foot = 112.19vw (the framed hero, see .hero-frame) + 208px
        page foot   = the taller of 100dvh and the hero plus the nav
 
-     208px is the nav's top padding (20) + three 54px links + their two 4px
-     gaps, and --nav-h the nav's whole natural height; both were measured off
-     the live page at 320, 393 and 430 and held to a pixel. Re-measure them
-     if the link type or the row's contents change. The clamp above --room is
-     what the band would like to be; --room is what it may have.
+     208px is the nav's top padding plus the three links, --nav-h the nav's
+     whole natural height, and --foot how far the footer row's top sits above
+     the page's own foot. All three were measured off the live page; --nav-h
+     and --foot both step by 18px at 439px, which is the width where "cookie
+     settings" stops wrapping to two lines and the row loses a line. (438 and
+     439 were bisected, not guessed — the breakpoint used to be written 430
+     and was wrong by nine pixels.) Re-measure all three if the link type or
+     the row's contents change.
 
-     The near hill is then let through the floor of that: see .hill-1. */
+     The band takes --room WHOLE, with no clamp over it. It used to be capped
+     at 230px, and the cap is what a cap always is here: the far hill's
+     summit is defined as the band's top edge, so a band that stops short of
+     the links stops the summit short of them too — 18px short at 430px wide,
+     which is visible. Whatever the band is allowed, the summit follows it.
+
+     Where the page is short of room the band gets small, and on a 320x568
+     screen it gets very small: the links' foot and the footer row's top are
+     4px apart there, so there is almost no band to have. The near hill's
+     ground is floored against that (see .hill-1) so it cannot climb past the
+     links, but the two hills behind it are down to a sliver. That is the
+     layout being out of room, not the hills being wrong — the same screen
+     has the footer row sitting 4px under the last link. */
   .hills {
     --links-h: 208px;
-    --nav-h: 314px;      /* 296px from 430px up, where the row unwraps */
+    --nav-h: 314px;      /* both step 18px at 439px, where the row unwraps */
+    --foot: 102px;
+    --stroke: calc(100vw * 0.04545);   /* the hero's mat, see .hero-frame */
+    --sixth: calc(100vw / 6);
     --room: max(100vh - 100vw * 1.1219 - var(--links-h),
                 var(--nav-h) - var(--links-h));
-    --hills-h: min(clamp(140px, 52vw, 230px), var(--room));
+    --hills-h: var(--room);
     height: var(--hills-h);
-    --hills-x: calc(var(--hills-h) * -4.2);
   }
 
-  /* The near hill is drawn to its OWN height here, not the band's, and slid
-     further left than the other two. It is the one deliberate break in the
-     shared frame, and it buys the two things this layout asks of it.
+  /* FAR: summit on the band's top edge — which is the foot of the "gallery"
+     link, since that is where the band starts — and a sixth of the window in
+     from the left. Its height is the band's, so its summit (u = 1000, the
+     whole frame) lands on that edge by construction. Its left flank is the
+     steep one and runs off the window within about 75px; what the screen
+     gets is the head and the long right flank. */
+  .hills > .hill-3 {
+    height: var(--hills-h);
+    -webkit-mask-position: calc(var(--sixth) - var(--hills-h) * 4.2) bottom,
+                           left bottom;
+    mask-position: calc(var(--sixth) - var(--hills-h) * 4.2) bottom,
+                   left bottom;
+  }
 
-     Its ground band has to carry the footer row, and that row is a fixed
-     number of pixels tall whatever the window — so the band has to be a
-     fixed number of pixels too, which a fraction of a band that shrinks with
-     the viewport cannot be. At this height its ground (0.22 of it, see
-     gen-hills.py) lands at 106-123px from 320px up, clear of the row.
+  /* MIDDLE: summit one stroke below the band's top, a sixth in from the
+     right. Its summit is 0.70 of its own frame, so the height that puts the
+     summit a stroke down is (band - stroke) / 0.70 — which comes to rather
+     more than the band itself, and that is fine: the extra is empty sky
+     above the summit, and nothing of the hill is drawn up there. */
+  .hills > .hill-2 {
+    --h2-h: calc((var(--hills-h) - var(--stroke)) / 0.7);
+    height: var(--h2-h);
+    -webkit-mask-position:
+      calc(100vw - var(--sixth) - var(--h2-h) * 5.45) bottom, left bottom;
+    mask-position:
+      calc(100vw - var(--sixth) - var(--h2-h) * 5.45) bottom, left bottom;
+  }
 
-     The 5.17 against the other two's 4.2 slides the frame a further 0.97 of
-     its height left, which puts a LOWER stretch of the hill's flank at the
-     window's edge — u=254 of 1000 rather than u=336. Without it the near
-     hill would come in at 86% of the band and bury the far peak, which is
-     the one thing that has to be visible there. As it is it enters at about
-     two thirds of the band and goes on descending across the whole width,
-     reaching its ground just past the right edge.
+  /* NEAR: the point where its flank finally settles onto its ground — the
+     last corner in the drawing, at 5.787 of its height from the frame's left
+     edge — is put on the window's RIGHT edge, and that ground is set one
+     stroke above the footer row's top. Both together fix the height: the
+     ground is 0.22 of the frame (see gen-hills.py), so the hill is drawn at
+     (foot + stroke) / 0.22, around 545px on a 393px phone against the band's
+     203.
 
-     Both figures are its own height, so the hill keeps its shape exactly;
-     only which part of it the window sees changes. */
+     Being pinned that way, the hill is flat here by arithmetic rather than
+     by choice: the window covers the last 720-odd units of a 1200-unit
+     closing segment pitched at 0.055, so it rises about 22px right to left
+     and no amount of moving it sideways changes that. Steepening it means
+     re-pitching that segment in gen-hills.py, which the wide layout also
+     draws — so it is not a narrow-layout tweak. */
   .hills > .hill-1 {
-    --h1-h: clamp(480px, 132vw, 560px);
+    /* Floored against the band: the ground wants to be one stroke over the
+       row, but on a page with no room to spare that is HIGHER than the band's
+       own top, and the hill would climb over the links and bury the other
+       two entirely. Held at the band's top instead it still covers the row —
+       the row's top is inside the band wherever the band exists at all. */
+    --h1-ground: min(calc(var(--foot) + var(--stroke)), var(--hills-h));
+    --h1-h: calc(var(--h1-ground) / 0.22);
     height: var(--h1-h);
-    -webkit-mask-position: calc(var(--h1-h) * -5.17) bottom, left bottom;
-    mask-position: calc(var(--h1-h) * -5.17) bottom, left bottom;
+    -webkit-mask-position: calc(100vw - var(--h1-h) * 5.787) bottom,
+                           left bottom;
+    mask-position: calc(100vw - var(--h1-h) * 5.787) bottom, left bottom;
   }
 
   /* Full-width frame: stroke = 5% of image width with the frame spanning
@@ -608,14 +667,18 @@ a { color: inherit; }
   .home-social svg { width: 26px; height: 26px; }
 }
 
-/* From 430px up the social row's "cookie settings" stops wrapping to two
-   lines and the nav is 18px shorter, so the page is 18px shorter too on the
-   windows where the content, not the viewport, sets its height. The hill
-   band ends on the links, so it has to know. (A separate rule rather than
-   one nested in the block above: plain CSS cannot put @media inside @media.)
-   */
-@media (min-width: 430px) and (max-width: 767px) {
-  .hills { --nav-h: 296px; }
+/* From 439px up the social row's "cookie settings" stops wrapping to two
+   lines. The row loses 18px, so the nav's natural height does too — which
+   matters on the windows where the content, not the viewport, sets the
+   page's height — and the row's top comes 18px nearer the page's foot, which
+   is what the near hill's ground is measured from. Bisected on the live
+   page: 438 wraps, 439 does not. (A separate rule rather than one nested in
+   the block above: plain CSS cannot put @media inside @media.) */
+@media (min-width: 439px) and (max-width: 767px) {
+  .hills {
+    --nav-h: 296px;
+    --foot: 84px;
+  }
 }
 
 /* The dvh half of the fallback for --room. It cannot be written as a second
