@@ -1,0 +1,15 @@
+{#- The hill backdrop: three silhouettes cut from one drawing, written by
+    tools/gen-hills.py into hill-1/2/3.svg. Decorative only, hence
+    aria-hidden — the page says nothing that these carry.
+
+    Back to front, so the near hill paints over the two behind it. All
+    three share one viewBox, so they need no offsets of their own: the
+    stylesheet places the box and every hill lands where it belongs
+    inside it. Dropping one of the three is a matter of deleting its
+    line here, which is how this is meant to be reused at the foot of
+    an inner page. #}
+<div class="hills" aria-hidden="true">
+  <span class="hill-3"></span>
+  <span class="hill-2"></span>
+  <span class="hill-1"></span>
+</div>
