@@ -15,13 +15,28 @@
   --olive: #545c2f;          /* secondary accent, 5.17:1 on the paper */
   --hairline: rgba(28, 26, 23, 0.12);
   --hairline-strong: rgba(28, 26, 23, 0.2);
-  /* The home page's hill backdrop. ONE colour for all three hills — what
-     separates them is strength, and only two strengths are used: the near
-     hill at full, the two behind it at two thirds. Where those two cross
-     they make a third tone (1 - (1/3)^2 = 0.89) without a third value to
-     keep in step, which is the whole reason they are alpha and not
-     pre-mixed hexes. See .hills. */
-  --hill-ink: #222222;
+  /* The home page's hill backdrop: one ink at three strengths, but written
+     out as three OPAQUE tones rather than three alphas. That is not an
+     optimisation, it is the only way a nearer hill can hide a further one.
+     Painted as alpha, two hills crossing made a fourth tone along their
+     overlap — the far ridge showing through the near one, which reads as
+     cellophane rather than as distance.
+
+     Each value is that strength of --ink mixed into --washi, channel by
+     channel in sRGB, which is exactly what the browser's own compositing
+     produced before — these are the same colours, minus the stacking.
+     Recompute as ink*s + paper*(1-s) if either end of the palette moves:
+
+       --hill-1  1.00  #222222
+       --hill-2  0.67  #62605a
+       --hill-3  0.45  #8c887e
+
+     0.45 rather than the 0.67 hill 2 carries: opaque, two hills at the same
+     strength have no edge where they cross at all, and hill 3 is a whole
+     distance further back than hill 2. */
+  --hill-1: #222222;
+  --hill-2: #62605a;
+  --hill-3: #8c887e;
   /* The home page's footer row sits ON the near hill, so its icons are
      paper rather than accent — the only place on the site where they are.
      Their hover still swaps to --olive, as everywhere else. */
@@ -90,7 +105,9 @@
   --olive: #adb876;      /* 7.50:1 */
   --hairline: rgba(215, 202, 176, 0.16);
   --hairline-strong: rgba(215, 202, 176, 0.28);
-  --hill-ink: #e2dbcb;
+  --hill-1: #e2dbcb;
+  --hill-2: #a29d93;
+  --hill-3: #78756e;
   /* Dark keeps an olive here: the near hill it sits on is pale, so paper
      would vanish into it. This is its own value rather than --rust because
      the icons answer to the hill under them, not to the link colour. */
@@ -185,14 +202,17 @@ a { color: inherit; }
    ONE FRAME, THREE FILES. Every file carries the same viewBox — the group's
    whole bounding box, 5.1 : 1, symmetric about the tallest hill's tip — with
    its own hill drawn in place inside it. So all three layers are the same
-   box at the same position and differ only in which file they mask and how
-   strong they are. Nothing here measures or offsets a hill individually, and
+   box at the same position and differ only in which file they mask and which
+   tone they paint. Nothing here measures or offsets a hill individually, and
    a footer that wants only the near hill is one file and one span.
 
    They are masks over a flat fill, not coloured images, so one set of files
-   serves both themes: the colour is --hill-ink's and the strength is this
-   block's. Three <span>s, three little paths, no script, nothing measured at
-   runtime — the whole backdrop is four static declarations and a repaint.
+   serves both themes: each layer paints one flat tone and the file decides
+   where it survives. The tones are opaque and painted back to front, so a
+   nearer hill HIDES the ones behind it rather than tinting them — see
+   --hill-1/2/3 for why that is not the same as three alphas. Three <span>s,
+   three little paths, no script, nothing measured at runtime — the whole
+   backdrop is four static declarations and a repaint.
 
    THE GROUND RUNS ON FOREVER. Each outline leaves its frame horizontally, at
    that hill's own ground level, and the second mask layer — a hard-edged
@@ -232,7 +252,6 @@ a { color: inherit; }
   right: 0;
   bottom: 0;
   height: 100%;
-  background: var(--hill-ink);
   /* `auto 100%` fills the box's height and takes the width from the file's
      own ratio: the drawing scales with the window's height and is cropped by
      its width, never squashed. The ground layer is 100% 100% because it has
@@ -246,6 +265,7 @@ a { color: inherit; }
 }
 
 .hill-1 {
+  background: var(--hill-1);
   -webkit-mask-image: url("../img/hill-1.svg"),
                       linear-gradient(to bottom, transparent 0 78%, #000 78%);
   mask-image: url("../img/hill-1.svg"),
@@ -253,6 +273,7 @@ a { color: inherit; }
 }
 
 .hill-2 {
+  background: var(--hill-2);
   -webkit-mask-image: url("../img/hill-2.svg"),
                       linear-gradient(to bottom, transparent 0 81%, #000 81%);
   mask-image: url("../img/hill-2.svg"),
@@ -260,16 +281,12 @@ a { color: inherit; }
 }
 
 .hill-3 {
+  background: var(--hill-3);
   -webkit-mask-image: url("../img/hill-3.svg"),
                       linear-gradient(to bottom, transparent 0 86%, #000 86%);
   mask-image: url("../img/hill-3.svg"),
               linear-gradient(to bottom, transparent 0 86%, #000 86%);
 }
-
-/* Two thirds, on both of the far hills. Their overlap is the third tone —
-   see --hill-ink. */
-.hill-2,
-.hill-3 { opacity: 0.6667; }
 
 /* The mat around the hero. Stroke width = 5% of the displayed image width;
    with the 1134x1286 image (ratio r=0.8818) and the frame filling the full
