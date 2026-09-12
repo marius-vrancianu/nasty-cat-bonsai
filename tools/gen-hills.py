@@ -178,14 +178,32 @@ MARK_B = "/* <<< end of the generated figures */"
 # --------------------------------------------------------------------------
 # The shared frame. 1000 units tall = the group's height = the tallest hill.
 # The width is symmetric about x = VB_W/2, which is hill 3's summit, and is
-# set by the furthest-reaching foot in the set (hill 3's own, at +3819).
+# set by the furthest-reaching foot in the set — hill 1's left one, which is
+# the long gentle flank the wide layout looks at, at CENTRE - 4815.
 # Changing it is safe: the stylesheet reads every position out of the
 # generated figures, which are all relative to a hill's own height, so a
-# wider or narrower frame moves nothing on the page.
+# wider or narrower frame moves nothing on the page. It was 7700 until hill
+# 1's left flank was lengthened and no longer fitted.
 # --------------------------------------------------------------------------
 VB_H = 1000
-VB_W = 7700
-CENTRE = VB_W / 2  # 4200 — hill 3's summit, and the group's anchor point
+VB_W = 10400
+CENTRE = VB_W / 2  # 5200 — hill 3's summit, and the group's anchor point
+
+# --------------------------------------------------------------------------
+# The narrow layout's window, stated in the terms hill 1's tail is cut to.
+# These two are the only figures in this file that come from the STYLESHEET
+# rather than from the drawing, and they are here because the tail below is
+# solved from them rather than typed in.
+#
+# NARROW_FOOT is main.css's --foot in the narrow layout: how far the footer
+# row's top sits above the page's own foot. The stylesheet draws this hill at
+# --foot / its ground, so that number and this one have to agree — if --foot
+# moves and this does not, the break in the flank stops landing on the
+# window's middle. tools/check-hills.mjs asserts that it does land there, so
+# the two cannot drift for long.
+# --------------------------------------------------------------------------
+NARROW_FOOT = 84     # px, = main.css's --foot under 439px wide
+NARROW_PHONE = 393   # px, the window the break is exact on
 
 # summit  height of the top above the frame's foot
 # at      where that top goes, in units either side of CENTRE
@@ -194,6 +212,34 @@ CENTRE = VB_W / 2  # 4200 — hill 3's summit, and the group's anchor point
 # down    (slope, fall) down the right flank, SUMMIT first
 # The rises in each list have to add up to summit - ground; the generator
 # says so if they don't.
+
+# Hill 1's right flank, solved rather than written — see THE TAIL IS CUT and
+# WHAT PAYS FOR THE TAIL in its entry below. The four segments off the summit
+# are fixed; the closing pair is two runs of half the phone's window each, at
+# a pitch and four times it; and the ground is whatever makes those two add
+# up to the fall that is left.
+H1_SUMMIT = 760
+H1_DOWN_FIXED = [(0.08, 24), (0.34, 190), (0.22, 150), (0.13, 120.64)]
+H1_TAIL_PITCH = (0.22, 0.055)
+H1_UP_INNER = [(0.14, 190), (0.26, 140), (0.44, 130)]
+
+_fixed = sum(r for _, r in H1_DOWN_FIXED)
+# Drawn at NARROW_FOOT / ground px, so half of a NARROW_PHONE window is
+# NARROW_PHONE * ground / (2 * NARROW_FOOT) units. Each tail segment is that
+# long, both are paid for out of summit - ground, and that is one equation in
+# one unknown.
+_half = lambda g: NARROW_PHONE * g / (2 * NARROW_FOOT)
+# Rounded to a tenth of a unit, because the drawing is written to that and the
+# ground has to land on a vertex exactly. The tail is then re-cut to whatever
+# fall is actually left, which puts the break 0.02% off the window's middle —
+# four hundredths of a pixel on the phone it is cut for.
+H1_GROUND = round((H1_SUMMIT - _fixed) / (1 + sum(H1_TAIL_PITCH) * _half(1)), 1)
+_run = (H1_SUMMIT - H1_GROUND - _fixed) / sum(H1_TAIL_PITCH)
+H1_TAIL = [(p, p * _run) for p in H1_TAIL_PITCH]
+# The left flank's outermost segment takes up the slack, so both sides still
+# add to summit - ground whatever the ground came out at.
+H1_UP_OUTER = (0.06, H1_SUMMIT - H1_GROUND - sum(r for _, r in H1_UP_INNER))
+
 HILLS = {
     # Near, front, full strength. Its summit sits at half hill 2's distance
     # from the centre, on the other side — the only thing fixing it, and the
@@ -202,48 +248,66 @@ HILLS = {
     # one starts at the centre.
     #
     # What this hill is for is the long right flank that runs under the other
-    # two and carries the footer row, so that flank gets six segments and the
-    # left gets three. It is the flattest of the three by some way — 0.34 at
-    # its steepest descent, easing to 0.055 — and it is still descending where
-    # either window ends, which is what keeps it from reading as a plinth.
+    # two and carries the footer row, so that flank gets six segments. It is
+    # the flattest of the three by some way — 0.34 at its steepest descent,
+    # easing to 0.055 — and it is still descending where either window ends,
+    # which is what keeps it from reading as a plinth.
+    #
+    # THE LEFT FLANK IS THE WIDE LAYOUT'S HORIZON, and it is four segments
+    # and some 4400 units long — nearly twice the run it had. On a
+    # window of ordinary proportions none of that shows: the summit is behind
+    # the picture and the flank leaves the left edge 1150 units out. It is
+    # written for the SHORT, WIDE window, where the band is a couple of
+    # hundred pixels tall and the whole frame is on screen at once. There the
+    # old three-segment flank reached its foot a fifth of the way across and
+    # left the rest of the window a flat plinth with the footer icons sitting
+    # on it; this one is still descending when it runs off the left edge.
+    #
+    # The closing 0.06 is the same pitch as the tail on the other side, which
+    # is what makes the hill read as one long shape rather than as a peak with
+    # two different hills hung off it. The 0.44 nearest the summit is
+    # untouched — see POINTY HEADS. Nothing on this side is visible in the
+    # narrow layout, which starts at the summit and looks right.
     #
     # THE TAIL IS CUT TO THE NARROW LAYOUT'S WINDOW. There, this hill's toe is
     # pinned to the window's right edge, so a run measured back from the toe
-    # is a run measured back from that edge. 347 units at 0.055 reaches the
-    # middle of a 393px phone; 347 more at FOUR TIMES that pitch reaches its
-    # left edge. The window is 694 units wide there because the hill is drawn
-    # at foot/0.18 = 567px and 393/0.567 = 693.
+    # is a run measured back from that edge. The last segment reaches the
+    # middle of a NARROW_PHONE window at 0.055; the one before it reaches that
+    # window's left edge at FOUR TIMES that pitch. Both runs are therefore
+    # half a window, and the window is 2 * NARROW_FOOT / ground wide in units
+    # because that is what the stylesheet draws this hill at.
     #
-    # That is exact at 393 and drifts either side, since the window's width in
-    # units follows the viewport while the break does not. It cannot be
-    # otherwise — the drawing is one shape and the window is not — and either
-    # side of 393 it still reads as "about the middle", which is what it is
-    # for.
+    # It is exact at NARROW_PHONE and drifts either side, since the window's
+    # width in units follows the viewport while the break does not. It cannot
+    # be otherwise — the drawing is one shape and the window is not — and
+    # either side of 393 it still reads as "about the middle", which is what
+    # it is for.
     #
-    # WHY THE GROUND IS 180 AND NOT 220. Quadrupling that pitch costs 46 more
-    # units of fall than the segment it replaces, and the fall budget is
-    # summit - ground. Taking it from the 0.13 segment above would shorten
-    # that segment, and the 0.13 segment is precisely what the WIDE layout is
-    # looking at — it would drag the steepened part left into view and change
-    # a layout that is finished. Lowering the ground grows the budget instead,
-    # and 180 is the loosest value that still leaves the 0.13 running past
-    # +1778, where a 16:9 window ends. The wide layout's flank is then
-    # unchanged to within half a pixel, and the steepening begins at +1844,
-    # just off the edge of it.
+    # WHAT PAYS FOR THE TAIL is the ground, and that is why the ground is
+    # solved for rather than chosen. Quadrupling a pitch costs fall, the fall
+    # budget is summit - ground, and the obvious place to take it from — the
+    # 0.13 segment above — is precisely the stretch the WIDE layout is looking
+    # at: shortening it drags the steepened part left into view and changes a
+    # layout that is finished. Lowering the ground grows the budget instead,
+    # and the equation above is that trade written down. It lands near 168,
+    # which leaves the 0.13 running past +1778, where a 16:9 window ends; the
+    # steepening begins just off the edge of it.
     #
-    # The left flank gains the same 40 units so the two sides still balance;
-    # it is never on screen in either layout.
+    # This is also the reason --foot's value is copied into this file. When
+    # --foot went from 102 to 84 — the footer row's top padding moving into
+    # the band — every one of these numbers moved with it, and a table of
+    # literals would have gone quietly stale.
     #
-    # Beyond about 2100px at 1080 tall the window does reach past +1844 and
-    # the steepened segment comes into view, sitting roughly 20px lower at the
-    # far right than it used to. Nothing can prevent that: the narrow layout
-    # defines that stretch of flank and an ultrawide window can see it.
+    # Beyond about 2100px at 1080 tall the window does reach past the break
+    # and the steepened segment comes into view, sitting roughly 20px lower at
+    # the far right than the 0.13 would have. Nothing can prevent that: the
+    # narrow layout defines that stretch of flank and an ultrawide window can
+    # see it.
     "hill-1.svg": dict(
         note="near, front",
-        summit=760, at=-625, ground=180,
-        up=[(0.15, 170), (0.26, 180), (0.44, 230)],
-        down=[(0.08, 24), (0.34, 190), (0.22, 150),
-              (0.13, 120.64), (0.22, 76.29), (0.055, 19.07)],
+        summit=H1_SUMMIT, at=-625, ground=H1_GROUND,
+        up=[H1_UP_OUTER] + H1_UP_INNER,
+        down=H1_DOWN_FIXED + H1_TAIL,
     ),
     # Middle distance, right of centre, and the only hill whose head has to
     # clear another's flank: it is inside hill 3 until about +1120 and stands
@@ -349,6 +413,14 @@ def figures(name, spec, pts):
         ("sky", num((1 - ground) * 100) + "%", "all of it above that ground"),
         ("peak", num((CENTRE + spec["at"]) / VB_H), "summit, from the frame's left edge"),
         ("heel", num(pts[1][0] / VB_H), "first corner off the left flat run"),
+        # A pitch, not a length: rise over run, so it is the same number in
+        # units and in pixels and needs no height to use. It is the GENTLEST
+        # segment of the left flank — every segment above it is steeper by
+        # construction (see POINTY HEADS) — which is what lets a rule ask how
+        # high the flank is at some distance from the summit and be sure the
+        # answer is a floor rather than a guess.
+        ("approach", num((pts[2][1] - pts[1][1]) / (pts[2][0] - pts[1][0])),
+         "pitch of the outermost segment of the left flank"),
         ("toe", num(pts[-2][0] / VB_H), "last corner before the right flat run"),
         ("last", num((pts[-2][0] - pts[-3][0]) / VB_H), "run of the closing segment"),
     ]
