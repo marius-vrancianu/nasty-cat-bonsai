@@ -134,32 +134,32 @@
 /* >>> figures written by tools/gen-hills.py — do not edit by hand */
 :root {
   /* The frame every hill file shares, in units of its own height. */
-  --hills-frame: 8.4;
-  --hills-mid: 4.2;
+  --hills-frame: 7.7;
+  --hills-mid: 3.85;
 
   /* h1 — near, front */
   --h1-summit: 0.76;        /* top, as a fraction of the height */
   --h1-ground: 0.22;        /* the level it settles onto */
   --h1-sky: 78%;            /* all of it above that ground */
-  --h1-peak: 2.2;           /* summit, from the frame's left edge */
-  --h1-heel: 0.1183;        /* first corner off the left flat run */
-  --h1-toe: 5.7868;         /* last corner before the right flat run */
+  --h1-peak: 3.225;         /* summit, from the frame's left edge */
+  --h1-heel: 1.1433;        /* first corner off the left flat run */
+  --h1-toe: 6.4293;         /* last corner before the right flat run */
 
   /* h2 — middle distance, right of centre */
   --h2-summit: 0.7;         /* top, as a fraction of the height */
   --h2-ground: 0.19;        /* the level it settles onto */
   --h2-sky: 81%;            /* all of it above that ground */
-  --h2-peak: 5.45;          /* summit, from the frame's left edge */
-  --h2-heel: 3.5361;        /* first corner off the left flat run */
-  --h2-toe: 7.6054;         /* last corner before the right flat run */
+  --h2-peak: 5.1;           /* summit, from the frame's left edge */
+  --h2-heel: 3.1861;        /* first corner off the left flat run */
+  --h2-toe: 7.2554;         /* last corner before the right flat run */
 
   /* h3 — far, centred, tallest */
   --h3-summit: 1;           /* top, as a fraction of the height */
   --h3-ground: 0.14;        /* the level it settles onto */
   --h3-sky: 86%;            /* all of it above that ground */
-  --h3-peak: 4.2;           /* summit, from the frame's left edge */
-  --h3-heel: 1.4973;        /* first corner off the left flat run */
-  --h3-toe: 8.0194;         /* last corner before the right flat run */
+  --h3-peak: 3.85;          /* summit, from the frame's left edge */
+  --h3-heel: 1.1473;        /* first corner off the left flat run */
+  --h3-toe: 7.6694;         /* last corner before the right flat run */
 }
 
 /* <<< end of the generated figures */
@@ -550,6 +550,12 @@ a { color: inherit; }
     --links-h: 208px;
     --nav-h: 314px;      /* both step 18px at 439px, where the row unwraps */
     --foot: 102px;
+    /* One link's box. Measured 60px at every width from 320 to 767 — the type
+       and its padding are fixed here, so this does not move the way --foot
+       and --nav-h do. Half of it is the distance from the links' foot up to
+       the middle of the last of them, which is where the far hill's summit
+       goes. */
+    --link-h: 60px;
     --stroke: calc(100vw * 0.04545);   /* the hero's mat, see .hero-frame */
     --sixth: calc(100vw / 6);
     --room: max(100vh - 100vw * 1.1219 - var(--links-h),
@@ -558,14 +564,22 @@ a { color: inherit; }
     height: var(--hills-h);
   }
 
-  /* FAR: summit on the band's top edge — which is the foot of the "gallery"
-     link, since that is where the band starts — and a sixth of the window in
-     from the left. Drawn at the band's own height, so its summit (the whole
-     frame, --h3-summit = 1) lands on that edge by construction. Its left
-     flank is the steep one and runs off the window within about 75px; what
-     the screen gets is the head and the long right flank. */
+  /* FAR: summit on the MIDDLE of the "gallery" link, a sixth of the window in
+     from the left. The band starts at that link's foot, so the summit stands
+     half a link's box above the band — which is what the extra --link-h/2 in
+     the height buys, since this hill's summit is its whole frame
+     (--h3-summit = 1) and therefore always the top of its layer.
+
+     It is the one thing on this backdrop that rises past the band and behind
+     the links, and it is allowed to: the links are ranged right and this
+     summit is a sixth of the way in from the left, so the two never meet.
+     Nothing is clipped — .hills sets no overflow — and the ink above the band
+     is a single peak, not a band of tone.
+
+     Its left flank is the steep one and runs off the window within about
+     75px; what the screen gets is the head and the long right flank. */
   .hills > .hill-3 {
-    --h: var(--hills-h);
+    --h: calc(var(--hills-h) + var(--link-h) / 2);
     --x: calc(var(--sixth) - var(--h) * var(--h3-peak));
   }
 
@@ -581,9 +595,14 @@ a { color: inherit; }
 
   /* NEAR: its toe — the last corner in the drawing, where the flank finally
      settles onto its ground — goes on the window's RIGHT edge, and that
-     ground sits one stroke above the footer row. Both together fix the
-     height, which is what dividing by --h1-ground says: around 545px on a
+     ground sits ON the footer row's top rather than a stroke above it, so the
+     icons hang just under the horizon rather than clear of it. Both together
+     fix the height, which is what dividing by --h1-ground says: 464px on a
      393px phone, against the band's 203.
+
+     That 464 is also what the drawing's tail is cut to — see gen-hills.py,
+     THE TAIL IS CUT — so the flank holds 0.055 from this edge to the middle
+     of the window and twice that from there to the left edge.
 
      The min() is a floor against the band. On a page with no room to spare —
      a 320x568 screen, where the links' foot and the row's top are 4px apart —
@@ -599,7 +618,7 @@ a { color: inherit; }
      re-pitching that segment in gen-hills.py, which the wide layout also
      draws — so it is not a narrow-layout tweak. */
   .hills > .hill-1 {
-    --h: calc(min(var(--foot) + var(--stroke), var(--hills-h)) / var(--h1-ground));
+    --h: calc(min(var(--foot), var(--hills-h)) / var(--h1-ground));
     --x: calc(100vw - var(--h) * var(--h1-toe));
   }
 

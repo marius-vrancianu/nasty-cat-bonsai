@@ -200,11 +200,10 @@ centre and is therefore behind the picture on most laptops.
 The narrow layout puts the centre on the window's left edge and shows 0 to
 about +1940, so it is the same side of the frame again.
 
-Neither ever shows hill 1's summit, off at -2000, nor hill 3's left flank.
-What both show is hill 3's head and long right flank, hill 2's head
-clearing it around +1120, and hill 1's flank underneath — so that is where
-the segments are spent, and why hill 1's right flank has five of them and
-its left three.
+Neither ever shows hill 1's summit, at -625, nor hill 3's left flank. What
+both show is hill 3's head and long right flank, hill 2's head clearing it
+around +1120, and hill 1's flank underneath — so that is where the segments
+are spent, and why hill 1's right flank has six of them and its left three.
 """
 
 import os
@@ -225,10 +224,13 @@ MARK_B = "/* <<< end of the generated figures */"
 # --------------------------------------------------------------------------
 # The shared frame. 1000 units tall = the group's height = the tallest hill.
 # The width is symmetric about x = VB_W/2, which is hill 3's summit, and is
-# set by the furthest-reaching foot in the set (hill 1's, at -4082).
+# set by the furthest-reaching foot in the set (hill 3's own, at +3819).
+# Changing it is safe: the stylesheet reads every position out of the
+# generated figures, which are all relative to a hill's own height, so a
+# wider or narrower frame moves nothing on the page.
 # --------------------------------------------------------------------------
 VB_H = 1000
-VB_W = 8400
+VB_W = 7700
 CENTRE = VB_W / 2  # 4200 — hill 3's summit, and the group's anchor point
 
 # summit  height of the top above the frame's foot
@@ -239,18 +241,41 @@ CENTRE = VB_W / 2  # 4200 — hill 3's summit, and the group's anchor point
 # The rises in each list have to add up to summit - ground; the generator
 # says so if they don't.
 HILLS = {
-    # Near, front, full strength. Its summit is off at -2000 and is never on
-    # screen in either layout; what this hill is for is the long right flank
-    # that runs under the other two and carries the footer row, so that flank
-    # gets five segments and the left gets three. It is the flattest of the
-    # three by some way — 0.34 at its steepest descent, easing to 0.055 — and
-    # it is still descending where the narrow layout's window ends, which is
-    # what keeps it from reading as a plinth.
+    # Near, front, full strength. Its summit sits at half hill 2's distance
+    # from the centre, on the other side — the only thing fixing it, and the
+    # reason `at` is -625 against hill 2's +1250. It is still never on screen:
+    # the wide layout's picture covers everything left of +5, and the narrow
+    # one starts at the centre.
+    #
+    # What this hill is for is the long right flank that runs under the other
+    # two and carries the footer row, so that flank gets six segments and the
+    # left gets three. It is the flattest of the three by some way — 0.34 at
+    # its steepest descent, easing to 0.055 — and it is still descending where
+    # either window ends, which is what keeps it from reading as a plinth.
+    #
+    # THE TAIL IS CUT TO THE NARROW LAYOUT'S WINDOW. There, this hill's toe is
+    # pinned to the window's right edge, so a run measured back from the toe
+    # is a run measured back from that edge. 424 units at 0.055 reaches the
+    # middle of a 393px phone; 424 more at twice the pitch reaches its left
+    # edge. The window is 848 units wide there because the hill is drawn at
+    # foot/0.22 = 464px and 393/0.464 = 847.
+    #
+    # That is exact at 393 and drifts either side, since the window's width in
+    # units follows the viewport while the break does not: the break falls at
+    # 61% across a 320px screen and 37% across a 439px one. It cannot be
+    # otherwise — the drawing is one shape and the window is not — and between
+    # those it reads as "about the middle", which is what it is for.
+    #
+    # 0.13 gives up 3.96 of fall, which is what the two new segments gain over
+    # the single 0.055 x 1200 they replace. The wide layout sees none of this:
+    # its window ends at +1778 and the first of the two breaks is at +1732, so
+    # it catches 46 units of the 0.11 and nothing of the 0.055.
     "hill-1.svg": dict(
         note="near, front",
-        summit=760, at=-2000, ground=220,
+        summit=760, at=-625, ground=220,
         up=[(0.15, 130), (0.26, 180), (0.44, 230)],
-        down=[(0.08, 24), (0.34, 190), (0.22, 150), (0.13, 110), (0.055, 66)],
+        down=[(0.08, 24), (0.34, 190), (0.22, 150),
+              (0.13, 106.04), (0.11, 46.64), (0.055, 23.32)],
     ),
     # Middle distance, right of centre, and the only hill whose head has to
     # clear another's flank: it is inside hill 3 until about +1120 and stands

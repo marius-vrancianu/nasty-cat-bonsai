@@ -98,18 +98,30 @@ const readLayout = () => {
     vw: innerWidth, vh: innerHeight,
     band: R(".hills"), links: R(".home-links"), social: R(".home-social"),
     hero: R(".hero-frame"),
+    /* The last link's own box, read rather than taken from --link-h, so the
+       rule checks the landmark and not the constant that claims to be it. */
+    gallery: R(".home-links > a:last-child"),
     hillH: [1, 2, 3].map((n) => parseFloat(
       getComputedStyle(document.querySelector(`.hill-${n}`)).height)),
     tones: [rgb(".hill-1"), rgb(".hill-2"), rgb(".hill-3")],
     h1Ground: fig("--h1-ground"),
+    summitOf: [1, 2, 3].map((n) => fig(`--h${n}-summit`)),
     stroke: innerWidth < 768 ? innerWidth * 0.04545 : innerHeight * 0.04052,
   };
 };
 
-/* Topmost pixel of each hill tone, per column. Nearest-tone with a small
-   tolerance: the browser's colour management shifts a flat fill by a level or
-   two, so exact matching finds nothing. */
-const readPixels = async ({ b64, tones, from }) => {
+/* Topmost pixel of each hill tone, per column.
+
+   Nearest-tone rather than exact, because colour management shifts a flat
+   fill by a level or two and exact matching finds nothing. But a loose match
+   on ONE pixel is worse than useless here: the near hill's anti-aliased edge
+   against the paper runs through every blend of the two, and at about 46% of
+   the way it passes within five levels of the far hill's tone. A single stray
+   pixel of that reads as a mountain 10px above where any mountain is drawn.
+   So a match has to hold for RUN rows together — anti-aliasing is one or two
+   pixels deep, a hill is hundreds. */
+const RUN = 3;
+const readPixels = async ({ b64, tones, from, RUN }) => {
   const img = new Image();
   img.src = "data:image/png;base64," + b64;
   await img.decode();
@@ -121,13 +133,15 @@ const readPixels = async ({ b64, tones, from }) => {
   const tops = tones.map(() => []);
   for (let x = 0; x < c.width; x++) {
     const seen = tones.map(() => null);
+    const streak = tones.map(() => 0);
     for (let y = Math.max(0, from); y < c.height; y++) {
       const i = (y * c.width + x) * 4;
       for (let t = 0; t < tones.length; t++) {
         if (seen[t] !== null) continue;
         const [r, gr, b] = tones[t];
-        if (Math.abs(d[i] - r) + Math.abs(d[i + 1] - gr) + Math.abs(d[i + 2] - b) <= 12)
-          seen[t] = y;
+        if (Math.abs(d[i] - r) + Math.abs(d[i + 1] - gr) + Math.abs(d[i + 2] - b) <= 12) {
+          if (++streak[t] >= RUN) seen[t] = y - RUN + 1;
+        } else streak[t] = 0;
       }
     }
     tones.forEach((_, t) => tops[t].push(seen[t]));
@@ -218,9 +232,16 @@ async function main() {
       });
       await page.waitForTimeout(120);
 
+      /* Start the scan at the highest row any hill can reach — each layer is
+         anchored to the page's foot and its ink tops out at its summit's
+         share of its own height — rather than at a fixed margin above the
+         band, which the near hill outgrows on a wide narrow-layout window. */
+      const ceiling = Math.max(...L.hillH.map((h, n) => h * L.summitOf[n]));
       const shot = await page.screenshot({ fullPage: true });
-      const P = await page.evaluate(readPixels,
-        { b64: shot.toString("base64"), tones: L.tones, from: Math.floor(L.band.top) - 40 });
+      const P = await page.evaluate(readPixels, {
+        b64: shot.toString("base64"), tones: L.tones, RUN,
+        from: Math.floor(L.pageH - ceiling) - 3,
+      });
 
       const tag = `${size.w}x${size.h}`;
       rule(tag, theme, "the page does not scroll sideways", L.overflowX <= 0,
@@ -251,6 +272,18 @@ async function main() {
         const sixth = size.w / 6;
         const bandH = L.band.bottom - L.band.top;
         const groundPx = L.hillH[0] * L.h1Ground;
+        /* Whether a hill's summit is actually out in the open, asked where it
+           matters: at the column the summit stands in, against the near hill's
+           silhouette THERE. Comparing against the near hill's ground instead
+           is the obvious mistake and a wrong one — that ground is only reached
+           at its toe, on the window's right edge, and by the left of a wide
+           narrow-layout window the same flank is 200px higher and buries
+           everything. 12px is the point past which a summit is a shape rather
+           than a few pixels the scan cannot place. */
+        const clear = (col, y) => {
+          const over = P.tops[0][Math.round(col)];
+          return over === null ? Infinity : over - y;
+        };
         /* Where the page has no spare height the near hill's ground is floored
            at the band's own top (see .hill-1 in main.css) and the two behind
            it are left with a sliver or nothing. Both of those are intended, so
@@ -265,26 +298,55 @@ async function main() {
           `band ${L.band.top} vs links ${L.links.bottom}`);
         rule(tag, theme,
           floored ? "near hill's ground floored at the band's top"
-                  : "near hill's ground one stroke over the footer row",
+                  : "near hill's ground on the footer row's top",
           near(P.tops[0][P.width - 1],
-               floored ? L.band.top : L.social.top - L.stroke, 2),
+               floored ? L.band.top : L.social.top, 2),
           `${P.tops[0][P.width - 1]} vs ` +
-          `${Math.round(floored ? L.band.top : L.social.top - L.stroke)}`);
+          `${Math.round(floored ? L.band.top : L.social.top)}`);
+
+        /* The flank holds one pitch from the right edge to the middle of the
+           window and twice that from there to the left — cut into the drawing
+           at the width where the two halves come out equal (see gen-hills.py).
+           Measured over the outer thirds of each half so the reading is not
+           taken across a break. */
+        const slope = (a, b) => (P.tops[0][a] - P.tops[0][b]) / (b - a);
+        const half = Math.floor(P.width / 2);
+        const right = slope(half + Math.floor(half * 0.2), P.width - 2);
+        const left = slope(2, Math.floor(half * 0.8));
+        const ratio = Math.abs(left) / Math.abs(right);
+        rule(tag, theme, "near hill's flank doubles its pitch at the window's middle",
+          ratio > 1.7 && ratio < 2.3,
+          `left ${Math.abs(left).toFixed(3)} vs right ${Math.abs(right).toFixed(3)} ` +
+          `= ${ratio.toFixed(2)}x`);
+        /* The near hill's ground IS the row's top now, so at the one column
+           where they meet the first painted pixel falls a row below it. The
+           +1 is that rounding and nothing else. */
         rule(tag, theme, "near hill carries the whole footer row",
-          P.tops[0].every((y) => y !== null && y <= L.social.top),
+          P.tops[0].every((y) => y !== null && y <= L.social.top + 1),
           `lowest ${Math.max(...P.tops[0].filter((y) => y !== null))} vs row ${L.social.top}`);
 
-        if (roomBehind >= 12) {
-          rule(tag, theme, "far summit a sixth in from the left, on the links' foot",
-            near(P.peaks[2]?.x, sixth, 3) && near(P.peaks[2]?.y, L.links.bottom, 3),
-            `(${P.peaks[2]?.x}, ${P.peaks[2]?.y}) vs (${Math.round(sixth)}, ${Math.round(L.links.bottom)})`);
-          rule(tag, theme, "middle summit a sixth in from the right, one stroke down",
-            near(P.peaks[1]?.x, sixth * 5, 3) && near(P.peaks[1]?.y, L.links.bottom + L.stroke, 3),
-            `(${P.peaks[1]?.x}, ${P.peaks[1]?.y}) vs (${Math.round(sixth * 5)}, ${Math.round(L.links.bottom + L.stroke)})`);
-        } else if (!QUIET) {
-          console.log(`  ${tag} ${theme}: only ${roomBehind.toFixed(0)}px of band ` +
-            `above the near hill — the two behind it are buried, ` +
-            `their anchors not checked`);
+        const galleryMid = (L.gallery.top + L.gallery.bottom) / 2;
+        const want = [null, { col: sixth * 5, y: L.links.bottom + L.stroke },
+                            { col: sixth, y: galleryMid }];
+        const showing = (n) => clear(want[n].col, want[n].y) >= 12;
+        if (showing(1) || showing(2)) {
+          if (showing(2))
+            rule(tag, theme, "far summit a sixth in from the left, on the gallery link's middle",
+              near(P.peaks[2]?.x, sixth, 3) && near(P.peaks[2]?.y, galleryMid, 3),
+              `(${P.peaks[2]?.x}, ${P.peaks[2]?.y}) vs (${Math.round(sixth)}, ${Math.round(galleryMid)})`);
+          if (showing(1))
+            rule(tag, theme, "middle summit a sixth in from the right, one stroke down",
+              near(P.peaks[1]?.x, sixth * 5, 3) && near(P.peaks[1]?.y, L.links.bottom + L.stroke, 3),
+              `(${P.peaks[1]?.x}, ${P.peaks[1]?.y}) vs (${Math.round(sixth * 5)}, ${Math.round(L.links.bottom + L.stroke)})`);
+        }
+        if (!QUIET && !(showing(1) && showing(2))) {
+          const buried = [!showing(2) && "far", !showing(1) && "middle"].filter(Boolean);
+          console.log(`  ${tag} ${theme}: the near hill's flank covers the ` +
+            `${buried.join(" and ")} hill${buried.length > 1 ? "s" : ""} ` +
+            `where ${buried.length > 1 ? "their summits stand" : "its summit stands"} ` +
+            `(${[2, 1].filter((n) => !showing(n))
+                 .map((n) => `${clear(want[n].col, want[n].y).toFixed(0)}px`).join(", ")}) — ` +
+            `anchor not checked`);
         }
       }
       await ctx.close();
