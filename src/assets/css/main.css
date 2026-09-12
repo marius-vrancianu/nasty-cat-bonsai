@@ -139,11 +139,12 @@
 
   /* h1 — near, front */
   --h1-summit: 0.76;        /* top, as a fraction of the height */
-  --h1-ground: 0.22;        /* the level it settles onto */
-  --h1-sky: 78%;            /* all of it above that ground */
+  --h1-ground: 0.18;        /* the level it settles onto */
+  --h1-sky: 82%;            /* all of it above that ground */
   --h1-peak: 3.225;         /* summit, from the frame's left edge */
-  --h1-heel: 1.1433;        /* first corner off the left flat run */
-  --h1-toe: 6.4293;         /* last corner before the right flat run */
+  --h1-heel: 0.8766;        /* first corner off the left flat run */
+  --h1-toe: 6.3871;         /* last corner before the right flat run */
+  --h1-last: 0.3467;        /* run of the closing segment */
 
   /* h2 — middle distance, right of centre */
   --h2-summit: 0.7;         /* top, as a fraction of the height */
@@ -152,6 +153,7 @@
   --h2-peak: 5.1;           /* summit, from the frame's left edge */
   --h2-heel: 3.1861;        /* first corner off the left flat run */
   --h2-toe: 7.2554;         /* last corner before the right flat run */
+  --h2-last: 0.9833;        /* run of the closing segment */
 
   /* h3 — far, centred, tallest */
   --h3-summit: 1;           /* top, as a fraction of the height */
@@ -160,6 +162,7 @@
   --h3-peak: 3.85;          /* summit, from the frame's left edge */
   --h3-heel: 1.1473;        /* first corner off the left flat run */
   --h3-toe: 7.6694;         /* last corner before the right flat run */
+  --h3-last: 1.58;          /* run of the closing segment */
 }
 
 /* <<< end of the generated figures */
@@ -597,12 +600,14 @@ a { color: inherit; }
      settles onto its ground — goes on the window's RIGHT edge, and that
      ground sits ON the footer row's top rather than a stroke above it, so the
      icons hang just under the horizon rather than clear of it. Both together
-     fix the height, which is what dividing by --h1-ground says: 464px on a
+     fix the height, which is what dividing by --h1-ground says: 567px on a
      393px phone, against the band's 203.
 
-     That 464 is also what the drawing's tail is cut to — see gen-hills.py,
+     That 567 is also what the drawing's tail is cut to — see gen-hills.py,
      THE TAIL IS CUT — so the flank holds 0.055 from this edge to the middle
-     of the window and twice that from there to the left edge.
+     of the window and FOUR times that from there to the left edge. The
+     fraction it divides by is 0.18 rather than the 0.22 it was, and for the
+     same reason; the generator's comment has the whole of it.
 
      The min() is a floor against the band. On a page with no room to spare —
      a 320x568 screen, where the links' foot and the row's top are 4px apart —

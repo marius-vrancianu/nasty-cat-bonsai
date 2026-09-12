@@ -105,6 +105,9 @@ const readLayout = () => {
       getComputedStyle(document.querySelector(`.hill-${n}`)).height)),
     tones: [rgb(".hill-1"), rgb(".hill-2"), rgb(".hill-3")],
     h1Ground: fig("--h1-ground"),
+    h1Last: fig("--h1-last"),
+    socialColors: [...document.querySelectorAll(".home-social a, .home-social button")]
+      .map((e) => getComputedStyle(e).color),
     summitOf: [1, 2, 3].map((n) => fig(`--h${n}-summit`)),
     stroke: innerWidth < 768 ? innerWidth * 0.04545 : innerHeight * 0.04052,
   };
@@ -210,6 +213,14 @@ async function main() {
          forgetting to cost an hour once. */
       const decline = page.locator(".consent-banner button", { hasText: /decline/i }).first();
       if (await decline.count()) await decline.click({ force: true }).catch(() => {});
+      /* And then get the pointer off the page. The banner's Decline button
+         sits at (176, 798) on a 393px phone, and once the banner goes that
+         point is on top of the RSS icon — so the click leaves it in :hover and
+         it renders --olive while its neighbours render --home-social. It looks
+         exactly like a colour bug in the footer and is not one; it does not
+         happen in the wide layout only because the same button's centre lands
+         on the picture there. */
+      await page.mouse.move(0, 0);
       await page.waitForTimeout(250);
 
       const L = await page.evaluate(readLayout);
@@ -246,6 +257,8 @@ async function main() {
       const tag = `${size.w}x${size.h}`;
       rule(tag, theme, "the page does not scroll sideways", L.overflowX <= 0,
         `overflow ${L.overflowX}px`);
+      rule(tag, theme, "the footer row is all one colour at rest",
+        new Set(L.socialColors).size === 1, L.socialColors.join(" "));
 
       if (wide) {
         /* The band is the lower half of the window, and the tallest hill fills
@@ -305,7 +318,7 @@ async function main() {
           `${Math.round(floored ? L.band.top : L.social.top)}`);
 
         /* The flank holds one pitch from the right edge to the middle of the
-           window and twice that from there to the left — cut into the drawing
+           window and four times that from there to the left — cut into the drawing
            at the width where the two halves come out equal (see gen-hills.py).
            Measured over the outer thirds of each half so the reading is not
            taken across a break. */
@@ -313,11 +326,18 @@ async function main() {
         const half = Math.floor(P.width / 2);
         const right = slope(half + Math.floor(half * 0.2), P.width - 2);
         const left = slope(2, Math.floor(half * 0.8));
-        const ratio = Math.abs(left) / Math.abs(right);
-        rule(tag, theme, "near hill's flank doubles its pitch at the window's middle",
-          ratio > 1.7 && ratio < 2.3,
-          `left ${Math.abs(left).toFixed(3)} vs right ${Math.abs(right).toFixed(3)} ` +
-          `= ${ratio.toFixed(2)}x`);
+        const tailPx = L.h1Last * L.hillH[0];
+        if (2 * tailPx >= size.w - 1) {
+          const ratio = Math.abs(left) / Math.abs(right);
+          rule(tag, theme, "near hill's flank quadruples its pitch at the window's middle",
+            ratio > 3.4 && ratio < 4.6,
+            `left ${Math.abs(left).toFixed(3)} vs right ${Math.abs(right).toFixed(3)} ` +
+            `= ${ratio.toFixed(2)}x`);
+        } else if (!QUIET) {
+          console.log(`  ${tag} ${theme}: the re-cut tail spans ` +
+            `${(2 * tailPx).toFixed(0)}px of a ${size.w}px window — the flank ` +
+            `above it shows too, so the pitch rule is not checked`);
+        }
         /* The near hill's ground IS the row's top now, so at the one column
            where they meet the first painted pixel falls a row below it. The
            +1 is that rounding and nothing else. */

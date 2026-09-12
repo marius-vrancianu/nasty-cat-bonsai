@@ -255,27 +255,41 @@ HILLS = {
     #
     # THE TAIL IS CUT TO THE NARROW LAYOUT'S WINDOW. There, this hill's toe is
     # pinned to the window's right edge, so a run measured back from the toe
-    # is a run measured back from that edge. 424 units at 0.055 reaches the
-    # middle of a 393px phone; 424 more at twice the pitch reaches its left
-    # edge. The window is 848 units wide there because the hill is drawn at
-    # foot/0.22 = 464px and 393/0.464 = 847.
+    # is a run measured back from that edge. 347 units at 0.055 reaches the
+    # middle of a 393px phone; 347 more at FOUR TIMES that pitch reaches its
+    # left edge. The window is 694 units wide there because the hill is drawn
+    # at foot/0.18 = 567px and 393/0.567 = 693.
     #
     # That is exact at 393 and drifts either side, since the window's width in
-    # units follows the viewport while the break does not: the break falls at
-    # 61% across a 320px screen and 37% across a 439px one. It cannot be
-    # otherwise — the drawing is one shape and the window is not — and between
-    # those it reads as "about the middle", which is what it is for.
+    # units follows the viewport while the break does not. It cannot be
+    # otherwise — the drawing is one shape and the window is not — and either
+    # side of 393 it still reads as "about the middle", which is what it is
+    # for.
     #
-    # 0.13 gives up 3.96 of fall, which is what the two new segments gain over
-    # the single 0.055 x 1200 they replace. The wide layout sees none of this:
-    # its window ends at +1778 and the first of the two breaks is at +1732, so
-    # it catches 46 units of the 0.11 and nothing of the 0.055.
+    # WHY THE GROUND IS 180 AND NOT 220. Quadrupling that pitch costs 46 more
+    # units of fall than the segment it replaces, and the fall budget is
+    # summit - ground. Taking it from the 0.13 segment above would shorten
+    # that segment, and the 0.13 segment is precisely what the WIDE layout is
+    # looking at — it would drag the steepened part left into view and change
+    # a layout that is finished. Lowering the ground grows the budget instead,
+    # and 180 is the loosest value that still leaves the 0.13 running past
+    # +1778, where a 16:9 window ends. The wide layout's flank is then
+    # unchanged to within half a pixel, and the steepening begins at +1844,
+    # just off the edge of it.
+    #
+    # The left flank gains the same 40 units so the two sides still balance;
+    # it is never on screen in either layout.
+    #
+    # Beyond about 2100px at 1080 tall the window does reach past +1844 and
+    # the steepened segment comes into view, sitting roughly 20px lower at the
+    # far right than it used to. Nothing can prevent that: the narrow layout
+    # defines that stretch of flank and an ultrawide window can see it.
     "hill-1.svg": dict(
         note="near, front",
-        summit=760, at=-625, ground=220,
-        up=[(0.15, 130), (0.26, 180), (0.44, 230)],
+        summit=760, at=-625, ground=180,
+        up=[(0.15, 170), (0.26, 180), (0.44, 230)],
         down=[(0.08, 24), (0.34, 190), (0.22, 150),
-              (0.13, 106.04), (0.11, 46.64), (0.055, 23.32)],
+              (0.13, 120.64), (0.22, 76.29), (0.055, 19.07)],
     ),
     # Middle distance, right of centre, and the only hill whose head has to
     # clear another's flank: it is inside hill 3 until about +1120 and stands
@@ -382,6 +396,7 @@ def figures(name, spec, pts):
         ("peak", num((CENTRE + spec["at"]) / VB_H), "summit, from the frame's left edge"),
         ("heel", num(pts[1][0] / VB_H), "first corner off the left flat run"),
         ("toe", num(pts[-2][0] / VB_H), "last corner before the right flat run"),
+        ("last", num((pts[-2][0] - pts[-3][0]) / VB_H), "run of the closing segment"),
     ]
 
 
