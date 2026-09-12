@@ -200,7 +200,7 @@ a { color: inherit; }
    editing an SVG by hand.
 
    ONE FRAME, THREE FILES. Every file carries the same viewBox — the group's
-   whole bounding box, 5.1 : 1, symmetric about the tallest hill's tip — with
+   whole bounding box, 8.4 : 1, symmetric about the tallest hill's tip — with
    its own hill drawn in place inside it. So all three layers are the same
    box at the same position and differ only in which file they mask and which
    tone they paint. Nothing here measures or offsets a hill individually, and
@@ -424,8 +424,8 @@ a { color: inherit; }
      half of the drawing: the far peak standing at the edge, the middle hill
      out to its right, the near hill's flank under both. A mask-position of
      half the image's width, negative, is what puts a centred drawing's
-     middle on the box's left edge; the image is 5.1 boxes wide at this
-     height, hence 2.55.
+     middle on the box's left edge; the image is 8.4 boxes wide at this
+     height, hence 4.2.
 
      HOW TALL. The band has to fit between the last link and the foot of the
      page — "no hill behind the buttons" is the whole brief for this layout —
@@ -450,7 +450,7 @@ a { color: inherit; }
                 var(--nav-h) - var(--links-h));
     --hills-h: min(clamp(140px, 52vw, 230px), var(--room));
     height: var(--hills-h);
-    --hills-x: calc(var(--hills-h) * -2.55);
+    --hills-x: calc(var(--hills-h) * -4.2);
   }
 
   /* The near hill is drawn to its OWN height here, not the band's, and slid
@@ -463,21 +463,21 @@ a { color: inherit; }
      the viewport cannot be. At this height its ground (0.22 of it, see
      gen-hills.py) lands at 106-123px from 320px up, clear of the row.
 
-     The 3.2 against the other two's 2.55 slides the frame a further 0.65 of
+     The 5.17 against the other two's 4.2 slides the frame a further 0.97 of
      its height left, which puts a LOWER stretch of the hill's flank at the
-     window's edge — u=275 of 1000 rather than u=545. Without it the near
-     hill would stand taller than the whole band at the left edge and bury
-     the far peak, which is the one thing that has to be visible there. As it
-     is it comes in at about two thirds of the band, drops onto its ground
-     within the first 180px, and runs flat from there to the right edge.
+     window's edge — u=254 of 1000 rather than u=336. Without it the near
+     hill would come in at 86% of the band and bury the far peak, which is
+     the one thing that has to be visible there. As it is it enters at about
+     two thirds of the band and goes on descending across the whole width,
+     reaching its ground just past the right edge.
 
      Both figures are its own height, so the hill keeps its shape exactly;
      only which part of it the window sees changes. */
   .hills > .hill-1 {
     --h1-h: clamp(480px, 132vw, 560px);
     height: var(--h1-h);
-    -webkit-mask-position: calc(var(--h1-h) * -3.2) bottom, left bottom;
-    mask-position: calc(var(--h1-h) * -3.2) bottom, left bottom;
+    -webkit-mask-position: calc(var(--h1-h) * -5.17) bottom, left bottom;
+    mask-position: calc(var(--h1-h) * -5.17) bottom, left bottom;
   }
 
   /* Full-width frame: stroke = 5% of image width with the frame spanning
