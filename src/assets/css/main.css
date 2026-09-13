@@ -307,6 +307,11 @@ a { color: inherit; }
      it and drops the gate at its static position. Which is what happened. */
   --t-ratio: 1.21787;
   --t-w: calc(var(--t-h) * var(--t-ratio));
+  /* The orb's diameter, up here for the same reason --t-w is: both layouts
+     place it from its own size, and a custom property is resolved against
+     the element it is DECLARED on. Declared on .orb it would be missing in
+     the rules below, and a --s-x that quietly fails takes `left` with it. */
+  --s-d: calc(var(--t-w) * var(--s-size));
   /* Where the frame's centre line — the tallest tip — is put. The narrow
      layout does not use this: there the three are placed one by one. */
   --hills-x: center;
@@ -468,6 +473,53 @@ a { color: inherit; }
   }
 }
 
+/* THE CELESTIAL BODY — the sun by day, the moon by night, and the same box
+   either way. It is the furthest-back thing on the page: first in hills.njk,
+   so everything else paints over it.
+
+   NO FILE FOR THIS ONE. The hills and the gate are drawings and need to be;
+   a disc is `border-radius: 50%` and a crescent is that disc with an inset
+   shadow, which is the neatest shape in CSS and costs no request. The
+   crescent works because an inset shadow is clipped to the padding box —
+   the circle — and leaves a hole the shape of that same box, offset. Circle
+   minus circle at the same radius is a true lune: horns at either end and
+   its belly on the side away from the offset, which is the lower right. Its
+   thickness is the offset's own length, so --s-crescent IS how fat the moon
+   is, measured across its middle, and nothing else has to change with it.
+
+   Rust for the sun, and the lightest olive for the moon — the same pair the
+   links cross between, which is what keeps it part of the palette rather
+   than a fourth colour.
+
+   WHERE IT GOES is stated against the gate, not the window: it rises behind
+   the roof's right end, a little above and a little right of it, so the two
+   read as one composition wherever the gate happens to be. --s-over is how
+   much of the disc hides behind the gate horizontally and --s-rise how far
+   it clears the roof.
+
+   Then two clamps hold it off the window's edges by a stroke, which is the
+   whole of what the wide layout needs, and the narrow one swaps the top
+   clamp for the picture's foot: the photograph is opaque and paints over
+   this, so an orb that drifted up into it would come out sliced rather than
+   round. Both are minimums — where there is room, the gate's own position is
+   what places it. */
+.orb {
+  position: absolute;
+  left: var(--s-x);
+  bottom: var(--s-b);
+  width: var(--s-d);
+  height: var(--s-d);
+  border-radius: 50%;
+  background: var(--rust);
+}
+
+:root[data-theme="dark"] .orb {
+  background: transparent;
+  box-shadow: inset calc(var(--s-d) * var(--s-crescent) * -0.7071)
+                    calc(var(--s-d) * var(--s-crescent) * -0.7071)
+                    0 0 var(--olive);
+}
+
 /* THE TORII GATE, standing on the near hill.
 
    It is drawn in torii.svg, which is the supplied artwork cropped to the
@@ -580,6 +632,16 @@ a { color: inherit; }
   --t-ridge: 0.348;
   --t-sink: 0.08;
   --t-start: calc(var(--t-menu) + 100vh * 0.04052);
+  --s-size: 0.45;       /* the orb's diameter, as a share of the gate's width */
+  --s-crescent: 0.18;   /* the moon's thickness across its middle, of that */
+  --s-over: 0.35;       /* how much of it hides behind the gate, of that */
+  --s-rise: 0.30;       /* how far its middle clears the gate's top, of that */
+  --s-x: min(calc(var(--t-x) + var(--t-w)
+                  - (0.5 + var(--s-over)) * var(--s-d)),
+             calc(100vw - 100vh * 0.04052 - var(--s-d)));
+  --s-b: min(calc(var(--t-b) + var(--t-h)
+                  + (var(--s-rise) - 0.5) * var(--s-d)),
+             calc(100vh - 100vh * 0.04052 - var(--s-d)));
   --t-b: calc(var(--band-h) * (var(--t-ridge) - var(--t-share) * var(--t-sink)));
   --t-h: min(calc(var(--band-h) * var(--t-share)),
              calc(max(0px, 100vw - var(--t-start)) / var(--t-ratio)),
@@ -591,6 +653,12 @@ a { color: inherit; }
   .hills {
     --t-menu: calc(100dvh * 0.8914 + var(--nav-size) * 3.307);
     --t-start: calc(var(--t-menu) + 100dvh * 0.04052);
+    --s-x: min(calc(var(--t-x) + var(--t-w)
+                    - (0.5 + var(--s-over)) * var(--s-d)),
+               calc(100vw - 100dvh * 0.04052 - var(--s-d)));
+    --s-b: min(calc(var(--t-b) + var(--t-h)
+                    + (var(--s-rise) - 0.5) * var(--s-d)),
+               calc(100dvh - 100dvh * 0.04052 - var(--s-d)));
     --t-cap: calc(100dvh * 0.04052
                   + 2 * (2.046 * var(--nav-size) + clamp(8px, 2.25vh, 28px)));
     --t-h: min(calc(var(--band-h) * var(--t-share)),
@@ -866,6 +934,20 @@ a { color: inherit; }
        into it: at 767 only its roof was left. Sized from the window instead,
        once that is the larger of the two, it comes back out. No phone reaches
        this floor — at 430 the band's share is twice it. */
+    /* The orb, narrow. Same relationship to the gate; the clamps change.
+       Sideways it stops where the gate does, at the words, so nothing of it
+       is ever behind them. Upward it stops at the picture's foot rather than
+       the window's top: the photograph paints over this and would cut a
+       slice out of it. That foot is --links-h above the band's top, which is
+       how it can be said here at all — the page's own height, on a layout
+       whose page is as tall as its content, is the one thing these rules
+       cannot put in a formula. */
+    --s-x: min(calc(var(--t-x) + var(--t-w)
+                    - (0.5 + var(--s-over)) * var(--s-d)),
+               calc(100vw - var(--stroke) - var(--gallery-w) - var(--s-d)));
+    --s-b: min(calc(var(--t-b) + var(--t-h)
+                    + (var(--s-rise) - 0.5) * var(--s-d)),
+               calc(var(--hills-h) + var(--links-h) - var(--s-d)));
     --t-x: var(--stroke);
     --t-b: var(--foot);
     --t-share: 1.04;

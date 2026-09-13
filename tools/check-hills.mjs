@@ -132,6 +132,7 @@ const readLayout = () => {
        right edge in the wide layout (the gap starts there), its left edge in
        the narrow one (the gate must stop short of it). */
     torii: R(".torii"),
+    orb: R(".orb"),
     wordsLeft: Math.min(...[...document.querySelectorAll(".home-links > a")]
       .map((a) => a.getBoundingClientRect().left)),
     wordsRight: Math.max(...[...document.querySelectorAll(".home-links > a")]
@@ -361,6 +362,34 @@ async function main() {
         }
       } else if (!QUIET) {
         console.log(`  ${tag} ${theme}: no gap beside the menu, so no gate`);
+      }
+
+      /* THE CELESTIAL BODY rises behind the gate's roof, and the rules are
+         the three things it must not do: come loose from the gate, touch the
+         window's edges, or — in the narrow layout — drift up behind the
+         photograph, which is opaque and would cut a slice out of it.
+
+         It is sized from the gate, so a window with no gate has no orb
+         either and there is nothing here to ask about. */
+      const orb = L.orb && L.orb.width > 1 ? L.orb : null;
+      if (orb && gate) {
+        rule(tag, theme, "the orb stands behind the gate",
+          orb.right > gate.left && orb.left < gate.right &&
+          orb.bottom > gate.top && orb.top < gate.bottom,
+          `orb ${orb.left.toFixed(0)},${orb.top.toFixed(0)} ` +
+          `${orb.width.toFixed(0)}px vs gate ${gate.left.toFixed(0)},${gate.top.toFixed(0)}`);
+
+        if (wide) {
+          rule(tag, theme, "the orb keeps a stroke clear of the window's top and right",
+            orb.top >= L.stroke - 1 && orb.right <= size.w - L.stroke + 1,
+            `${orb.top.toFixed(0)}px down, ` +
+            `${(size.w - orb.right).toFixed(0)}px in, a stroke is ${L.stroke.toFixed(0)}px`);
+        } else {
+          rule(tag, theme, "the orb clears the picture above and the words beside it",
+            orb.top >= L.hero.bottom - 1 && orb.right <= L.wordsLeft + 1,
+            `top ${orb.top.toFixed(0)} vs picture's foot ${L.hero.bottom.toFixed(0)}, ` +
+            `right ${orb.right.toFixed(0)} vs words ${L.wordsLeft.toFixed(0)}`);
+        }
       }
 
       if (wide) {

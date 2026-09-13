@@ -1,22 +1,25 @@
-{#- The hill backdrop: three silhouettes cut from one drawing, written by
-    tools/gen-hills.py into hill-1/2/3.svg, and the torii gate standing on
-    the near one. Decorative only, hence aria-hidden — the page says nothing
-    that these carry.
+{#- The backdrop: the celestial body, three hill silhouettes cut from one
+    drawing by tools/gen-hills.py, and the torii gate standing on the near
+    hill. Decorative only, hence aria-hidden — the page says nothing that
+    these carry.
 
-    Back to front, so the near hill paints over everything behind it. The
-    three hills share one viewBox, so they need no offsets of their own: the
-    stylesheet places the box and every hill lands where it belongs inside
-    it. The gate is not one of them — it is a bounded object with a box of
-    its own, which is why it carries no `hill` class and does not pick up
-    their placement rule.
+    ORDER IS DEPTH here, and it is the whole of how the pieces relate:
 
-    Its ORDER here is the whole of how it stands on the hill: after hills 3
-    and 2 so it is in front of both, before hill 1 so the near hill paints
-    over its feet. Move that line and the gate either floats or disappears.
+      the orb    furthest back, behind everything
+      hill 3, 2  the far and middle hills
+      the gate   in front of both, behind the near hill
+      hill 1     nearest, painting over the gate's feet
+
+    The three hills share one viewBox, so they need no offsets of their own:
+    the stylesheet places the box and every hill lands where it belongs
+    inside it. The orb and the gate are not placed that way — each is a
+    bounded object with a box, which is why neither carries a `hill` class
+    and neither picks up their placement rule.
 
     Dropping any of these is a matter of deleting its line, which is how
     this is meant to be reused at the foot of an inner page. #}
 <div class="hills" aria-hidden="true">
+  <span class="orb"></span>
   <span class="hill hill-3"></span>
   <span class="hill hill-2"></span>
   <span class="torii"></span>
