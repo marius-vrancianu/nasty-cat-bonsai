@@ -550,6 +550,13 @@ a { color: inherit; }
    That the feet are actually buried is not left to this arithmetic: the
    check scans the pixels at both poles.
 
+   --t-start is where the gap actually begins: one stroke — the picture's own
+   mat, 4.052dvh — past the menu's edge, so there is always that much paper
+   between the last word and the gate. Without it the two touch on any window
+   where the gate fills the gap, and at 1512x982 the old spacing came to nine
+   pixels. Everything below is measured from --t-start rather than --t-menu,
+   so the clearance holds whether the gate is centred or at its largest.
+
    THE GAP IS ALSO A SIZE LIMIT, which is the second term of --t-h. The gate
    is asked for at --t-share of the band and that is more than the gap can
    hold on anything squarer than about 21 : 9, so without this the gate runs
@@ -559,8 +566,8 @@ a { color: inherit; }
    is room for it.
 
    That limit is exactly where the left edge would otherwise have to be
-   clamped: a gate no wider than the gap, centred in it, never reaches past
-   --t-menu. The max() on --t-x is what says so, and it is kept because it is
+   clamped: a gate no wider than the gap, centred in it, never reaches back to
+   --t-start. The max() on --t-x is what says so, and it is kept because it is
    the rule — "the box stops when its corner meets the menu" — rather than
    because it still fires. The 0px floor is for a window narrower than the
    nav's own left offset, where there is no gap at all and so no gate: at
@@ -572,20 +579,22 @@ a { color: inherit; }
   --t-share: 1.36;
   --t-ridge: 0.348;
   --t-sink: 0.08;
+  --t-start: calc(var(--t-menu) + 100vh * 0.04052);
   --t-b: calc(var(--band-h) * (var(--t-ridge) - var(--t-share) * var(--t-sink)));
   --t-h: min(calc(var(--band-h) * var(--t-share)),
-             calc(max(0px, 100vw - var(--t-menu)) / var(--t-ratio)),
+             calc(max(0px, 100vw - var(--t-start)) / var(--t-ratio)),
              calc(100vh - var(--t-cap) - var(--t-b)));
-  --t-x: max(var(--t-menu), calc((var(--t-menu) + 100vw - var(--t-w)) / 2));
+  --t-x: max(var(--t-start), calc((var(--t-start) + 100vw - var(--t-w)) / 2));
 }
 
 @supports (height: 1dvh) {
   .hills {
     --t-menu: calc(100dvh * 0.8914 + var(--nav-size) * 3.307);
+    --t-start: calc(var(--t-menu) + 100dvh * 0.04052);
     --t-cap: calc(100dvh * 0.04052
                   + 2 * (2.046 * var(--nav-size) + clamp(8px, 2.25vh, 28px)));
     --t-h: min(calc(var(--band-h) * var(--t-share)),
-               calc(max(0px, 100vw - var(--t-menu)) / var(--t-ratio)),
+               calc(max(0px, 100vw - var(--t-start)) / var(--t-ratio)),
                calc(100dvh - var(--t-cap) - var(--t-b)));
   }
 }

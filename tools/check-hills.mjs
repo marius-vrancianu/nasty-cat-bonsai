@@ -395,14 +395,21 @@ async function main() {
            Which of the two is in force is not asserted; that the gate is in
            one of them is. */
         if (gate) {
-          const gapMid = (L.wordsRight + size.w) / 2;
+          /* The gap starts one stroke past the last word, not at it, so there
+             is always that much paper between the menu and the gate. */
+          const gapFrom = L.wordsRight + L.stroke;
+          const gapMid = (gapFrom + size.w) / 2;
           const centred = near(gate.left + gate.width / 2, gapMid, 2);
-          const clamped = near(gate.left, L.wordsRight, 2);
+          const clamped = near(gate.left, gapFrom, 2);
           rule(tag, theme, "the gate is centred in the gap beside the menu, or held at its edge",
-            (centred || clamped) && gate.left >= L.wordsRight - 2,
+            (centred || clamped) && gate.left >= gapFrom - 2,
             centred ? `centred on ${gapMid.toFixed(0)}`
-                    : `held at the menu's edge ${L.wordsRight.toFixed(0)} ` +
+                    : `held at the gap's edge ${gapFrom.toFixed(0)} ` +
                       `(centring wanted ${(gapMid - gate.width / 2).toFixed(0)})`);
+          rule(tag, theme, "the gate keeps a stroke clear of the menu",
+            gate.left - L.wordsRight >= L.stroke - 1,
+            `${(gate.left - L.wordsRight).toFixed(0)}px of paper, ` +
+            `a stroke is ${L.stroke.toFixed(0)}px`);
           /* And it is whole: the gap is a size limit as well as a place, so
              the gate never runs off the right of the window. */
           rule(tag, theme, "the gate fits in the gap, end to end",
