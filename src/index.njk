@@ -6,7 +6,12 @@ bodyClass: home-body
   {#- The visible title lives inside the hero artwork; this gives screen
       readers and search engines a real page heading. #}
   <h1 class="visually-hidden">Nasty Cat Bonsai</h1>
-  {% include "partials/theme-toggle.njk" %}
+  {#- No icon toggle on this page: the celestial body IS the theme switch
+      here, and two controls for one setting is one too many. The icon stays
+      on every other page, where there is no sky to put a sun in. Setting
+      this before the include is what turns the orb from decoration into a
+      control — see partials/hills.njk. #}
+  {% set orbToggles = true %}
   {% include "partials/hills.njk" %}
   {# AVIF → WebP → JPEG, largest-first per format; phones (which display
      the hero at ~100vw ≈ 390–430 CSS px) get the 800px encodes. The

@@ -1,7 +1,6 @@
 {#- The backdrop: the celestial body, three hill silhouettes cut from one
     drawing by tools/gen-hills.py, and the torii gate standing on the near
-    hill. Decorative only, hence aria-hidden — the page says nothing that
-    these carry.
+    hill.
 
     ORDER IS DEPTH here, and it is the whole of how the pieces relate:
 
@@ -16,12 +15,28 @@
     bounded object with a box, which is why neither carries a `hill` class
     and neither picks up their placement rule.
 
-    Dropping any of these is a matter of deleting its line, which is how
-    this is meant to be reused at the foot of an inner page. #}
-<div class="hills" aria-hidden="true">
-  <span class="orb"></span>
-  <span class="hill hill-3"></span>
-  <span class="hill hill-2"></span>
-  <span class="torii"></span>
-  <span class="hill hill-1"></span>
+    THE ORB IS ALSO THE THEME SWITCH, where the including page asks for it.
+    It ships DISABLED and aria-hidden and theme.js removes both, which is the
+    same bargain the icon toggle makes with its `hidden`: without JavaScript
+    there is nothing for a control to do, so it stays what it was, a drawing
+    of a sun. A focusable button that does nothing is worse than no button.
+
+    That is also why aria-hidden is on each decorative child rather than on
+    the box around them — a focusable element inside an aria-hidden subtree is
+    hidden from a screen reader while still taking a tab stop, which is the
+    one arrangement worse than either.
+
+    Dropping any of these is a matter of deleting its line, which is how this
+    is meant to be reused at the foot of an inner page. Leave `orbToggles`
+    unset there and the orb is decoration again. #}
+<div class="hills">
+  {%- if orbToggles %}
+  <button class="orb" type="button" data-theme-toggle disabled aria-hidden="true"></button>
+  {%- else %}
+  <span class="orb" aria-hidden="true"></span>
+  {%- endif %}
+  <span class="hill hill-3" aria-hidden="true"></span>
+  <span class="hill hill-2" aria-hidden="true"></span>
+  <span class="torii" aria-hidden="true"></span>
+  <span class="hill hill-1" aria-hidden="true"></span>
 </div>

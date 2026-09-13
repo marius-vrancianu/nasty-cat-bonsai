@@ -133,6 +133,21 @@ const readLayout = () => {
        the narrow one (the gate must stop short of it). */
     torii: R(".torii"),
     orb: R(".orb"),
+    /* The orb is the home page's theme switch, so what it IS matters as much
+       as where it is: a real button, enabled, named, and not hidden from a
+       screen reader. And the icon toggle must be gone from this page — two
+       controls for one setting is the thing this replaced. */
+    orbControl: (() => {
+      const e = document.querySelector(".orb");
+      if (!e) return null;
+      return { tag: e.tagName, disabled: !!e.disabled,
+               hidden: e.getAttribute("aria-hidden"),
+               label: e.getAttribute("aria-label") || "",
+               pressed: e.getAttribute("aria-pressed") || "",
+               title: e.title || "",
+               clicks: getComputedStyle(e).pointerEvents };
+    })(),
+    iconToggle: document.querySelectorAll(".theme-toggle").length,
     wordsLeft: Math.min(...[...document.querySelectorAll(".home-links > a")]
       .map((a) => a.getBoundingClientRect().left)),
     wordsRight: Math.max(...[...document.querySelectorAll(".home-links > a")]
@@ -371,6 +386,19 @@ async function main() {
 
          It is sized from the gate, so a window with no gate has no orb
          either and there is nothing here to ask about. */
+      if (L.orbControl) {
+        const c = L.orbControl;
+        rule(tag, theme, "the orb is an enabled, named button and the icon toggle is gone",
+          c.tag === "BUTTON" && !c.disabled && c.hidden === null &&
+          /switch to (light|dark) theme/i.test(c.label) &&
+          c.pressed === (theme === "dark" ? "true" : "false") &&
+          c.title === c.label && c.clicks !== "none" && L.iconToggle === 0,
+          `${c.tag}${c.disabled ? " disabled" : ""}` +
+          `${c.hidden !== null ? " aria-hidden" : ""}, "${c.label}", ` +
+          `pressed=${c.pressed}, pointer-events ${c.clicks}, ` +
+          `${L.iconToggle} icon toggle(s)`);
+      }
+
       const orb = L.orb && L.orb.width > 1 ? L.orb : null;
       if (orb && gate) {
         rule(tag, theme, "the orb stands behind the gate",
@@ -600,6 +628,48 @@ async function main() {
           near(P.peaks[1]?.x, sixth * 5, 3) && near(P.peaks[1]?.y, L.links.bottom + L.stroke, 3),
           `(${P.peaks[1]?.x}, ${P.peaks[1]?.y}) vs (${Math.round(sixth * 5)}, ${Math.round(L.links.bottom + L.stroke)})`);
       }
+      /* PRESS IT. Everything painted over the orb is pointer-events: none, so
+         a real click at the disc's centre reaches the button even where the
+         gate covers it — which is the whole of the hit area this page relies
+         on, and not something a synthetic .click() would prove. */
+      /* An orb with no size cannot be pressed, and at 768x1024 there is one:
+         the gate sizes the orb and there is no gap beside the menu to put a
+         gate in. That window has no theme switch on this page at all — which
+         is not the orb failing but the WIDE LAYOUT being used outside its
+         range. It wants a landscape window: the nav starts 89.14dvh from the
+         left, so on anything narrower than that the nav, the footer row and
+         half the picture are already off the right-hand edge. A tablet held
+         in portrait lands there. Worth fixing, and not by patching the orb. */
+      if (L.orbControl && orb) {
+        const box = await page.evaluate(() => {
+          const e = document.querySelector(".orb");
+          e.scrollIntoView({ block: "center" });
+          const r = e.getBoundingClientRect();
+          return { x: r.left + r.width / 2, y: r.top + r.height / 2,
+                   w: innerWidth, h: innerHeight };
+        });
+        if (box.x > 0 && box.x < box.w && box.y > 0 && box.y < box.h) {
+          await page.mouse.click(box.x, box.y);
+          await page.waitForTimeout(120);
+          const after = await page.evaluate(() => ({
+            theme: document.documentElement.dataset.theme || "light",
+            saved: (() => { try { return localStorage.getItem("theme"); }
+                            catch { return null; } })(),
+            label: document.querySelector(".orb").getAttribute("aria-label"),
+          }));
+          const want = theme === "dark" ? "light" : "dark";
+          rule(tag, theme, "pressing the orb turns the theme over and remembers it",
+            after.theme === want && after.saved === want &&
+            after.label === `Switch to ${want === "dark" ? "light" : "dark"} theme`,
+            `${theme} -> ${after.theme} (saved ${after.saved}), now "${after.label}"`);
+        } else if (!QUIET) {
+          console.log(`  ${tag} ${theme}: the orb's centre is off screen — not pressed`);
+        }
+      } else if (L.orbControl && !QUIET) {
+        console.log(`  ${tag} ${theme}: no gate, so no orb, so NO THEME SWITCH ` +
+          `on this page — the wide layout is out of its range here`);
+      }
+
       await ctx.close();
     }
   }

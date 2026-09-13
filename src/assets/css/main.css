@@ -46,6 +46,7 @@
      it is paper, and a moon that followed the link colour would have to
      change every time that did. See .orb. */
   --orb: var(--rust);
+  --orb-hover: var(--rust-hover);
   /* One physical pixel, expressed in CSS pixels. The rules drawn with it
      are a single device pixel at any zoom; the inline script in base.njk
      keeps it true, and this 1px is what a browser without it falls back
@@ -135,6 +136,10 @@
   /* Paper, and the brightest thing on the night page at 11.5:1 against the
      sky. By day this is the rust accent; see the light theme above. */
   --orb: #e2dbcb;
+  /* The moon answers a press by going olive, the way every other control on
+     the site does. 7.50:1 on the sky, so it is no quieter than the paper it
+     was. */
+  --orb-hover: var(--olive);
 }
 
 /* The hills' own geometry, in units of each hill's drawn height. These are
@@ -533,6 +538,47 @@ a { color: inherit; }
   height: var(--s-d);
   border-radius: 50%;
   background: var(--orb);
+  /* It is a <button> on the home page and a <span> everywhere else, so the
+     button's own chrome is cleared here rather than in a rule that only one
+     of the two would match. */
+  border: 0;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* AND IT IS THE THEME SWITCH. .hills sets pointer-events: none so the
+   backdrop never swallows a click meant for something else; this is the one
+   piece that wants them back. Everything painted over the orb — two hills and
+   the gate — keeps pointer-events: none, so the whole disc answers wherever
+   you press it, including the half of the moon that is drawn dark and the
+   part hidden behind the roof. The button's box is the circle either way.
+
+   Colour carries the states rather than an outline alone: the orb sits partly
+   over the near hill, and an outline drawn in any one colour would be
+   invisible against one half of what is behind it. The outline is still there
+   for the ring it draws around the hit area, which is worth seeing on a shape
+   that is half hidden. */
+.orb[data-theme-toggle] {
+  pointer-events: auto;
+}
+
+.orb[data-theme-toggle]:not(:disabled) { cursor: pointer; }
+
+.orb[data-theme-toggle]:hover,
+.orb[data-theme-toggle]:focus-visible {
+  background: var(--orb-hover);
+}
+
+.orb[data-theme-toggle]:focus-visible {
+  /* --ink and not --orb-hover: the ring has to be seen against the paper,
+     the hills and the gate all at once, and --ink is the one colour in the
+     palette that is defined as the opposite of the background in both
+     themes. Sized in CSS pixels rather than device ones — this is a ring to
+     be noticed, not a hairline to be exact. */
+  outline: 3px solid var(--ink);
+  outline-offset: 6px;
 }
 
 :root[data-theme="dark"] .orb {
@@ -540,6 +586,16 @@ a { color: inherit; }
   box-shadow: inset calc(var(--s-d) * var(--s-crescent) * -0.7071)
                     calc(var(--s-d) * var(--s-crescent) * -0.7071)
                     0 0 var(--orb);
+}
+
+/* The moon's colour lives in a shadow rather than a background, so its hover
+   has to be restated here — the background swap above has nothing to paint. */
+:root[data-theme="dark"] .orb[data-theme-toggle]:hover,
+:root[data-theme="dark"] .orb[data-theme-toggle]:focus-visible {
+  background: transparent;
+  box-shadow: inset calc(var(--s-d) * var(--s-crescent) * -0.7071)
+                    calc(var(--s-d) * var(--s-crescent) * -0.7071)
+                    0 0 var(--orb-hover);
 }
 
 /* THE TORII GATE, standing on the near hill.
@@ -1273,12 +1329,8 @@ a { color: inherit; }
 [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
 [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
-.home > .theme-toggle {
-  position: absolute;
-  top: 14px;
-  right: 18px;
-  z-index: 3;
-}
+/* The home page had one of these in the top right corner. It has the sky
+   instead now — see .orb — and this rule went with the markup. */
 
 .back-link {
   text-decoration: none;
