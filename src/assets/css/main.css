@@ -632,7 +632,7 @@ a { color: inherit; }
   --t-ridge: 0.348;
   --t-sink: 0.08;
   --t-start: calc(var(--t-menu) + 100vh * 0.04052);
-  --s-size: 0.45;       /* the orb's diameter, as a share of the gate's width */
+  --s-size: 0.6;        /* the orb's diameter, as a share of the gate's width */
   --s-crescent: 0.18;   /* the moon's thickness across its middle, of that */
   --s-over: 0.35;       /* how much of it hides behind the gate, of that */
   --s-rise: 0.30;       /* how far its middle clears the gate's top, of that */
