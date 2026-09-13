@@ -935,19 +935,29 @@ a { color: inherit; }
        once that is the larger of the two, it comes back out. No phone reaches
        this floor — at 430 the band's share is twice it. */
     /* The orb, narrow. Same relationship to the gate; the clamps change.
-       Sideways it stops where the gate does, at the words, so nothing of it
-       is ever behind them. Upward it stops at the picture's foot rather than
-       the window's top: the photograph paints over this and would cut a
-       slice out of it. That foot is --links-h above the band's top, which is
-       how it can be said here at all — the page's own height, on a layout
-       whose page is as tall as its content, is the one thing these rules
-       cannot put in a formula. */
+       Sideways it stops short of the words, so nothing of it is ever behind
+       them. Upward it stops below the picture's foot rather than at the
+       window's top: the photograph paints over this and would cut a slice
+       out of it. That foot is --links-h above the band's top, which is how it
+       can be said here at all — the page's own height, on a layout whose page
+       is as tall as its content, is the one thing these rules cannot put in a
+       formula.
+
+       BOTH CLAMPS KEEP A STROKE IN HAND, and that stroke is not decoration.
+       --gallery-w is the width of a WORD worked out as a multiple of its type
+       size, and 3.307em is only true to about two pixels: a different browser
+       build lays the same word out a shade wider or narrower. Clamped exactly
+       to the words, the orb overran them by 2px on a 430px screen in CI while
+       passing locally, on the same commit. A clamp with no slack is a clamp
+       that depends on the font's rasteriser. The gate has had its stroke of
+       clearance from the words all along, which is why it never drifted. */
     --s-x: min(calc(var(--t-x) + var(--t-w)
                     - (0.5 + var(--s-over)) * var(--s-d)),
-               calc(100vw - var(--stroke) - var(--gallery-w) - var(--s-d)));
+               calc(100vw - 2 * var(--stroke) - var(--gallery-w) - var(--s-d)));
     --s-b: min(calc(var(--t-b) + var(--t-h)
                     + (var(--s-rise) - 0.5) * var(--s-d)),
-               calc(var(--hills-h) + var(--links-h) - var(--s-d)));
+               calc(var(--hills-h) + var(--links-h) - var(--s-d)
+                    - var(--stroke)));
     --t-x: var(--stroke);
     --t-b: var(--foot);
     --t-share: 1.04;
