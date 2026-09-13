@@ -536,25 +536,45 @@ a { color: inherit; }
    tall: exact at all four. Change either declaration and this has to follow;
    tools/check-hills.mjs compares the two and says so.
 
-   --t-b is the footing, and it is the one figure here that is MEASURED
-   rather than derived. Hill 1's ridge where the gate stands is a remarkably
-   steady 0.348 to 0.356 of the band — 0.383 on the shortest window tested —
-   because the gate's distance from that hill's summit and the hill's own
-   flank both scale with the window's height. Taking the low end and sinking
-   the feet 8% of the gate's height below it puts the bottom at 0.284 of the
-   band. That the feet are actually buried is not left to this arithmetic:
-   the check scans the pixels at both poles.
+   --t-share is how big the gate is: its height as a share of the band. It is
+   the one number to change to resize the gate, and everything else here
+   follows it — including the footing, so a bigger gate stands deeper rather
+   than perching at the same line.
 
-   The left edge is clamped at --t-menu. On a window squarer than about
-   3 : 2 the gap is narrower than the gate and centring in it would slide the
-   gate over the words; held there instead, it simply runs further off the
-   right of the window. */
+   --t-ridge is the one figure here that is MEASURED rather than derived:
+   hill 1's ridge where the gate stands is a remarkably steady 0.348 to 0.356
+   of the band — 0.383 on the shortest window tested — because the gate's
+   distance from that hill's summit and the hill's own flank both scale with
+   the window's height. The low end is taken. --t-sink then puts the feet
+   that share of the gate's height below it, which is where --t-b comes from.
+   That the feet are actually buried is not left to this arithmetic: the
+   check scans the pixels at both poles.
+
+   THE GAP IS ALSO A SIZE LIMIT, which is the second term of --t-h. The gate
+   is asked for at --t-share of the band and that is more than the gap can
+   hold on anything squarer than about 21 : 9, so without this the gate runs
+   off the right of the window — at 1280x800 two thirds of it was off, and
+   what was left read as a fragment rather than as a gate. Held to the gap it
+   stays whole, and the size it was asked for is what it gets wherever there
+   is room for it.
+
+   That limit is exactly where the left edge would otherwise have to be
+   clamped: a gate no wider than the gap, centred in it, never reaches past
+   --t-menu. The max() on --t-x is what says so, and it is kept because it is
+   the rule — "the box stops when its corner meets the menu" — rather than
+   because it still fires. The 0px floor is for a window narrower than the
+   nav's own left offset, where there is no gap at all and so no gate: at
+   768x1024 the whole nav is off the right of the window already. */
 .hills {
   --t-menu: calc(100vh * 0.8914 + var(--nav-size) * 3.307);
   --t-cap: calc(100vh * 0.04052
                 + 2 * (2.046 * var(--nav-size) + clamp(8px, 2.25vh, 28px)));
-  --t-b: calc(var(--band-h) * 0.284);
-  --t-h: min(calc(var(--band-h) * 0.8),
+  --t-share: 1.36;
+  --t-ridge: 0.348;
+  --t-sink: 0.08;
+  --t-b: calc(var(--band-h) * (var(--t-ridge) - var(--t-share) * var(--t-sink)));
+  --t-h: min(calc(var(--band-h) * var(--t-share)),
+             calc(max(0px, 100vw - var(--t-menu)) / var(--t-ratio)),
              calc(100vh - var(--t-cap) - var(--t-b)));
   --t-x: max(var(--t-menu), calc((var(--t-menu) + 100vw - var(--t-w)) / 2));
 }
@@ -564,7 +584,8 @@ a { color: inherit; }
     --t-menu: calc(100dvh * 0.8914 + var(--nav-size) * 3.307);
     --t-cap: calc(100dvh * 0.04052
                   + 2 * (2.046 * var(--nav-size) + clamp(8px, 2.25vh, 28px)));
-    --t-h: min(calc(var(--band-h) * 0.8),
+    --t-h: min(calc(var(--band-h) * var(--t-share)),
+               calc(max(0px, 100vw - var(--t-menu)) / var(--t-ratio)),
                calc(100dvh - var(--t-cap) - var(--t-b)));
   }
 }
@@ -838,7 +859,8 @@ a { color: inherit; }
        this floor — at 430 the band's share is twice it. */
     --t-x: var(--stroke);
     --t-b: var(--foot);
-    --t-h: min(max(calc(var(--hills-h) * 0.8), calc(100vw * 0.27)),
+    --t-share: 1.04;
+    --t-h: min(max(calc(var(--hills-h) * var(--t-share)), calc(100vw * 0.351)),
                calc(var(--hills-h) - var(--t-b) + var(--links-h) * 0.6667),
                calc((100vw - 3 * var(--stroke) - var(--gallery-w))
                     / var(--t-ratio)));

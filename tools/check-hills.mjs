@@ -329,14 +329,19 @@ async function main() {
          wide layout on a window narrower than 89.14dvh the whole nav is off
          screen already. Only the poles that are ON screen are asked about. */
       const POLES = [0.27114, 0.72885];
-      if (L.torii) {
+      /* A gate with no width is not a failed gate: the wide layout puts the
+         nav 89.14dvh from the left, and on a window narrower than that there
+         is no gap beside the menu to stand one in, so --t-h comes out at
+         nought and nothing is drawn. 768x1024 is that window here. */
+      const gate = L.torii && L.torii.width > 1 ? L.torii : null;
+      if (gate) {
         const capLine = wide ? L.gallery.top : L.blog.top;
         rule(tag, theme,
           `the gate's top is not above the "${wide ? "gallery" : "blog"}" link`,
-          L.torii.top >= capLine - 1,
-          `gate ${L.torii.top.toFixed(0)} vs link ${capLine.toFixed(0)}`);
+          gate.top >= capLine - 1,
+          `gate ${gate.top.toFixed(0)} vs link ${capLine.toFixed(0)}`);
 
-        const cols = POLES.map((f) => Math.round(L.torii.left + f * L.torii.width))
+        const cols = POLES.map((f) => Math.round(gate.left + f * gate.width))
           .filter((x) => x >= 0 && x < P.width);
         if (cols.length) {
           /* Its feet are under the near hill — that is the whole illusion of
@@ -345,15 +350,17 @@ async function main() {
              hidden from the scan, so this is the hill and not the gate's own
              roof looking back. */
           const sunk = cols.map((x) =>
-            P.tops[0][x] === null ? null : L.torii.bottom - P.tops[0][x]);
+            P.tops[0][x] === null ? null : gate.bottom - P.tops[0][x]);
           rule(tag, theme, "the gate's feet are buried in the near hill",
             sunk.every((d) => d !== null && d > 1),
             sunk.map((d, i) => `pole ${i + 1} ${d === null ? "no hill" : d.toFixed(0) + "px"}`)
-              .join(", ") + ` of a ${L.torii.height.toFixed(0)}px gate`);
+              .join(", ") + ` of a ${gate.height.toFixed(0)}px gate`);
         } else if (!QUIET) {
           console.log(`  ${tag} ${theme}: both of the gate's poles are off the ` +
             `right of the window — nothing to stand on, and nothing shown`);
         }
+      } else if (!QUIET) {
+        console.log(`  ${tag} ${theme}: no gap beside the menu, so no gate`);
       }
 
       if (wide) {
@@ -387,15 +394,20 @@ async function main() {
            where it is held at their edge instead and runs off to the right.
            Which of the two is in force is not asserted; that the gate is in
            one of them is. */
-        if (L.torii) {
+        if (gate) {
           const gapMid = (L.wordsRight + size.w) / 2;
-          const centred = near(L.torii.left + L.torii.width / 2, gapMid, 2);
-          const clamped = near(L.torii.left, L.wordsRight, 2);
+          const centred = near(gate.left + gate.width / 2, gapMid, 2);
+          const clamped = near(gate.left, L.wordsRight, 2);
           rule(tag, theme, "the gate is centred in the gap beside the menu, or held at its edge",
-            (centred || clamped) && L.torii.left >= L.wordsRight - 2,
+            (centred || clamped) && gate.left >= L.wordsRight - 2,
             centred ? `centred on ${gapMid.toFixed(0)}`
                     : `held at the menu's edge ${L.wordsRight.toFixed(0)} ` +
-                      `(centring wanted ${(gapMid - L.torii.width / 2).toFixed(0)})`);
+                      `(centring wanted ${(gapMid - gate.width / 2).toFixed(0)})`);
+          /* And it is whole: the gap is a size limit as well as a place, so
+             the gate never runs off the right of the window. */
+          rule(tag, theme, "the gate fits in the gap, end to end",
+            gate.right <= size.w + 1,
+            `ends at ${gate.right.toFixed(0)} of ${size.w}`);
         }
 
         if (L.socialX !== null && L.socialX.right <= size.w + 1) {
@@ -450,13 +462,13 @@ async function main() {
            behind them. One stroke of clearance is what the stylesheet asks
            for; this allows any gap at all, since the words are what must stay
            readable and the exact distance is a matter of taste. */
-        if (L.torii) {
+        if (gate) {
           rule(tag, theme, "the gate stands one stroke in from the window's left",
-            near(L.torii.left, L.stroke, 1),
-            `${L.torii.left.toFixed(0)} vs ${L.stroke.toFixed(0)}`);
+            near(gate.left, L.stroke, 1),
+            `${gate.left.toFixed(0)} vs ${L.stroke.toFixed(0)}`);
           rule(tag, theme, "the gate keeps clear of the words",
-            L.torii.right < L.wordsLeft,
-            `gate ends ${L.torii.right.toFixed(0)}, words start ${L.wordsLeft.toFixed(0)}`);
+            gate.right < L.wordsLeft,
+            `gate ends ${gate.right.toFixed(0)}, words start ${L.wordsLeft.toFixed(0)}`);
         }
 
         rule(tag, theme, "band starts at the links' foot",
