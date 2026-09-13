@@ -274,6 +274,21 @@ a { color: inherit; }
   --links-h: calc(100vh * 0.30632);
   --link-font: calc(var(--links-h) / 4.74);
   --ul-w: calc(var(--link-font) * 0.222);
+  /* The width of the longest of the three words. CSS cannot measure text, so
+     it is a multiple of the type size: "gallery" measures 3.306em, and this
+     says 3.34.
+     THE DIFFERENCE IS DELIBERATE. A different browser build lays the same
+     word out about a pixel wider, and both the gate and the orb are held
+     clear of these words by a distance that would otherwise be exact — so a
+     pixel of disagreement came straight out of the clearance. It did: the
+     gate passed here with 43.8px of paper against a 43.8px stroke and failed
+     CI with 42.8. Over-stating the word by 1% puts 2 to 3px of slack under
+     the estimate at the sizes this type reaches, which is the shape of fix
+     the orb's clamps already got.
+     Measured here at eleven window sizes from 291 to 1600 tall: 3.3055 to
+     3.3068, so the ratio itself is solid — it is the rasteriser that is not
+     worth trusting to the pixel. */
+  --gallery-w: calc(var(--link-font) * 3.34);
   position: relative;
   height: 100vh;
   height: 100dvh;
@@ -667,8 +682,9 @@ a { color: inherit; }
    --t-menu is where that gap starts — the right edge of "gallery", the
    longest of the three words. CSS cannot measure text, so it is worked out
    the way the pines' anchor was: every word here is a fixed multiple of its
-   own type size, and "gallery" measures 3.307em, which holds at every window
-   because the type is what scales. Add the nav's own left offset (89.14dvh,
+   own type size, and --gallery-w on .home carries that figure — deliberately
+   a shade over the measured one, so a clearance of exactly one stroke is not
+   left at the mercy of a rasteriser. Add the nav's own left offset (89.14dvh,
    the framed picture's width — see .hero-frame) and that is the edge.
 
    --t-cap is the top of the "gallery" link's box, which the gate's own top
@@ -718,7 +734,7 @@ a { color: inherit; }
    nav's own left offset, where there is no gap at all and so no gate: at
    768x1024 the whole nav is off the right of the window already. */
 .hills {
-  --t-menu: calc(100vh * 0.8914 + var(--link-font) * 3.307);
+  --t-menu: calc(100vh * 0.8914 + var(--gallery-w));
   --t-cap: calc(100vh * 0.04052 + var(--links-h) * 0.66667);
   --t-share: 1.36;
   --t-ridge: 0.348;
@@ -743,7 +759,7 @@ a { color: inherit; }
 
 @supports (height: 1dvh) {
   .hills {
-    --t-menu: calc(100dvh * 0.8914 + var(--link-font) * 3.307);
+    --t-menu: calc(100dvh * 0.8914 + var(--gallery-w));
     --t-start: calc(var(--t-menu) + 100dvh * 0.04052);
     --s-x: min(calc(var(--t-x) + var(--t-w)
                     - (0.5 + var(--s-over)) * var(--s-d)),
@@ -1006,10 +1022,7 @@ a { color: inherit; }
        which came to within a third of a pixel of this at every width from
        320 to 767.
 
-       --gallery-w is the width of the longest of the three words: every word
-       here is a fixed multiple of its own type size, and "gallery" measures
-       3.307em. The torii is held clear of it. */
-    --gallery-w: calc(var(--link-font) * 3.307);
+       --gallery-w is on .home now, one copy for both layouts. */
     /* The brushwork's weight, in whole physical pixels at any zoom, which is
        where this layout was tuned. The wide layout takes the same mark as a
        proportion of its own type instead — see --ul-w on .home. */
@@ -1130,8 +1143,8 @@ a { color: inherit; }
 
        BOTH CLAMPS KEEP A STROKE IN HAND, and that stroke is not decoration.
        --gallery-w is the width of a WORD worked out as a multiple of its type
-       size, and 3.307em is only true to about two pixels: a different browser
-       build lays the same word out a shade wider or narrower. Clamped exactly
+       size, and --gallery-w is only true to about two pixels: a different
+       browser build lays the same word out a shade wider or narrower. Clamped exactly
        to the words, the orb overran them by 2px on a 430px screen in CI while
        passing locally, on the same commit. A clamp with no slack is a clamp
        that depends on the font's rasteriser. The gate has had its stroke of
