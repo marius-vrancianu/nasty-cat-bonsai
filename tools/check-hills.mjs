@@ -60,6 +60,7 @@ const SIZES = [
   { w: 600, h: 800, why: "small tablet, still the narrow layout" },
   { w: 767, h: 1024, why: "last width of the narrow layout" },
   { w: 768, h: 1024, why: "first width of the wide layout" },
+  { w: 1100, h: 900, why: "squarish desktop; the gate's left edge is clamped here" },
   { w: 1280, h: 800, why: "laptop; the centre is behind the picture here" },
   { w: 1512, h: 982, why: "MacBook" },
   { w: 1920, h: 1080, why: "16:9 desktop" },
@@ -94,7 +95,8 @@ const readLayout = () => {
     const e = document.querySelector(s);
     if (!e) return null;
     const q = e.getBoundingClientRect();
-    return { top: q.top + scrollY, bottom: q.bottom + scrollY, left: q.left, right: q.right };
+    return { top: q.top + scrollY, bottom: q.bottom + scrollY, left: q.left, right: q.right,
+             width: q.width, height: q.height };
   };
   const css = getComputedStyle(document.documentElement);
   const fig = (n) => parseFloat(css.getPropertyValue(n));
@@ -125,6 +127,15 @@ const readLayout = () => {
     /* The last link's own box, read rather than taken from --link-h, so the
        rule checks the landmark and not the constant that claims to be it. */
     gallery: R(".home-links > a:last-child"),
+    blog: R(".home-links > a:nth-child(2)"),
+    /* The gate, and the two words it is placed against: the widest one's
+       right edge in the wide layout (the gap starts there), its left edge in
+       the narrow one (the gate must stop short of it). */
+    torii: R(".torii"),
+    wordsLeft: Math.min(...[...document.querySelectorAll(".home-links > a")]
+      .map((a) => a.getBoundingClientRect().left)),
+    wordsRight: Math.max(...[...document.querySelectorAll(".home-links > a")]
+      .map((a) => a.getBoundingClientRect().right)),
     hillH: [1, 2, 3].map((n) => parseFloat(
       getComputedStyle(document.querySelector(`.hill-${n}`)).height)),
     tones: [rgb(".hill-1"), rgb(".hill-2"), rgb(".hill-3")],
@@ -269,10 +280,17 @@ async function main() {
          Hidden, it can be checked on all of them: the rule is about where the
          hill is DRAWN, not about how much of it a reader can see.
 
+         THE GATE GOES TOO, and for a third reason: it is painted in the near
+         hill's own colour, so every column it stands in would report the
+         gate's roof as the hill's ridge and quietly break half the rules
+         below. Hidden, P.tops[0] is the hill and nothing else — which is also
+         exactly what the gate's own rule needs to know.
+
          `visibility: hidden` and not `display: none`, so nothing reflows and
          the hills stay exactly where the measurements above found them. */
       await page.evaluate(() => {
-        for (const sel of [".hero-frame", ".home-nav", ".theme-toggle", ".consent-banner"])
+        for (const sel of [".hero-frame", ".home-nav", ".theme-toggle",
+                           ".consent-banner", ".torii"])
           document.querySelector(sel)?.style.setProperty("visibility", "hidden");
       });
       await page.waitForTimeout(120);
@@ -295,6 +313,48 @@ async function main() {
         new Set(L.socialColors).size === 1, L.socialColors.join(" "));
 
       const bandH = L.band.bottom - L.band.top;
+
+      /* THE TORII GATE. Two rules hold everywhere, and each layout adds its
+         own placement rule below.
+
+         The poles' centres are at 27.1% and 72.9% of the gate's width. That
+         comes from the drawing — torii.svg is the artwork cropped to the
+         gate's bounding box — and it is written here rather than in main.css
+         because the stylesheet has no use for it: only this does. Re-crop the
+         file and these move.
+
+         A pole can be off the right of the window, which is not a failure:
+         on a squarish window the gate is held against the menu (see --t-x)
+         and runs off the edge rather than sliding over the words, and in the
+         wide layout on a window narrower than 89.14dvh the whole nav is off
+         screen already. Only the poles that are ON screen are asked about. */
+      const POLES = [0.27114, 0.72885];
+      if (L.torii) {
+        const capLine = wide ? L.gallery.top : L.blog.top;
+        rule(tag, theme,
+          `the gate's top is not above the "${wide ? "gallery" : "blog"}" link`,
+          L.torii.top >= capLine - 1,
+          `gate ${L.torii.top.toFixed(0)} vs link ${capLine.toFixed(0)}`);
+
+        const cols = POLES.map((f) => Math.round(L.torii.left + f * L.torii.width))
+          .filter((x) => x >= 0 && x < P.width);
+        if (cols.length) {
+          /* Its feet are under the near hill — that is the whole illusion of
+             the gate standing on the slope rather than in front of it. The
+             ridge is read at the pole's own column, with the gate itself
+             hidden from the scan, so this is the hill and not the gate's own
+             roof looking back. */
+          const sunk = cols.map((x) =>
+            P.tops[0][x] === null ? null : L.torii.bottom - P.tops[0][x]);
+          rule(tag, theme, "the gate's feet are buried in the near hill",
+            sunk.every((d) => d !== null && d > 1),
+            sunk.map((d, i) => `pole ${i + 1} ${d === null ? "no hill" : d.toFixed(0) + "px"}`)
+              .join(", ") + ` of a ${L.torii.height.toFixed(0)}px gate`);
+        } else if (!QUIET) {
+          console.log(`  ${tag} ${theme}: both of the gate's poles are off the ` +
+            `right of the window — nothing to stand on, and nothing shown`);
+        }
+      }
 
       if (wide) {
         /* The band is the lower half of the window — or as much more as the
@@ -322,6 +382,22 @@ async function main() {
            with the row's own top, so it is the landmark being checked and not
            a figure that claims to be it. This is what a 2013x291 window failed
            before the floor went in. */
+        /* The gate is centred in the gap between the last word of the menu and
+           the window's edge — unless centring would slide it over the words,
+           where it is held at their edge instead and runs off to the right.
+           Which of the two is in force is not asserted; that the gate is in
+           one of them is. */
+        if (L.torii) {
+          const gapMid = (L.wordsRight + size.w) / 2;
+          const centred = near(L.torii.left + L.torii.width / 2, gapMid, 2);
+          const clamped = near(L.torii.left, L.wordsRight, 2);
+          rule(tag, theme, "the gate is centred in the gap beside the menu, or held at its edge",
+            (centred || clamped) && L.torii.left >= L.wordsRight - 2,
+            centred ? `centred on ${gapMid.toFixed(0)}`
+                    : `held at the menu's edge ${L.wordsRight.toFixed(0)} ` +
+                      `(centring wanted ${(gapMid - L.torii.width / 2).toFixed(0)})`);
+        }
+
         if (L.socialX !== null && L.socialX.right <= size.w + 1) {
           rule(tag, theme, "the near hill carries the footer row",
             Array.from({ length: Math.ceil(L.socialX.right - L.socialX.left) },
@@ -369,6 +445,20 @@ async function main() {
           const over = P.tops[0][Math.round(col)];
           return over === null ? Infinity : over - y;
         };
+        /* The gate hangs off the LEFT edge one stroke in — the picture's own
+           inset — and stops short of the words, so nothing of it is ever
+           behind them. One stroke of clearance is what the stylesheet asks
+           for; this allows any gap at all, since the words are what must stay
+           readable and the exact distance is a matter of taste. */
+        if (L.torii) {
+          rule(tag, theme, "the gate stands one stroke in from the window's left",
+            near(L.torii.left, L.stroke, 1),
+            `${L.torii.left.toFixed(0)} vs ${L.stroke.toFixed(0)}`);
+          rule(tag, theme, "the gate keeps clear of the words",
+            L.torii.right < L.wordsLeft,
+            `gate ends ${L.torii.right.toFixed(0)}, words start ${L.wordsLeft.toFixed(0)}`);
+        }
+
         rule(tag, theme, "band starts at the links' foot",
           near(L.band.top, L.links.bottom, 1),
           `band ${L.band.top} vs links ${L.links.bottom}`);

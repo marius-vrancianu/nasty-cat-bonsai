@@ -298,6 +298,15 @@ a { color: inherit; }
      window anyone actually has, and the floor only bites past about 5 : 1. */
   --band-h: max(var(--band-base), var(--band-icons));
   height: var(--band-h);
+  /* The torii's proportion, 197.57 / 162.228, and the width it gives — see
+     .torii below. Both live here rather than on .torii because both layouts
+     spend them: one divides a width limit by the ratio, and both place the
+     gate's left edge against its own width. A custom property is resolved
+     against the element it is DECLARED on, so one declared on the child is
+     simply missing up here, and a --t-x that quietly fails takes `left` with
+     it and drops the gate at its static position. Which is what happened. */
+  --t-ratio: 1.21787;
+  --t-w: calc(var(--t-h) * var(--t-ratio));
   /* Where the frame's centre line — the tallest tip — is put. The narrow
      layout does not use this: there the three are placed one by one. */
   --hills-x: center;
@@ -327,8 +336,12 @@ a { color: inherit; }
    `mask-size: auto 100%` fills --h and takes the width from the file's own
    ratio, so the drawing scales and is cropped but never squashed. The ground
    layer is 100% 100% because it has to reach both window edges whatever that
-   width comes to. */
-.hills > span {
+   width comes to.
+
+   `.hill` rather than `span`: the torii gate is a span in this box too, and
+   it is not placed this way at all — it is a bounded object with its own box
+   rather than a horizon that leaves the frame at both edges. See .torii. */
+.hills > .hill {
   --h: 100%;
   --x: center;
   position: absolute;
@@ -452,6 +465,107 @@ a { color: inherit; }
     --reach: max(0px, calc(50vw - var(--band-base)
                                   * (var(--hills-mid) - var(--h1-peak))
                                 - 100dvh * 0.8914));
+  }
+}
+
+/* THE TORII GATE, standing on the near hill.
+
+   It is drawn in torii.svg, which is the supplied artwork cropped to the
+   gate's own bounding box and stripped of colour — so the file's edges ARE
+   the gate's edges and its box can be placed directly, with no offsets to
+   keep in step. Three figures come out of that crop and are written here
+   because nothing else can know them:
+
+     --t-ratio   197.57 / 162.228, the drawing's own proportion
+     the poles   their centres at 27.1% and 72.9% of the width
+
+   The poles are not needed by the stylesheet — only by the check that they
+   are buried — so they live in tools/check-hills.mjs, next to the rule that
+   uses them. Re-cropping the file means re-measuring all three.
+
+   It is masked and coloured exactly like a hill, in --hill-1: the near hill
+   is what it stands on, and the same tone is what lets the two merge where
+   they meet instead of showing a join. Being a mask, the file carries no
+   colour of its own and the theme is the stylesheet's business, as with
+   everything else on this backdrop.
+
+   HOW IT IS SIZED, in one place for both layouts: --t-h is a share of the
+   hills band, capped by the two things that must not be crossed — see each
+   layout below for what those are. The width follows the ratio, so it is
+   never squashed. Every window gets the same gate at a different scale.
+
+   WHY IT SITS IN .hills AT ALL rather than beside it: the order of the spans
+   in hills.njk is what puts it in front of hills 3 and 2 and behind hill 1,
+   and that last part is the whole illusion — the near hill paints over the
+   feet, so the gate reads as standing on the slope rather than in front of
+   it. A z-index would do the same thing and be one more number to keep;
+   document order is free. */
+.torii {
+  position: absolute;
+  left: var(--t-x);
+  bottom: var(--t-b);
+  width: var(--t-w);
+  height: var(--t-h);
+  background: var(--hill-1);
+  -webkit-mask-image: url("../img/torii.svg");
+  mask-image: url("../img/torii.svg");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* THE GATE, WIDE. Placed in the empty right-hand half of the window: its
+   middle goes on the middle of the gap between the last word of the menu and
+   the window's edge.
+
+   --t-menu is where that gap starts — the right edge of "gallery", the
+   longest of the three words. CSS cannot measure text, so it is worked out
+   the way the pines' anchor was: every word here is a fixed multiple of its
+   own type size, and "gallery" measures 3.307em, which holds at every window
+   because the type is what scales. Add the nav's own left offset (89.14dvh,
+   the framed picture's width — see .hero-frame) and that is the edge.
+
+   --t-cap is the top of the "gallery" link's box, which the gate's own top
+   may sit below but never above. It too is arithmetic rather than
+   measurement, and it mirrors declarations elsewhere in this file: the nav
+   starts 4.052dvh down, and two link boxes plus two gaps fall above the
+   third word. A link's box is 2.046em — line-height 1.16 plus twice the
+   0.443em padding, both set on .home-links > a — and the gap is the clamp on
+   .home-links. Checked against the rendered link at 291, 800, 1080 and 1440
+   tall: exact at all four. Change either declaration and this has to follow;
+   tools/check-hills.mjs compares the two and says so.
+
+   --t-b is the footing, and it is the one figure here that is MEASURED
+   rather than derived. Hill 1's ridge where the gate stands is a remarkably
+   steady 0.348 to 0.356 of the band — 0.383 on the shortest window tested —
+   because the gate's distance from that hill's summit and the hill's own
+   flank both scale with the window's height. Taking the low end and sinking
+   the feet 8% of the gate's height below it puts the bottom at 0.284 of the
+   band. That the feet are actually buried is not left to this arithmetic:
+   the check scans the pixels at both poles.
+
+   The left edge is clamped at --t-menu. On a window squarer than about
+   3 : 2 the gap is narrower than the gate and centring in it would slide the
+   gate over the words; held there instead, it simply runs further off the
+   right of the window. */
+.hills {
+  --t-menu: calc(100vh * 0.8914 + var(--nav-size) * 3.307);
+  --t-cap: calc(100vh * 0.04052
+                + 2 * (2.046 * var(--nav-size) + clamp(8px, 2.25vh, 28px)));
+  --t-b: calc(var(--band-h) * 0.284);
+  --t-h: min(calc(var(--band-h) * 0.8),
+             calc(100vh - var(--t-cap) - var(--t-b)));
+  --t-x: max(var(--t-menu), calc((var(--t-menu) + 100vw - var(--t-w)) / 2));
+}
+
+@supports (height: 1dvh) {
+  .hills {
+    --t-menu: calc(100dvh * 0.8914 + var(--nav-size) * 3.307);
+    --t-cap: calc(100dvh * 0.04052
+                  + 2 * (2.046 * var(--nav-size) + clamp(8px, 2.25vh, 28px)));
+    --t-h: min(calc(var(--band-h) * 0.8),
+               calc(100dvh - var(--t-cap) - var(--t-b)));
   }
 }
 
@@ -611,6 +725,12 @@ a { color: inherit; }
     --sixth: calc(100vw / 6);
     --links-h: clamp(144px, 38vw, 154px);
     --link-h: calc(var(--links-h) / 3);   /* one link's box, exactly */
+    /* The type laid into --links-h — three boxes of 1.2 x font + 12 fill it
+       exactly — and, from it, the width of the longest of the three words.
+       Every word here is a fixed multiple of its own type size, and
+       "gallery" measures 3.307em; the torii is held clear of it. */
+    --link-font: calc((var(--links-h) - 36px) / 3.6);
+    --gallery-w: calc(var(--link-font) * 3.307);
     --band-gap: clamp(84px, 24vw, 104px);
     --foot: 84px;
     --room: max(100vh - 100vw * 1.1219 - var(--links-h),
@@ -680,6 +800,48 @@ a { color: inherit; }
   .hills {
     --hills-h: var(--room);
     height: var(--hills-h);
+
+    /* THE GATE, NARROW. Hung off the LEFT edge at one stroke in, the same
+       inset the picture's mat holds above it, so the gate and the photograph
+       share a left margin and the three words keep the right.
+
+       --t-b is the footing, and here it can be exact rather than measured:
+       the near hill's ground IS the footer row's top in this layout, so
+       standing the gate's feet on --foot puts them at that ground — and the
+       hill's ridge is above its ground at every column, so the feet are
+       under the hill wherever the gate ends up. How far under follows the
+       flank: about a tenth of the gate on a 320px screen and a sixth on a
+       412px one, since the hill rises leftward across the window. The check
+       scans the pixels either way.
+
+       Two caps on the size, and the second does the real work:
+
+         the top of the "blog" link, which the gate may sit below but never
+         above. The band starts at the links' foot, so that line is two
+         thirds of --links-h above the band's top — which keeps this in the
+         band's terms and out of the page's, and the page's height is the one
+         thing this layout cannot put in a formula;
+
+         and the words themselves. The gate must not pass behind them, so its
+         width stops one stroke short of where "gallery" begins. On a tall
+         phone, where the band is generous, this is what holds the gate to a
+         size the window can hold.
+
+       The floor under the band's share is for the other end of this layout —
+       a small tablet in portrait, 600 to 767px wide. There the page is its
+       content's height, so the band is the same 170px it is on a phone, but
+       the near hill is a whole window wider and its flank stands far higher
+       at the left edge where the gate is. A gate sized only from the band
+       came out barely taller than the hill it stood on and all but vanished
+       into it: at 767 only its roof was left. Sized from the window instead,
+       once that is the larger of the two, it comes back out. No phone reaches
+       this floor — at 430 the band's share is twice it. */
+    --t-x: var(--stroke);
+    --t-b: var(--foot);
+    --t-h: min(max(calc(var(--hills-h) * 0.8), calc(100vw * 0.27)),
+               calc(var(--hills-h) - var(--t-b) + var(--links-h) * 0.6667),
+               calc((100vw - 3 * var(--stroke) - var(--gallery-w))
+                    / var(--t-ratio)));
   }
 
   /* FAR: summit on the MIDDLE of the "gallery" link, a sixth of the window in
@@ -823,7 +985,7 @@ a { color: inherit; }
   /* No inline padding, so each word's own right edge is what lands on the
      nav's — anything here would push it off by that much. */
   .home-links > a {
-    font-size: calc((var(--links-h) - 36px) / 3.6);
+    font-size: var(--link-font);
     line-height: 1.2;
     padding: 6px 0;
   }
