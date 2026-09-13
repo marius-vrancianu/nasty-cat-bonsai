@@ -52,17 +52,17 @@
      keeps it true, and this 1px is what a browser without it falls back
      to — today's behaviour. See that script for why it is needed. */
   --device-px: 1px;
-  /* The weight of the home page's brushwork: five physical pixels at any
-     zoom, measured on the stroke itself at its fullest. --ul-w is the box
-     the stroke is masked into, which has to be wider, because the stroke
-     wanders inside it rather than running straight down the middle. The
-     0.88 is what tools/gen-brush-rules.py leaves for ink after the
-     underlines' wander budget; it prints the divisor for every file it
-     writes, and these lines have to match it or the mark is drawn at the
-     wrong weight. Only the narrow layout's underlines use it now — the
-     desktop rules the generator's wider 0.66 sheet served are gone. */
-  --rule-ink: calc(var(--device-px) * 5);
-  --ul-w: calc(var(--rule-ink) / 0.88);
+  /* The weight of the home page's brushwork: seven physical pixels at any
+     zoom, which --device-px rounds to a whole number of them so the mark is
+     never drawn at the wrong weight (see the script in base.njk).
+
+     It is the box the stroke is masked into AND the stroke's own thickness
+     at its fullest, because each drawing is cropped to its own ink — the
+     silhouette touches all four edges of its viewBox. The old files needed a
+     wander budget on top, a 0.88 divisor kept in step with a generator by
+     hand; there is nothing to keep in step now. Only the narrow layout's
+     underlines use this. */
+  --ul-w: calc(var(--device-px) * 7);
   --font: "Proza Libre", Georgia, serif;
   --measure: 680px;          /* comfortable reading width */
   --pad-x: clamp(20px, 5vw, 56px);
@@ -1210,6 +1210,23 @@ a { color: inherit; }
      "about", "blo" of "blog", "alle" of "gallery". The spans in index.njk
      set those spans of letters; a span is inline, so its box is exactly the
      letters it holds.
+
+     THE THREE MARKS ARE THREE REAL BRUSH STROKES, cropped each to its own
+     ink and flattened to a silhouette — they are masks, so they carry alpha
+     and nothing else and the colour stays here. They came off a 1.8MB sheet
+     of three strokes drawn as a shade-by-shade trace, 5,259 filled paths of
+     grey; what a mask needs from that is one outline, so the sheet was
+     rendered, thresholded and its boundary traced by marching squares, then
+     simplified to about a tenth of a pixel at the size these are finally
+     drawn. 1.1 to 1.6KB each, and the dry-brush gaps survive as holes in the
+     path rather than as separate shapes — hence fill-rule="evenodd".
+
+     WHICH STROKE GOES WHERE is a matter of how much each is stretched, since
+     mask-size: 100% 100% and preserveAspectRatio="none" fit the drawing to
+     the word whatever its own proportion. At 7px of ink the three words want
+     ratios of about 13.2, 7.0 and 9.6; the strokes are 10.6, 6.9 and 7.5, so
+     they are paired longest-to-longest and "blo" gets a stroke it barely has
+     to stretch at all.
 
      These strokes carry no fade of their own, so they end where the brush
      thinned out. Sitting a touch above the line box's foot puts them where
