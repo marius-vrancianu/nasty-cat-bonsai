@@ -41,6 +41,11 @@
      paper rather than accent — the only place on the site where they are.
      Their hover still swaps to --olive, as everywhere else. */
   --home-social: #e2dbcb;
+  /* The celestial body. Its own name rather than --rust because the two
+     themes do not agree about what it is: by day it IS the accent, by night
+     it is paper, and a moon that followed the link colour would have to
+     change every time that did. See .orb. */
+  --orb: var(--rust);
   /* One physical pixel, expressed in CSS pixels. The rules drawn with it
      are a single device pixel at any zoom; the inline script in base.njk
      keeps it true, and this 1px is what a browser without it falls back
@@ -105,15 +110,31 @@
   --olive: #adb876;      /* 7.50:1 */
   --hairline: rgba(215, 202, 176, 0.16);
   --hairline-strong: rgba(215, 202, 176, 0.28);
-  --hill-1: #e2dbcb;
-  --hill-2: #a29d93;
-  --hill-3: #78756e;
-  /* Dark keeps an olive here: the near hill it sits on is pale, so paper
-     would vanish into it. This is its own value rather than --rust because
-     the icons answer to the hill under them, not to the link colour — and
-     it is darker than any olive in the palette for the same reason, since
-     here the ground is the light one. 5.13:1 on that hill. */
-  --home-social: #565b33;
+  /* DARK'S HILLS ARE OLIVE, not paper. They were #e2dbcb and its greys —
+     the light theme's ramp turned upside down — and the backdrop read as a
+     photographic negative of the day one. Olive makes it a night landscape
+     instead, and the moon becomes the one bright thing in it rather than one
+     pale shape among several.
+
+     The two behind still follow the near one by the rule at the top of this
+     file, ink*s + paper*(1-s) at 0.67 and 0.45, so the depth grading is
+     unchanged — only what is being graded. Against the #222222 sky they come
+     to 2.23:1, 1.69:1 and 1.40:1: a quiet backdrop by design, and they carry
+     no text, so the only ratio that has to hold is the footer row's below. */
+  --hill-1: #545c2f;
+  --hill-2: #44492b;
+  --hill-3: #393c28;
+  /* Paper here, where it used to be olive, because the hill it sits on has
+     swapped ends: it was the pale one and is now the dark one. 5.16:1 on it,
+     against the 5.18:1 the olive had on the old hill — the same legibility,
+     the other way round. (The old note here said 5.13; recomputed, it is
+     5.18. Every ratio in this block was worked out rather than remembered.) The hover to --olive comes out at 3.36:1 on this
+     hill, which is a good deal better than the 1.54:1 it managed on the pale
+     one, where the hover all but vanished. */
+  --home-social: #e2dbcb;
+  /* Paper, and the brightest thing on the night page at 11.5:1 against the
+     sky. By day this is the rust accent; see the light theme above. */
+  --orb: #e2dbcb;
 }
 
 /* The hills' own geometry, in units of each hill's drawn height. These are
@@ -487,9 +508,10 @@ a { color: inherit; }
    thickness is the offset's own length, so --s-crescent IS how fat the moon
    is, measured across its middle, and nothing else has to change with it.
 
-   Rust for the sun, and the lightest olive for the moon — the same pair the
-   links cross between, which is what keeps it part of the palette rather
-   than a fourth colour.
+   --orb is what it is painted in, and it is a palette token of its own
+   because the two themes disagree about what this thing is: by day it is the
+   rust accent, by night it is paper — the one bright shape in an olive
+   landscape.
 
    WHERE IT GOES is stated against the gate, not the window: it rises behind
    the roof's right end, a little above and a little right of it, so the two
@@ -510,14 +532,14 @@ a { color: inherit; }
   width: var(--s-d);
   height: var(--s-d);
   border-radius: 50%;
-  background: var(--rust);
+  background: var(--orb);
 }
 
 :root[data-theme="dark"] .orb {
   background: transparent;
   box-shadow: inset calc(var(--s-d) * var(--s-crescent) * -0.7071)
                     calc(var(--s-d) * var(--s-crescent) * -0.7071)
-                    0 0 var(--olive);
+                    0 0 var(--orb);
 }
 
 /* THE TORII GATE, standing on the near hill.
