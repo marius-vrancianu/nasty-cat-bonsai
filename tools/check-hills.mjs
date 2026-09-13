@@ -128,6 +128,10 @@ const readLayout = () => {
        rule checks the landmark and not the constant that claims to be it. */
     gallery: R(".home-links > a:last-child"),
     blog: R(".home-links > a:nth-child(2)"),
+    /* The wide layout's menu is the top third of the PHOTOGRAPH — not of the
+       frame, not of the window — and everything about the words is solved
+       from that, so it is the one figure worth asserting directly. */
+    heroImg: R(".home-hero"),
     /* The gate, and the two words it is placed against: the widest one's
        right edge in the wide layout (the gap starts there), its left edge in
        the narrow one (the gate must stop short of it). */
@@ -481,6 +485,19 @@ async function main() {
            with the row's own top, so it is the landmark being checked and not
            a figure that claims to be it. This is what a 2013x291 window failed
            before the floor went in. */
+        /* THE MENU IS THE PICTURE'S TOP THIRD. Its top on the picture's top,
+           its foot on the picture's first-third line — the constraint the
+           whole of the wide layout's type is solved from, so it is checked
+           against the rendered photograph rather than against the arithmetic
+           that produced it. */
+        if (L.heroImg) {
+          const third = L.heroImg.top + L.heroImg.height / 3;
+          rule(tag, theme, "the menu spans the top third of the picture",
+            near(L.links.top, L.heroImg.top, 1) && near(L.links.bottom, third, 1),
+            `links ${L.links.top.toFixed(1)}..${L.links.bottom.toFixed(1)} vs ` +
+            `picture ${L.heroImg.top.toFixed(1)}..${third.toFixed(1)}`);
+        }
+
         /* The gate is centred in the gap between the last word of the menu and
            the window's edge — unless centring would slide it over the words,
            where it is held at their edge instead and runs off to the right.

@@ -52,17 +52,6 @@
      keeps it true, and this 1px is what a browser without it falls back
      to — today's behaviour. See that script for why it is needed. */
   --device-px: 1px;
-  /* The weight of the home page's brushwork: seven physical pixels at any
-     zoom, which --device-px rounds to a whole number of them so the mark is
-     never drawn at the wrong weight (see the script in base.njk).
-
-     It is the box the stroke is masked into AND the stroke's own thickness
-     at its fullest, because each drawing is cropped to its own ink — the
-     silhouette touches all four edges of its viewBox. The old files needed a
-     wander budget on top, a 0.88 divisor kept in step with a generator by
-     hand; there is nothing to keep in step now. Only the narrow layout's
-     underlines use this. */
-  --ul-w: calc(var(--device-px) * 7);
   --font: "Proza Libre", Georgia, serif;
   --measure: 680px;          /* comfortable reading width */
   --pad-x: clamp(20px, 5vw, 56px);
@@ -259,8 +248,32 @@ a { color: inherit; }
 .home-body { overflow: hidden; }
 
 .home {
-  /* The nav's type size, named so the layout can be measured against it. */
-  --nav-size: clamp(19px, 4.333vh, 48px);
+  /* THE MENU IS A THIRD OF THE PICTURE, and everything else about the words
+     follows from that.
+
+     --links-h is the height of the three links together, and it is the top
+     third of the photograph: the frame is the window less a stroke top and
+     bottom, so the picture is 91.896dvh and a third of it is 30.632dvh. The
+     nav already starts at the picture's top edge, so the block spans the
+     picture's top third rather than merely matching its height.
+
+     --link-font falls out of it. A link's box is its line-height plus twice
+     its padding — 1.2 + 0.38 = 1.58 ems — and three of those fill the block,
+     so the type is the block over 4.74. THE NARROW LAYOUT USES THE SAME TWO
+     LINES with its own --links-h, which is what makes the two layouts the
+     same design at two sizes rather than two designs: change the ratio here
+     and both move together.
+
+     --ul-w is the brushwork's weight, and it is 0.222em because that is what
+     7px is against the narrow layout's type. The narrow layout keeps the
+     7 device pixels it was tuned at; this is that same mark, in proportion.
+
+     NO CLAMP on any of it. A third of the picture is a third of the picture:
+     on a 1440-tall window the words are 93px and on a 300-tall one they are
+     19px, and both are the proportion that was asked for. */
+  --links-h: calc(100vh * 0.30632);
+  --link-font: calc(var(--links-h) / 4.74);
+  --ul-w: calc(var(--link-font) * 0.222);
   position: relative;
   height: 100vh;
   height: 100dvh;
@@ -490,6 +503,8 @@ a { color: inherit; }
 }
 
 @supports (height: 1dvh) {
+  .home { --links-h: calc(100dvh * 0.30632); }
+
   :root {
     --band-base: 50dvh;
     --row-top: calc(100dvh * 0.04052 + clamp(32px, 100dvh * 0.038, 34px) + 8px);
@@ -703,9 +718,8 @@ a { color: inherit; }
    nav's own left offset, where there is no gap at all and so no gate: at
    768x1024 the whole nav is off the right of the window already. */
 .hills {
-  --t-menu: calc(100vh * 0.8914 + var(--nav-size) * 3.307);
-  --t-cap: calc(100vh * 0.04052
-                + 2 * (2.046 * var(--nav-size) + clamp(8px, 2.25vh, 28px)));
+  --t-menu: calc(100vh * 0.8914 + var(--link-font) * 3.307);
+  --t-cap: calc(100vh * 0.04052 + var(--links-h) * 0.66667);
   --t-share: 1.36;
   --t-ridge: 0.348;
   --t-sink: 0.08;
@@ -729,7 +743,7 @@ a { color: inherit; }
 
 @supports (height: 1dvh) {
   .hills {
-    --t-menu: calc(100dvh * 0.8914 + var(--nav-size) * 3.307);
+    --t-menu: calc(100dvh * 0.8914 + var(--link-font) * 3.307);
     --t-start: calc(var(--t-menu) + 100dvh * 0.04052);
     --s-x: min(calc(var(--t-x) + var(--t-w)
                     - (0.5 + var(--s-over)) * var(--s-d)),
@@ -737,8 +751,7 @@ a { color: inherit; }
     --s-b: min(calc(var(--t-b) + var(--t-h)
                     + (var(--s-rise) - 0.5) * var(--s-d)),
                calc(100dvh - 100dvh * 0.04052 - var(--s-d)));
-    --t-cap: calc(100dvh * 0.04052
-                  + 2 * (2.046 * var(--nav-size) + clamp(8px, 2.25vh, 28px)));
+    --t-cap: calc(100dvh * 0.04052 + var(--links-h) * 0.66667);
     --t-h: min(calc(var(--band-h) * var(--t-share)),
                calc(max(0px, 100vw - var(--t-start)) / var(--t-ratio)),
                calc(100dvh - var(--t-cap) - var(--t-b)));
@@ -826,29 +839,101 @@ a { color: inherit; }
   flex-direction: column;
   align-items: flex-start;
   width: max-content;
-  gap: clamp(8px, 2.25vh, 28px);
+  /* Given a height and the three boxes laid into it, exactly as in the narrow
+     layout: space-between with no gap, so any rounding in the line boxes is
+     spread between the words and the block still measures --links-h. */
+  height: var(--links-h);
+  justify-content: space-between;
+  gap: 0;
 }
 
-/* Two thirds the size the words used to be, and with no inline padding at
-   all, so each one starts on .home-nav's own left edge — level with the
-   first social icon underneath. The 0.443em block padding is what holds the
-   box at the 88px it has always been, so the three sit at the same tops as
-   before (40.2 / 150.6 / 260.9 at a 1920x993 viewport) even though the type
-   shrank. Keep those two in step if either changes: line-height 1.16 plus
-   twice the padding is the box. */
+/* No inline padding, so each word starts on .home-nav's own left edge —
+   level with the first social icon underneath, and the mirror of the narrow
+   layout ranging them against the picture's other side.
+
+   line-height 1.2 and 0.19em of padding either side make the box 1.58em,
+   which is the figure --link-font is solved from. The two have to move
+   together or the block stops measuring --links-h. */
 .home-links > a {
   position: relative;
   text-decoration: none;
   color: var(--ink);
-  font-size: var(--nav-size);
-  line-height: 1.16;
+  font-size: var(--link-font);
+  line-height: 1.2;
   letter-spacing: 0.01em;
-  padding: 0.443em 0;
+  padding: 0.19em 0;
   transition: color 0.2s ease;
 }
 
 .home-links > a:hover,
 .home-links > a:focus-visible { color: var(--rust-hover); }
+
+/* The words are underlined — and only partly, so that the mark reads as
+   one made over the word rather than as a border under it: all of
+   "about", "blo" of "blog", "alle" of "gallery". The spans in index.njk
+   set those spans of letters; a span is inline, so its box is exactly the
+   letters it holds.
+
+   BOTH LAYOUTS CARRY THEM. They were the narrow layout's alone while the
+   wide one had a vertical rule to hang its marks off; that rule is gone and
+   the two menus are now the same design at two sizes, so the marks belong
+   to both. Only --ul-w differs, and only because the narrow layout was
+   tuned at 7 device pixels and is left at them.
+
+   THE THREE MARKS ARE THREE REAL BRUSH STROKES, cropped each to its own
+   ink and flattened to a silhouette — they are masks, so they carry alpha
+   and nothing else and the colour stays here. They came off a 1.8MB sheet
+   of three strokes drawn as a shade-by-shade trace, 5,259 filled paths of
+   grey; what a mask needs from that is one outline, so the sheet was
+   rendered, thresholded and its boundary traced by marching squares, then
+   simplified to about a tenth of a pixel at the size these are finally
+   drawn. 1.1 to 1.6KB each, and the dry-brush gaps survive as holes in the
+   path rather than as separate shapes — hence fill-rule="evenodd".
+
+   WHICH STROKE GOES WHERE is a matter of how much each is stretched, since
+   mask-size: 100% 100% and preserveAspectRatio="none" fit the drawing to
+   the word whatever its own proportion. At 7px of ink the three words want
+   ratios of about 13.2, 7.0 and 9.6; the strokes are 10.6, 6.9 and 7.5, so
+   they are paired longest-to-longest and "blo" gets a stroke it barely has
+   to stretch at all.
+
+   These strokes carry no fade of their own, so they end where the brush
+   thinned out. Sitting a touch above the line box's foot puts them where
+   an underline goes, just clear of the baseline, rather than below the
+   descenders. They wander little: a word is a straight edge to measure
+   against, so a bend that would read as brushwork across open paper reads
+   here as an underline that has slipped. */
+.home-links .stroke { position: relative; }
+
+.home-links .stroke::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--ul-w) / -2 + 0.1em);
+  height: var(--ul-w);
+  background: var(--rust);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.home-links > a:nth-child(1) .stroke::after {
+  -webkit-mask-image: url("../img/brush-underline-1.svg");
+  mask-image: url("../img/brush-underline-1.svg");
+}
+
+.home-links > a:nth-child(2) .stroke::after {
+  -webkit-mask-image: url("../img/brush-underline-2.svg");
+  mask-image: url("../img/brush-underline-2.svg");
+}
+
+.home-links > a:nth-child(3) .stroke::after {
+  -webkit-mask-image: url("../img/brush-underline-3.svg");
+  mask-image: url("../img/brush-underline-3.svg");
+}
 
 .home-social {
   display: flex;
@@ -915,12 +1000,20 @@ a { color: inherit; }
     --sixth: calc(100vw / 6);
     --links-h: clamp(144px, 38vw, 154px);
     --link-h: calc(var(--links-h) / 3);   /* one link's box, exactly */
-    /* The type laid into --links-h — three boxes of 1.2 x font + 12 fill it
-       exactly — and, from it, the width of the longest of the three words.
-       Every word here is a fixed multiple of its own type size, and
-       "gallery" measures 3.307em; the torii is held clear of it. */
-    --link-font: calc((var(--links-h) - 36px) / 3.6);
+    /* The type is solved from --links-h by the rule on .home — one formula
+       for both layouts now, so the two menus cannot drift apart. It used to
+       be (--links-h - 36px) / 3.6, a 12px padding rather than an em one,
+       which came to within a third of a pixel of this at every width from
+       320 to 767.
+
+       --gallery-w is the width of the longest of the three words: every word
+       here is a fixed multiple of its own type size, and "gallery" measures
+       3.307em. The torii is held clear of it. */
     --gallery-w: calc(var(--link-font) * 3.307);
+    /* The brushwork's weight, in whole physical pixels at any zoom, which is
+       where this layout was tuned. The wide layout takes the same mark as a
+       proportion of its own type instead — see --ul-w on .home. */
+    --ul-w: calc(var(--device-px) * 7);
     --band-gap: clamp(84px, 24vw, 104px);
     --foot: 84px;
     --room: max(100vh - 100vw * 1.1219 - var(--links-h),
@@ -1199,72 +1292,9 @@ a { color: inherit; }
 
   /* No inline padding, so each word's own right edge is what lands on the
      nav's — anything here would push it off by that much. */
-  .home-links > a {
-    font-size: var(--link-font);
-    line-height: 1.2;
-    padding: 6px 0;
-  }
+  /* Nothing to restate: .home-links > a already has the type, the
+     line-height and the em padding that make the box 1.58em. */
 
-  /* The words are underlined — and only partly, so that the mark reads as
-     one made over the word rather than as a border under it: all of
-     "about", "blo" of "blog", "alle" of "gallery". The spans in index.njk
-     set those spans of letters; a span is inline, so its box is exactly the
-     letters it holds.
-
-     THE THREE MARKS ARE THREE REAL BRUSH STROKES, cropped each to its own
-     ink and flattened to a silhouette — they are masks, so they carry alpha
-     and nothing else and the colour stays here. They came off a 1.8MB sheet
-     of three strokes drawn as a shade-by-shade trace, 5,259 filled paths of
-     grey; what a mask needs from that is one outline, so the sheet was
-     rendered, thresholded and its boundary traced by marching squares, then
-     simplified to about a tenth of a pixel at the size these are finally
-     drawn. 1.1 to 1.6KB each, and the dry-brush gaps survive as holes in the
-     path rather than as separate shapes — hence fill-rule="evenodd".
-
-     WHICH STROKE GOES WHERE is a matter of how much each is stretched, since
-     mask-size: 100% 100% and preserveAspectRatio="none" fit the drawing to
-     the word whatever its own proportion. At 7px of ink the three words want
-     ratios of about 13.2, 7.0 and 9.6; the strokes are 10.6, 6.9 and 7.5, so
-     they are paired longest-to-longest and "blo" gets a stroke it barely has
-     to stretch at all.
-
-     These strokes carry no fade of their own, so they end where the brush
-     thinned out. Sitting a touch above the line box's foot puts them where
-     an underline goes, just clear of the baseline, rather than below the
-     descenders. They wander little: a word is a straight edge to measure
-     against, so a bend that would read as brushwork across open paper reads
-     here as an underline that has slipped. */
-  .home-links .stroke { position: relative; }
-
-  .home-links .stroke::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: calc(var(--ul-w) / -2 + 0.1em);
-    height: var(--ul-w);
-    background: var(--rust);
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    pointer-events: none;
-  }
-
-  .home-links > a:nth-child(1) .stroke::after {
-    -webkit-mask-image: url("../img/brush-underline-1.svg");
-    mask-image: url("../img/brush-underline-1.svg");
-  }
-
-  .home-links > a:nth-child(2) .stroke::after {
-    -webkit-mask-image: url("../img/brush-underline-2.svg");
-    mask-image: url("../img/brush-underline-2.svg");
-  }
-
-  .home-links > a:nth-child(3) .stroke::after {
-    -webkit-mask-image: url("../img/brush-underline-3.svg");
-    mask-image: url("../img/brush-underline-3.svg");
-  }
 
   /* 26px between six items overflows a 320px screen by ~17px, which puts
      a horizontal scrollbar on the page and cuts the first icon and the
