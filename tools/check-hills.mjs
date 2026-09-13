@@ -148,6 +148,33 @@ const readLayout = () => {
                clicks: getComputedStyle(e).pointerEvents };
     })(),
     iconToggle: document.querySelectorAll(".theme-toggle").length,
+    /* elementFromPoint works in VIEWPORT coordinates and returns null for a
+       point outside it, so each control is scrolled into view before it is
+       asked about — otherwise every footer icon on a phone reads as "null"
+       and a rule about covering would be answering a question about
+       scrolling. The scroll is put back afterwards; everything else here is
+       page coordinates and does not care either way. */
+    navReach: (() => {
+      const was = scrollY;
+      const out = [...document.querySelectorAll(".home-nav a, .home-nav button")]
+        .filter((e) => e.getClientRects().length)
+        .map((e) => {
+          e.scrollIntoView({ block: "center" });
+          const r = e.getBoundingClientRect();
+          const x = r.left + r.width / 2, y = r.top + r.height / 2;
+          const off = x < 0 || y < 0 || x >= innerWidth || y >= innerHeight;
+          const top = off ? null : document.elementFromPoint(x, y);
+          return { what: (e.getAttribute("aria-label") || e.textContent.trim() ||
+                          e.tagName).slice(0, 20),
+                   ok: off || (!!top && (top === e || e.contains(top))),
+                   off,
+                   top: top ? top.tagName.toLowerCase() +
+                        (top.className ? "." + String(top.className).trim().split(/\s+/).join(".") : "")
+                      : "off screen" };
+        });
+      scrollTo(0, was);
+      return out;
+    })(),
     wordsLeft: Math.min(...[...document.querySelectorAll(".home-links > a")]
       .map((a) => a.getBoundingClientRect().left)),
     wordsRight: Math.max(...[...document.querySelectorAll(".home-links > a")]
@@ -325,6 +352,14 @@ async function main() {
       const tag = `${size.w}x${size.h}`;
       rule(tag, theme, "the page does not scroll sideways", L.overflowX <= 0,
         `overflow ${L.overflowX}px`);
+      /* The nav is pointer-events: none so its empty space does not swallow
+         presses meant for the orb behind it. This is the other half of that:
+         everything in it that IS pressable still answers. */
+      rule(tag, theme, "every link and button in the nav is reachable",
+        L.navReach.every((r) => r.ok),
+        L.navReach.filter((r) => !r.ok).map((r) => `${r.what} -> ${r.top}`)
+          .join(", ") ||
+        `${L.navReach.filter((r) => !r.off).length} of ${L.navReach.length} on screen`);
       rule(tag, theme, "the footer row is all one colour at rest",
         new Set(L.socialColors).size === 1, L.socialColors.join(" "));
 
@@ -641,15 +676,52 @@ async function main() {
          half the picture are already off the right-hand edge. A tablet held
          in portrait lands there. Worth fixing, and not by patching the orb. */
       if (L.orbControl && orb) {
-        const box = await page.evaluate(() => {
+        /* PUT THE PAGE BACK FIRST. The scan above hides the picture and the
+           nav to read the hills, and `visibility: hidden` takes an element
+           out of hit-testing as well as out of sight — so pressing the orb
+           against that DOM proved only that the handler runs, not that a
+           finger can reach it. It could not: the nav is a full-width box in
+           the narrow layout and every point of the orb answered
+           `div.home-links`, which is why the sun did nothing on a phone while
+           passing here 30 times out of 30. */
+        await page.evaluate(() => {
+          for (const sel of [".hero-frame", ".home-nav", ".theme-toggle",
+                             ".consent-banner", ".torii"])
+            document.querySelector(sel)?.style.removeProperty("visibility");
+        });
+        await page.waitForTimeout(60);
+
+        /* And ask what is actually on top of it, which is the rule that would
+           have caught that directly. Five points, so a partial cover shows. */
+        const cover = await page.evaluate(() => {
           const e = document.querySelector(".orb");
           e.scrollIntoView({ block: "center" });
           const r = e.getBoundingClientRect();
+          return [[0.5, 0.5], [0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]]
+            .map(([fx, fy]) => {
+              const x = r.left + r.width * fx, y = r.top + r.height * fy;
+              if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return "off";
+              const top = document.elementFromPoint(x, y);
+              return top === e ? "orb"
+                : (top ? top.tagName.toLowerCase() +
+                         (top.className ? "." + String(top.className).trim().split(/\s+/).join(".") : "")
+                       : "null");
+            });
+        });
+        rule(tag, theme, "nothing is covering the orb",
+          cover.every((c) => c === "orb" || c === "off"), cover.join(", "));
+
+        const box = await page.evaluate(() => {
+          const r = document.querySelector(".orb").getBoundingClientRect();
           return { x: r.left + r.width / 2, y: r.top + r.height / 2,
                    w: innerWidth, h: innerHeight };
         });
         if (box.x > 0 && box.x < box.w && box.y > 0 && box.y < box.h) {
-          await page.mouse.click(box.x, box.y);
+          /* A finger in the narrow layout, a mouse in the wide one — the two
+             hit-test the same way, but only one of them is what a phone
+             sends, and this bug was reported from a phone. */
+          if (wide) await page.mouse.click(box.x, box.y);
+          else await page.touchscreen.tap(box.x, box.y);
           await page.waitForTimeout(120);
           const after = await page.evaluate(() => ({
             theme: document.documentElement.dataset.theme || "light",

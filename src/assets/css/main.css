@@ -789,6 +789,20 @@ a { color: inherit; }
    Vertically it spans the hero's content edges (inside the stroke):
    links start at the image's top edge, the social row is pushed to its
    bottom edge. */
+/* THE NAV IS A BOX AROUND SOME WORDS, not a surface. It is full-width in the
+   narrow layout and a tall column in the wide one, and in both it has a lot
+   of empty space — all of which used to swallow presses meant for what is
+   behind it. On a phone that is the whole of the orb: every point of the sun
+   answered `div.home-links`, so nothing happened when you touched it, while
+   the desktop worked only because the orb happens to sit clear of the column.
+
+   pointer-events go back on for the things that are actually pressable. The
+   underline pseudo-elements set their own `none` and are unaffected. */
+.home-nav { pointer-events: none; }
+
+.home-nav a,
+.home-nav button { pointer-events: auto; }
+
 .home-nav {
   position: absolute;
   top: calc(100vh * 0.04052);
