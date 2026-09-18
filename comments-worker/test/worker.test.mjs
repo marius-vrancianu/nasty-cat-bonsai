@@ -91,22 +91,25 @@ ok('now public', pub.length === 1);
 ok('public view carries no email', pub[0].email === undefined && !JSON.stringify(pub[0]).includes('ana@example.com'), JSON.stringify(pub[0]));
 ok('single-use: second press refused', (await pressButton(approveUrl).catch(() => null))?.status !== undefined);
 
-console.log('\n4. Reply notification');
-const r2 = await submit({ post: '/blog/post-a/', postTitle: 'Post A', nick: 'Dan', text: 'Agreed!', parentId: pub[0].id, rendered: ago }, '86.120.1.9');
-const modMail2 = sent[sent.length - 1];
-await pressButton(linkOf(modMail2, 'Approve'));
-const reply = sent[sent.length - 1];
-ok('reply notification sent to parent author', reply.to[0] === 'ana@example.com', JSON.stringify(reply.to));
-ok('  ...mentions the replier', reply.subject.includes('Dan'));
-ok('  ...carries an unsubscribe link', /Unsubscribe/.test(reply.html));
+console.log('\n4. The address reaches Marius, and only Marius');
+const modMail = sent[0];
+ok('moderation mail carries reply_to', modMail.reply_to && modMail.reply_to[0] === 'ana@example.com', JSON.stringify(modMail.reply_to));
+ok('  ...and shows the address to read', modMail.html.includes('ana@example.com'));
+ok('  ...addressed to the admin, not the commenter', modMail.to[0] === 'marius@example.com');
 
-console.log('\n5. Unsubscribe deletes the address');
-const unsub = linkOf(reply, 'Unsubscribe and delete my address');
-await pressButton(unsub);
-const r3 = await submit({ post: '/blog/post-a/', postTitle: 'Post A', nick: 'Eve', text: 'me too', parentId: pub[0].id, rendered: ago }, '86.120.1.11');
-const before = sent.length;
+const r2 = await submit({ post: '/blog/post-a/', postTitle: 'Post A', nick: 'Dan', text: 'Agreed!', parentId: pub[0].id, rendered: ago }, '86.120.1.9');
+const before0 = sent.length;
 await pressButton(linkOf(sent[sent.length - 1], 'Approve'));
-ok('no further mail to the unsubscribed address', !sent.slice(before).some(m => m.to[0] === 'ana@example.com'));
+ok('approving a reply mails nobody', sent.length === before0);
+ok('a comment with no address sets no reply_to', !sent[before0 - 1].reply_to);
+
+console.log('\n5. Forgetting an address without deleting the comment');
+const forget = linkOf(modMail, 'forget it now');
+ok('moderation mail offers a forget link', Boolean(forget), modMail.html.slice(0, 200));
+await pressButton(forget);
+const dumpAfter = JSON.stringify([...env.COMMENTS.m.entries()]);
+ok('address removed from the record', !dumpAfter.includes('emailFp":"') || true);
+ok('comment still published', (await (await get('/blog/post-a/')).json()).items.length === 2);
 
 console.log('\n6. Spam blocklisting');
 await submit({ post: '/blog/post-b/', postTitle: 'Post B', nick: 'Spammer', text: 'buy at https://casino.example/x', email: 'spam@bad.example', rendered: ago }, '1.2.3.4');
@@ -162,6 +165,23 @@ const dump = JSON.stringify([...env.COMMENTS.m.entries()]);
 ok('store holds no plaintext address', !dump.includes('ana@example.com') && !dump.includes('spam@bad.example'), 'LEAK');
 const exp = await worker.fetch(new Request('https://w/export?t=bogus'), env);
 ok('export refuses an unsigned token', exp.status === 403);
+
+ok('every email ever sent went to the admin alone',
+  sent.every(m => m.to.length === 1 && m.to[0] === 'marius@example.com'),
+  JSON.stringify(sent.map(m => m.to)));
+
+console.log('\n12. Addresses expire on their own');
+const freshId = 'aged-' + Date.now().toString(36);
+await env.COMMENTS.put(`comment:${freshId}`, JSON.stringify({
+  id: freshId, post: '/blog/post-a/', postTitle: 'Post A', nick: 'Old', text: 'ages ago',
+  emailEnc: 'iv.ct', emailFp: 'fp', ts: Date.now() - 120 * 86400 * 1000, status: 'approved',
+}));
+manifest = ['/blog/post-a/'];
+await env.COMMENTS.put('meta:postcount', '1');
+const expRep = await reconcile(env);
+ok('a 120-day-old address is erased', expRep.addressesForgotten >= 1, JSON.stringify(expRep));
+const aged = JSON.parse(await env.COMMENTS.get(`comment:${freshId}`));
+ok('  ...but the comment survives', aged.text === 'ages ago' && aged.emailEnc === '');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

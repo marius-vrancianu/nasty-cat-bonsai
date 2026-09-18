@@ -394,10 +394,19 @@ real comments.
 link that never expires, so your Gmail archive is your moderation history —
 search for the post title to find and unpublish an old comment.
 
-**Replies.** If a commenter left an email address, they are told when someone
-replies to them — but only after *you* approve the reply, never before.
-Their address is stored encrypted, is never shown on the site, and every
-notification has a one-click unsubscribe that deletes it.
+**Writing back.** If a commenter left an address, it is shown in the
+moderation email and that email is addressed back to them — so **hitting
+Reply in Gmail writes to the commenter**, not to the worker. That is the
+whole mechanism: a real answer from you, rather than an automated
+notification from a robot.
+
+Nothing on the site ever emails a reader. There is no mailing list and
+nothing for anyone to unsubscribe from.
+
+Addresses are stored encrypted, are never shown on the site, and are
+**deleted automatically after 90 days** whether you wrote back or not. If
+someone asks you to forget their address sooner, the moderation email has a
+*forget it now* link that deletes the address and leaves the comment alone.
 
 **Deleting a post deletes its comments.** Once a week the worker checks which
 posts still exist. If one has gone, you get an email saying its comments will

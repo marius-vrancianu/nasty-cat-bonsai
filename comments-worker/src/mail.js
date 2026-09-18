@@ -9,7 +9,7 @@ export function escapeHtml(s) {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-async function send(env, { to, subject, html }) {
+async function send(env, { to, subject, html, replyTo }) {
   if (!env.RESEND_API_KEY) return { ok: false, error: "no-api-key" };
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -22,6 +22,10 @@ async function send(env, { to, subject, html }) {
       to: [to],
       subject,
       html,
+      /* Set when the commenter left an address: hitting Reply in Gmail then
+         composes to THEM, not back to the worker. That is the whole reply
+         mechanism now — there is no automated notification to readers. */
+      ...(replyTo ? { reply_to: [replyTo] } : {}),
     }),
   });
   if (!res.ok) return { ok: false, error: `resend-${res.status}` };
@@ -63,7 +67,9 @@ export function moderationMail(env, comment, links, post) {
     <p style="font-size:14px;color:#545c2f;margin:0 0 18px">on <a href="${post.url}" style="color:#545c2f">${escapeHtml(post.title)}</a></p>
     ${parent}
     <p style="font-size:15px;margin:0 0 4px"><strong>${escapeHtml(comment.nick)}</strong>${
-      comment.hasEmail ? ` <span style="color:#545c2f;font-size:13px">(left an email for reply notifications)</span>` : ""
+      comment.email
+        ? ` <a href="mailto:${escapeHtml(comment.email)}" style="color:#545c2f;font-size:13px">&lt;${escapeHtml(comment.email)}&gt;</a>`
+        : ` <span style="color:#545c2f;font-size:13px">(no address)</span>`
     }</p>
     <blockquote style="margin:0 0 22px;padding:12px 16px;border-left:3px solid #9a2104;
       background:rgba(28,26,23,.04);font-size:15px;line-height:1.6;white-space:pre-wrap">${escapeHtml(comment.text)}</blockquote>
@@ -72,27 +78,16 @@ export function moderationMail(env, comment, links, post) {
       ${button(links.decline, "Decline", false)}
       ${button(links.spam, "Spam", false)}
     </p>
+    ${comment.email ? `<p style="font-size:13px;color:#545c2f;margin:14px 0 0;
+      padding:10px 14px;border-left:2px solid #545c2f">
+      <strong>Hit Reply</strong> and your answer goes straight to ${escapeHtml(comment.nick)} —
+      this email is addressed back to them. Their address is deleted automatically
+      after ${env.EMAIL_RETENTION_DAYS || 90} days, or
+      <a href="${links.forget}" style="color:#545c2f">forget it now</a> and keep the comment.
+    </p>` : ""}
     <p style="font-size:13px;color:#6b6659;margin:14px 0 0">
       Spam also blocks any link domains, plus this sender's IP for 30 days.
       Keep this email: <a href="${links.remove}" style="color:#6b6659">remove this comment later</a>.
-    </p>`),
-  };
-}
-
-export function replyMail(env, { parentNick, replyNick, text, postTitle, postUrl, unsubscribe }) {
-  return {
-    subject: `${replyNick} replied to your comment on "${postTitle}"`,
-    html: shell(`
-    <h1 style="font-size:20px;font-weight:normal;color:#9a2104;margin:0 0 18px">Someone replied to you</h1>
-    <p style="font-size:15px;margin:0 0 4px">Hello ${escapeHtml(parentNick)} — <strong>${escapeHtml(replyNick)}</strong> replied to your comment on
-      <a href="${postUrl}" style="color:#9a2104">${escapeHtml(postTitle)}</a>:</p>
-    <blockquote style="margin:14px 0 22px;padding:12px 16px;border-left:3px solid #9a2104;
-      background:rgba(28,26,23,.04);font-size:15px;line-height:1.6;white-space:pre-wrap">${escapeHtml(text)}</blockquote>
-    <p>${button(postUrl, "Read the thread", true)}</p>
-    <p style="font-size:12px;color:#6b6659;margin:18px 0 0">
-      You are getting this only because you left your address when you commented on ${escapeHtml(env.SITE_NAME || "the site")}.
-      It is stored encrypted, never shown on the page and never shared.
-      <a href="${unsubscribe}" style="color:#6b6659">Unsubscribe and delete my address</a>.
     </p>`),
   };
 }

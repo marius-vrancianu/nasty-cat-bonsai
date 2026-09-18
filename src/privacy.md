@@ -21,13 +21,13 @@ This is a personal, non-commercial website. I collect as little data as possible
 
 *What you send when you post a comment:* the name you type, your comment text, the time of posting, and — only if you choose to fill it in — an email address. Your name, text and time are published with your comment once I have approved it. Legal basis: your request to publish a comment (Art. 6(1)(b) GDPR).
 
-*The optional email address* is used for one thing only: to tell you if someone replies to you. It is **encrypted at rest**, is never displayed on the site, never shared, and is never sent to your browser or anyone else's. Every reply notification carries a one-click link that **deletes** the address outright. Legal basis: consent (Art. 6(1)(a) GDPR).
+*The optional email address* is used for one thing only: so that I can write back to you personally, from my own mailbox. You will never receive an automated message from this site — there is no mailing list, no notification system and nothing to unsubscribe from. The address is **encrypted at rest**, is never displayed on the site, never shared, and is never sent to your browser or to anyone else. It is **deleted automatically 90 days after you post**, whether I have written back or not. Legal basis: consent (Art. 6(1)(a) GDPR).
 
 *Your IP address* is seen by the comment service when you post, and is used to limit how often one person can comment and to block sources of spam. It is never stored in readable form — only as an irreversible keyed hash, which expires within 30 days. Legal basis: my legitimate interest in keeping the site free of spam (Art. 6(1)(f) GDPR).
 
-*Notification emails* to me, and any reply notification to you, are delivered by Resend (Resend, Inc., USA).
+*The email telling me that you commented* is delivered by Resend (Resend, Inc., USA), and carries your comment and your address if you gave one. It goes to me and to nobody else.
 
-*How long any of it is kept:* comments stay as long as the post they are on. If I delete a post, its comments — and any addresses stored with them — are deleted automatically within about a month. You can ask me to delete a comment at any time, and the unsubscribe link above removes an address without needing to ask anyone.
+*How long any of it is kept:* comments stay as long as the post they are on. If I delete a post, its comments — and any addresses stored with them — are deleted automatically within about a month. Addresses go after 90 days regardless. You can ask me to delete your comment, or just your address, at any time.
 
 **Images.** Gallery and post images are delivered by the jsDelivr CDN, which receives your IP address to send you the files. Legal basis: legitimate interest (Art. 6(1)(f) GDPR).
 

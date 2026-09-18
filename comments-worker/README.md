@@ -11,8 +11,9 @@ dashboard, no login, and nothing that expires — which is the entire point.
 - Accepts comments, holds them, and publishes nothing until you say so.
 - Emails you once per comment. Blocked submissions are dropped in silence,
   so a spammer never reaches your inbox at all.
-- Notifies commenters who left an address when someone replies to them —
-  only ever after *you* approve the reply.
+- Addresses the moderation email back to the commenter, so Reply in your
+  mail client writes to them personally. Nothing here ever emails a reader
+  automatically; stored addresses expire after 90 days.
 - Blocks spam by link domain (the part that doesn't rotate), by IP for 30
   days, and by address for a year. Every block is undoable from the page you
   land on.
@@ -45,17 +46,21 @@ wrangler deploy
 ```
 
 **Never rotate the three keys casually.** `EMAIL_KEY` decrypts stored
-addresses — change it and every reply notification stops working. `HASH_KEY`
+addresses — change it and you can never read back the ones already stored,
+so those commenters become unanswerable. `HASH_KEY`
 underpins the blocklist, and `SIGNING_KEY` validates links in emails you have
 already received.
 
 ### On Resend
 
-Without a verified domain, Resend only delivers to the address that owns the
-account. Since you are the only recipient of moderation mail, that is enough
-to start — but **reply notifications to readers will not send** until you
-verify a domain and set `FROM_EMAIL` to an address on it. Until then the
-comment system works fully; only the reply-notification feature waits.
+Every email this worker sends goes to `ADMIN_EMAIL` and nowhere else, so
+Resend's free tier needs **no verified domain** — its default
+`onboarding@resend.dev` sender delivers to the account owner, which is you.
+Leave `FROM_EMAIL` alone unless you ever buy a domain.
+
+Replies to commenters are not sent by this worker at all: the moderation
+email carries `reply_to` set to the commenter's address, so answering happens
+in your own mail client, from your own mailbox.
 
 ## Maintenance
 
@@ -70,11 +75,11 @@ before anything touches storage.
 
 | Route | Who calls it |
 |---|---|
-| `GET /comments?post=<slug>` | the widget, on every post page (edge-cached 60s) |
+| `GET /comments?post=<slug>` | the widget, on every post page (KV read, edge-cached by Cloudflare) |
 | `POST /comments` | the widget's form |
 | `GET\|POST /m/<action>` | you, from a moderation email |
 | `GET\|POST /o/<keep\|purge>` | you, from an orphaned-post email |
-| `GET\|POST /u` | a reader unsubscribing from replies |
+| `GET\|POST /u` | you, forgetting one address without deleting its comment |
 | `GET /export?t=…` | you, for a backup |
 | `GET /reconcile?t=…` | you, to force the orphan check early |
 

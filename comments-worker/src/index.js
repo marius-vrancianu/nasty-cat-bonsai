@@ -24,11 +24,18 @@ import {
   fingerprint, signToken, verifyToken, encryptEmail, decryptEmail, randomId,
 } from "./crypto.js";
 import { checkShape, cleanSubmission, linkedDomains, normaliseEmail, LIMITS } from "./validate.js";
-import { send, moderationMail, replyMail, orphanMail, floodMail } from "./mail.js";
+import { send, moderationMail, orphanMail, floodMail } from "./mail.js";
 import { confirmPage, confirmSimple, donePage, errorPage } from "./pages.js";
 
 const DAY = 86400;
 const ORPHAN_GRACE_DAYS = 30;
+
+/* How long a commenter's address is kept. Its only purpose is to let Marius
+   answer them personally from Gmail; a reply three months after the fact is
+   not a thing that happens. The weekly reconcile erases anything older, so
+   the store never accumulates addresses nobody is going to use — which is
+   storage limitation doing its job rather than a promise in a policy. */
+const EMAIL_RETENTION_DAYS = 90;
 const MAIL_PER_HOUR = 10;      // past this, one summary instead of a flood
 
 /* ---------------------------------------------------------------- helpers */
@@ -159,11 +166,14 @@ async function handleSubmit(request, env) {
       links[a] = `${env.WORKER_URL}/m/${a}?t=${await signToken(env.SIGNING_KEY, a, id, 400 * DAY)}`;
     }
     links.remove = `${env.WORKER_URL}/m/remove?t=${await signToken(env.SIGNING_KEY, "remove", id, 0)}`;
-    const mail = moderationMail(env, { ...record, hasEmail: Boolean(c.email) }, links, {
+    links.forget = `${env.WORKER_URL}/u?t=${await signToken(env.SIGNING_KEY, "unsub", id, 0)}`;
+    const mail = moderationMail(env, { ...record, email: c.email }, links, {
       title: record.postTitle,
       url: postUrl(env, c.post),
     });
-    await send(env, { to: env.ADMIN_EMAIL, ...mail });
+    /* The address goes no further than this one message. It is not stored in
+       readable form and nothing else ever reads it back out. */
+    await send(env, { to: env.ADMIN_EMAIL, replyTo: c.email || undefined, ...mail });
   }
 
   return accepted;
@@ -184,7 +194,6 @@ async function performAction(env, action, id) {
       list.items.push(publicView(record));
       list.items.sort((a, b) => a.ts - b.ts);
       await Promise.all([kvPut(env, `comment:${id}`, record), kvPut(env, listKey, list)]);
-      await notifyParent(env, record);
     }
     return donePage("Published",
       `It is live on <a href="${postUrl(env, record.post)}">${record.postTitle}</a> within a minute.`);
@@ -239,27 +248,6 @@ async function performAction(env, action, id) {
   }
 
   return errorPage("Unknown action.");
-}
-
-/* Reply notification. Only ever fired from approve — if this ran on
-   submission, anyone could push mail to your readers before you had seen it. */
-async function notifyParent(env, reply) {
-  if (!reply.parentId) return;
-  const parent = await kvGet(env, `comment:${reply.parentId}`);
-  if (!parent || !parent.emailEnc) return;
-  const to = await decryptEmail(env.EMAIL_KEY, parent.emailEnc);
-  if (!to) return;
-  const unsubscribe =
-    `${env.WORKER_URL}/u?t=${await signToken(env.SIGNING_KEY, "unsub", parent.id, 0)}`;
-  const mail = replyMail(env, {
-    parentNick: parent.nick,
-    replyNick: reply.nick,
-    text: reply.text,
-    postTitle: reply.postTitle,
-    postUrl: postUrl(env, reply.post),
-    unsubscribe,
-  });
-  await send(env, { to, ...mail });
 }
 
 /* ------------------------------------------------------- orphan reconcile */
@@ -341,7 +329,20 @@ async function reconcile(env) {
   const withComments = new Set(counts.keys());
 
   const now = Date.now();
-  const report = { orphaned: [], purged: [], restored: [] };
+  const report = { orphaned: [], purged: [], restored: [], addressesForgotten: 0 };
+
+  /* Erase addresses past their usefulness. Cheap to fold in here: the
+     records were just read above for the counts. */
+  const cutoff = now - EMAIL_RETENTION_DAYS * DAY * 1000;
+  for (const key of await listCommentKeys(env)) {
+    const rec = await kvGet(env, key);
+    if (rec && rec.emailEnc && rec.ts < cutoff) {
+      rec.emailEnc = "";
+      rec.emailFp = "";
+      await kvPut(env, key, rec);
+      report.addressesForgotten++;
+    }
+  }
 
   for (const slug of withComments) {
     const orphanKey = `orphan:${slug}`;
@@ -464,8 +465,10 @@ export default {
       return donePage("Deleted", `${n} comment${n === 1 ? "" : "s"} removed, addresses included.`);
     }
 
-    // Unsubscribe from reply notifications — deletes the address rather than
-    // flagging it, so this doubles as a self-serve erasure request.
+    /* "Forget their address, keep the comment." Linked from the moderation
+       email. Readers have no automated mail to unsubscribe from any more, so
+       this is Marius's tool for honouring an erasure request without having
+       to delete somebody's comment to do it. */
     if (path === "/u") {
       const token = request.method === "POST"
         ? (await request.formData()).get("t")
@@ -473,9 +476,9 @@ export default {
       const claim = await verifyToken(env.SIGNING_KEY, token);
       if (!claim || claim.action !== "unsub") return errorPage("This link is not valid.");
       if (request.method === "GET") {
-        return confirmSimple("/u", token, "Stop reply notifications?",
-          "Your address will be deleted from the comment it was stored with. Your comment itself stays published.",
-          "Yes, delete my address");
+        return confirmSimple("/u", token, "Forget this address?",
+          "The address stored with this comment will be deleted. The comment itself stays exactly where it is.",
+          "Yes, forget it");
       }
       const record = await kvGet(env, `comment:${claim.id}`);
       if (record) {
@@ -483,7 +486,7 @@ export default {
         record.emailFp = "";
         await kvPut(env, `comment:${claim.id}`, record);
       }
-      return donePage("Deleted", "Your address is gone. You will not hear from this site again.");
+      return donePage("Forgotten", "The address is gone. The comment is untouched.");
     }
 
     if (path === "/export") {
@@ -513,4 +516,4 @@ export default {
   },
 };
 
-export { reconcile, purgePost };
+export { reconcile, purgePost, EMAIL_RETENTION_DAYS };
