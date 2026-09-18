@@ -1,0 +1,26 @@
+name = "nasty-cat-comments"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Weekly orphan reconcile: Mondays at 04:17 UTC. An odd minute on purpose —
+# the whole internet schedules crons on the hour.
+[triggers]
+crons = ["17 4 * * 1"]
+
+[vars]
+SITE_URL = "https://marius-vrancianu.github.io/nasty-cat-bonsai"
+SITE_ORIGIN = "https://marius-vrancianu.github.io"
+SITE_NAME = "Nasty Cat Bonsai"
+FROM_EMAIL = "onboarding@resend.dev"
+# Set this to the deployed worker's own URL after the first `wrangler deploy`
+# prints it — the moderation links in every email are built from it.
+WORKER_URL = "https://nasty-cat-comments.YOUR-SUBDOMAIN.workers.dev"
+
+[[kv_namespaces]]
+binding = "COMMENTS"
+id = "PUT-YOUR-KV-NAMESPACE-ID-HERE"
+
+# Secrets are NOT set here — they go in with `wrangler secret put`:
+#   SIGNING_KEY  RESEND_API_KEY
+#   EMAIL_KEY    ADMIN_EMAIL
+#   HASH_KEY

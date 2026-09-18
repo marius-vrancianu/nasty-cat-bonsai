@@ -1574,14 +1574,197 @@ a { color: inherit; }
 
 .comments { margin-top: 48px; }
 
-/* The Cusdis widget lives in a cross-origin iframe that starts small and
-   scrolls internally until its auto-resize message arrives. Give it a
-   solid floor so the form + typical thread sit in the page flow; the
-   widget still grows the iframe for longer threads. */
-#cusdis_thread iframe {
-  width: 100%;
+/* The comment thread. It is ours now and lives in the page's own DOM, so it
+   inherits the palette, the typeface and the dark theme for free — there is
+   no iframe to reserve space for and no minimum height to guess at. The old
+   rule here floored a cross-origin widget at 480px, which is why a backend
+   that had quietly died still took up half a screen.
+
+   Fields and buttons borrow their shapes from #post-search and the consent
+   banner rather than inventing a third style for the same job. */
+.comment-list {
+  list-style: none;
+  margin: 0 0 40px;
+  padding: 0;
+}
+
+.comment {
+  padding: 16px 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.comment:first-child { border-top: 0; padding-top: 0; }
+
+/* A reply is set in from its parent and hung off a rule, so the relationship
+   reads without a connector line or an avatar. One level only — see
+   groupByParent() in comments.js. */
+.comment.is-reply {
+  margin-left: 22px;
+  padding-left: 18px;
+  border-top: 0;
+  border-left: 2px solid var(--hairline-strong);
+}
+
+.comment-head {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.comment-author { color: var(--rust); }
+
+.comment-date {
+  color: var(--olive);
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+/* Comments are stored and rendered as plain text, so the only formatting a
+   commenter has is the line break they typed. pre-wrap honours it. */
+.comment-text {
+  font-size: 16px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.comment-reply {
+  font: inherit;
+  font-size: 13px;
+  background: none;
   border: 0;
-  min-height: 480px;
+  padding: 6px 0 0;
+  color: var(--rust);
+  cursor: pointer;
+}
+
+.comment-reply:hover,
+.comment-reply:focus-visible { color: var(--olive); }
+
+.comment-note {
+  font-size: 15px;
+  color: var(--olive);
+  margin: 0 0 24px;
+}
+
+.comment-note.is-error { color: var(--rust); }
+.comment-note:empty { margin: 0; }
+
+.comment-form {
+  padding-top: 26px;
+  border-top: 1px solid var(--hairline);
+}
+
+.comment-replying {
+  font-size: 14px;
+  color: var(--olive);
+  margin: 0 0 14px;
+}
+
+.comment-cancel-reply {
+  font: inherit;
+  font-size: 13px;
+  background: none;
+  border: 0;
+  padding: 0 0 0 8px;
+  color: var(--rust);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.comment-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.comment-row .comment-field { flex: 1 1 220px; }
+
+.comment-field {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.comment-field > span {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.comment-field > span em {
+  font-style: normal;
+  color: var(--olive);
+  font-size: 13px;
+}
+
+.comment-field small {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--olive);
+}
+
+.comment-field input,
+.comment-field textarea {
+  font: inherit;
+  font-size: 15px;
+  width: 100%;
+  color: var(--ink);
+  background: var(--washi);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 4px;
+  padding: 8px 12px;
+  transition: border-color 0.2s ease;
+}
+
+.comment-field textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.comment-field input:hover,
+.comment-field textarea:hover,
+.comment-field input:focus-visible,
+.comment-field textarea:focus-visible { border-color: var(--rust); outline: none; }
+
+/* The honeypot. Off-screen rather than display:none — a bot that checks for
+   visibility mostly checks for that one property. Humans never see it, and
+   aria-hidden in the markup keeps it away from screen readers. */
+.comment-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.comment-submit {
+  font: inherit;
+  font-size: 15px;
+  padding: 9px 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--rust);
+  color: var(--washi);
+  border: 1px solid var(--rust);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.comment-submit:hover,
+.comment-submit:focus-visible { background: var(--rust-hover); border-color: var(--rust-hover); }
+
+.comment-submit[disabled] { opacity: 0.6; cursor: default; }
+
+.comment-hint {
+  font-size: 13px;
+  color: var(--olive);
 }
 
 .comments-title {

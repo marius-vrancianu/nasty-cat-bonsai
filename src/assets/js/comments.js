@@ -1,71 +1,221 @@
-/* Lazy comments. The Cusdis widget script is third-party (cusdis.com),
-   and most readers never comment — so it isn't loaded with the page.
-   Instead it loads when the reader scrolls within ~600px of the Comments
-   section, early enough that the thread is usually ready by the time it
-   scrolls into view. Browsers without IntersectionObserver just load it
-   immediately, like before.
+/* Comments. The thread is ours — stored by the worker in comments-worker/,
+   rendered here — so there is no third-party script, no iframe and no
+   second document to parse. Just this file and one JSON fetch.
 
-   The widget renders into an iframe built with srcdoc — same-origin by
-   definition — so once it exists we inject a small stylesheet that gives
-   the form fields the site's accent strokes (rust in light, olive in
-   dark; Cusdis' own gray borders disappear against the washi paper).
-   The widget toggles a .dark wrapper class internally, so the injected
-   CSS reacts to theme switches by itself. */
+   Nothing runs until the reader scrolls within ~600px of the section, so a
+   visitor who reads a post and leaves pays nothing at all for a feature they
+   never looked at. Browsers without IntersectionObserver load immediately.
+
+   Every value that came from a person is written with textContent or
+   createTextNode. There is no innerHTML in this file, and there should never
+   be one: the worker stores comments as plain text precisely so that the only
+   way to get markup onto the page is to put it here. */
 (function () {
   "use strict";
 
-  var thread = document.getElementById("cusdis_thread");
-  if (!thread) return;
+  var root = document.querySelector("[data-comments]");
+  if (!root) return;
 
+  var api = root.dataset.api.replace(/\/$/, "");
+  var post = root.dataset.post;
+  var postTitle = root.dataset.postTitle;
+
+  var list = root.querySelector(".comment-list");
+  var note = root.querySelector(".comment-note");
+  var form = root.querySelector(".comment-form");
+  var replying = root.querySelector(".comment-replying");
+  var replyingTo = root.querySelector(".comment-replying-to");
+  var cancelReply = root.querySelector(".comment-cancel-reply");
+  var submit = form.querySelector(".comment-submit");
+
+  var NICK_KEY = "commentNick";
+  var parentId = "";
   var loaded = false;
 
-  // Keep the colors in sync with --rust in main.css (light and dark).
-  var SKIN =
-    "input, textarea { border-color: #9a2104 !important; border-radius: 3px; }" +
-    "button { background: transparent !important; border: 1px solid #9a2104 !important;" +
-    " border-radius: 3px; color: #9a2104 !important; }" +
-    ".dark input, .dark textarea { border-color: #86914b !important; }" +
-    ".dark button { border-color: #86914b !important; color: #86914b !important; }";
+  /* When the form first became visible to a human. The worker rejects
+     anything submitted within three seconds of it, which no one typing a
+     sentence can trip but most bots do. */
+  var renderedAt = Date.now();
 
-  function injectSkin(iframe) {
-    try {
-      var doc = iframe.contentDocument;
-      if (!doc || !doc.head || doc.getElementById("nasty-cat-skin")) return;
-      var style = doc.createElement("style");
-      style.id = "nasty-cat-skin";
-      style.textContent = SKIN;
-      doc.head.appendChild(style);
-    } catch (e) {
-      /* if the iframe is ever not same-origin, leave the widget as-is */
-    }
+  var dateFormat = new Intl.DateTimeFormat("en-US", {
+    month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+  });
+
+  function say(message, kind) {
+    note.textContent = message || "";
+    note.className = "comment-note" + (kind ? " is-" + kind : "");
   }
 
-  function watchForIframe() {
-    var iframe = thread.querySelector("iframe");
-    if (iframe) {
-      // re-inject on every load: cusdis reassigns srcdoc when re-rendering
-      iframe.addEventListener("load", function () { injectSkin(iframe); });
-      injectSkin(iframe);
-      return true;
-    }
-    return false;
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
   }
+
+  function renderOne(item, isReply) {
+    var li = el("li", "comment" + (isReply ? " is-reply" : ""));
+    li.id = "comment-" + item.id;
+
+    var head = el("p", "comment-head");
+    head.appendChild(el("span", "comment-author", item.nick));
+    head.appendChild(document.createTextNode(" "));
+    var time = el("time", "comment-date", dateFormat.format(new Date(item.ts)));
+    time.dateTime = new Date(item.ts).toISOString();
+    head.appendChild(time);
+    li.appendChild(head);
+
+    li.appendChild(el("div", "comment-text", item.text));
+
+    /* One level of nesting only, which is what a blog thread actually needs
+       and what keeps this readable on a phone. A reply to a reply attaches
+       to the same parent rather than indenting further — see groupByParent. */
+    if (!isReply) {
+      var button = el("button", "comment-reply", "Reply");
+      button.type = "button";
+      button.addEventListener("click", function () { startReply(item); });
+      li.appendChild(button);
+    }
+    return li;
+  }
+
+  function groupByParent(items) {
+    var byId = {};
+    var i;
+    for (i = 0; i < items.length; i++) byId[items[i].id] = items[i];
+
+    var tops = [];
+    var children = {};
+    for (i = 0; i < items.length; i++) {
+      var item = items[i];
+      var parent = item.parentId && byId[item.parentId];
+      // a reply to a reply belongs to the top-level comment above both
+      while (parent && parent.parentId && byId[parent.parentId]) parent = byId[parent.parentId];
+      if (parent) {
+        (children[parent.id] = children[parent.id] || []).push(item);
+      } else {
+        tops.push(item);
+      }
+    }
+    return { tops: tops, children: children };
+  }
+
+  function render(items) {
+    list.textContent = "";
+    if (!items.length) {
+      list.hidden = true;
+      say("No comments yet.");
+      return;
+    }
+    var grouped = groupByParent(items);
+    for (var i = 0; i < grouped.tops.length; i++) {
+      var top = grouped.tops[i];
+      list.appendChild(renderOne(top, false));
+      var kids = grouped.children[top.id] || [];
+      for (var j = 0; j < kids.length; j++) list.appendChild(renderOne(kids[j], true));
+    }
+    list.hidden = false;
+    say("");
+  }
+
+  function startReply(item) {
+    parentId = item.id;
+    replyingTo.textContent = item.nick;
+    replying.hidden = false;
+    var anchor = document.getElementById("comment-" + item.id);
+    if (anchor && anchor.nextSibling) {
+      // sit the form directly under the thread being answered
+      anchor.parentNode.insertBefore(form, anchor.nextSibling);
+    }
+    form.querySelector("[name=text]").focus();
+  }
+
+  function endReply() {
+    parentId = "";
+    replying.hidden = true;
+    root.appendChild(form);
+  }
+
+  cancelReply.addEventListener("click", endReply);
 
   function load() {
     if (loaded) return;
     loaded = true;
-    var s = document.createElement("script");
-    s.async = true;
-    s.src = "https://cusdis.com/js/cusdis.es.js";
-    document.body.appendChild(s);
+    say("Loading comments…");
 
-    if (!watchForIframe() && "MutationObserver" in window) {
-      var mo = new MutationObserver(function () {
-        if (watchForIframe()) mo.disconnect();
+    fetch(api + "/comments?post=" + encodeURIComponent(post), { credentials: "omit" })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.status);
+        return res.json();
+      })
+      .then(function (data) { render(data.items || []); })
+      .catch(function () {
+        /* Say so, in one line. The widget this replaced answered a dead
+           backend by rendering nothing at all inside an iframe held open at
+           480px, which is how it went unnoticed for months. */
+        list.hidden = true;
+        say("Comments couldn’t be loaded just now. The form below still works.", "error");
       });
-      mo.observe(thread, { childList: true });
+
+    try {
+      var saved = localStorage.getItem(NICK_KEY);
+      if (saved) form.querySelector("[name=nick]").value = saved;
+    } catch (e) {
+      /* private mode — the field just starts empty */
     }
   }
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    var nick = form.querySelector("[name=nick]").value.trim();
+    var text = form.querySelector("[name=text]").value.trim();
+    var email = form.querySelector("[name=email]").value.trim();
+
+    if (!nick || !text) {
+      say("A name and a comment, please.", "error");
+      return;
+    }
+
+    submit.disabled = true;
+    say("Sending…");
+
+    fetch(api + "/comments", {
+      method: "POST",
+      credentials: "omit",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        post: post,
+        postTitle: postTitle,
+        parentId: parentId,
+        nick: nick,
+        email: email,
+        text: text,
+        website: form.querySelector("[name=website]").value,
+        rendered: renderedAt,
+      }),
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.status);
+        return res.json();
+      })
+      .then(function () {
+        try {
+          localStorage.setItem(NICK_KEY, nick);
+        } catch (e) {
+          /* private mode — the name just won't be remembered */
+        }
+        form.querySelector("[name=text]").value = "";
+        endReply();
+        say("Thank you — your comment is with me, and appears once I have read it.", "ok");
+      })
+      .catch(function () {
+        say("That didn’t send. Try again in a moment?", "error");
+      })
+      .then(function () {
+        submit.disabled = false;
+        renderedAt = Date.now();
+      });
+  });
 
   if (!("IntersectionObserver" in window)) {
     load();
@@ -82,5 +232,5 @@
     }
   }, { rootMargin: "600px 0px" });
 
-  io.observe(thread);
+  io.observe(root);
 })();

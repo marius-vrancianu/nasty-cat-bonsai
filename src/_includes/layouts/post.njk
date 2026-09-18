@@ -21,26 +21,66 @@ layout: layouts/base.njk
       {%- endif %}
       {{ content | safe }}
 
-      {# Cusdis comments — anonymous nickname + comment, no login.
-         Activated by setting comments.cusdisAppId in src/_data/site.js
-         (App ID from the cusdis.com dashboard). data-page-id is the post's
-         URL path, so each post gets its own thread. #}
-      {% if site.comments.cusdisAppId %}
-      <section class="comments" aria-label="Comments">
+      {# Comments. Held for approval by our own worker — see
+         comments-worker/README.md — and switched on by filling in
+         comments.apiUrl in src/_data/site.js.
+
+         The form is rendered here rather than built in JavaScript so the
+         section looks finished the moment the page paints: no layout shift,
+         and no reserved blank space waiting for a widget to arrive. The
+         existing comments are fetched and inserted above it. #}
+      {% if site.comments.apiUrl %}
+      <section class="comments" aria-label="Comments"
+               data-comments
+               data-api="{{ site.comments.apiUrl }}"
+               data-post="{{ page.url }}"
+               data-post-title="{{ title }}">
         <h2 class="comments-title">Comments</h2>
-        <div id="cusdis_thread"
-             data-theme="light"
-             data-host="https://cusdis.com"
-             data-app-id="{{ site.comments.cusdisAppId }}"
-             data-page-id="{{ page.url }}"
-             data-page-url="{{ site.url }}{{ page.url }}"
-             data-page-title="{{ title }}"></div>
-        {#- The widget script is loaded lazily by comments.js when the
-            reader scrolls near this section — see that file. #}
-        <script src="/assets/js/comments.js" defer></script>
+
+        <ol class="comment-list" hidden></ol>
+        <p class="comment-note" role="status" aria-live="polite"></p>
+
+        <form class="comment-form" novalidate>
+          <p class="comment-replying" hidden>
+            Replying to <span class="comment-replying-to"></span>
+            <button type="button" class="comment-cancel-reply">cancel</button>
+          </p>
+
+          <div class="comment-row">
+            <label class="comment-field">
+              <span>Name</span>
+              <input type="text" name="nick" maxlength="40" required autocomplete="nickname">
+            </label>
+            <label class="comment-field">
+              <span>Email <em>optional</em></span>
+              <input type="email" name="email" maxlength="160" autocomplete="email">
+              <small>Only used to tell you if someone replies. Never shown here, never shared,
+                and stored encrypted — you can delete it from any notification.</small>
+            </label>
+          </div>
+
+          <label class="comment-field">
+            <span>Comment</span>
+            <textarea name="text" rows="5" maxlength="2000" required></textarea>
+          </label>
+
+          {#- The honeypot. Hidden from people by CSS and from screen readers
+              by aria-hidden; anything that fills it in is a bot. #}
+          <div class="comment-hp" aria-hidden="true">
+            <label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+          </div>
+
+          <div class="comment-actions">
+            <button type="submit" class="comment-submit">Post comment</button>
+            <span class="comment-hint">Comments are read before they appear.</span>
+          </div>
+        </form>
+
+        <noscript>
+          <p class="comment-note">Comments need JavaScript to load. Everything else on this page does not.</p>
+        </noscript>
       </section>
-      {% else %}
-      <div class="comments-placeholder">Comments load here once Cusdis is configured — see src/_data/site.js.</div>
+      <script src="/assets/js/comments.js" defer></script>
       {% endif %}
     </article>
   </main>

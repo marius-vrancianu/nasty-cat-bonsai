@@ -368,14 +368,45 @@ version stays up until a deploy succeeds.
 
 ## 6. Everything else you'll eventually wonder about
 
-### 6.1 Comments (Cusdis)
+### 6.1 Comments
 
 Visitor comments are **held for your approval** and appear on the site only
-after you approve them. Moderate at <https://cusdis.com/dashboard> (log in
-with the account you created). Do enable email notifications in the
-dashboard settings, or you'll never know someone commented. Comments are
-stored by Cusdis, not in GitHub — deleting them happens in that dashboard
-too.
+after you approve them. There is no dashboard to visit and nothing to log
+into: **you moderate entirely from your inbox.**
+
+Every new comment sends you one email containing the comment itself and
+three buttons:
+
+- **Approve** — publishes it. It is live on the site within a minute.
+- **Decline** — bins it quietly. Use this for off-topic or duplicate posts.
+- **Spam** — bins it *and* blocks the source: any links in it for a year, the
+  sender's email for a year, and their IP for 30 days. Anything matching
+  those is dropped silently from then on, and you are not emailed about it.
+  The page you land on lists exactly what it blocked and has an **Undo**
+  button if you misfired.
+
+Each button opens a page with one more button on it. That extra tap is
+deliberate: some email scanners visit every link in a message to check it is
+safe, and without the confirmation step they would silently approve or bin
+real comments.
+
+**Keep the emails.** Each one also carries a *remove this comment later*
+link that never expires, so your Gmail archive is your moderation history —
+search for the post title to find and unpublish an old comment.
+
+**Replies.** If a commenter left an email address, they are told when someone
+replies to them — but only after *you* approve the reply, never before.
+Their address is stored encrypted, is never shown on the site, and every
+notification has a one-click unsubscribe that deletes it.
+
+**Deleting a post deletes its comments.** Once a week the worker checks which
+posts still exist. If one has gone, you get an email saying its comments will
+be deleted in 30 days, with **Keep them** and **Delete now** buttons. The
+delay exists because *renaming* a post looks exactly like deleting one — put
+the old name back within the month and the comments reattach on their own.
+
+Comments are stored by the worker (Cloudflare), not in GitHub. The technical
+side, backups and redeploying live in `comments-worker/README.md`.
 
 ### 6.2 Changing the design (colors, fonts, spacing)
 

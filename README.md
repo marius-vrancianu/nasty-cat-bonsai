@@ -19,10 +19,12 @@ built with [Eleventy](https://www.11ty.dev/) and served by GitHub Pages at
   - `gallery.json` — the manifest that decides *exactly* what the gallery
     shows, with captions. Blog images are separated simply by not being
     listed here.
-- **Comments** are [Cusdis](https://cusdis.com) — anonymous nickname +
-  comment, no login. Activated by pasting the App ID (cusdis.com dashboard →
-  website settings) into `comments.cusdisAppId` in `src/_data/site.js`.
-  New comments await approval in the Cusdis dashboard before they appear.
+- **Comments** are our own — see `comments-worker/`. A name, a comment, an
+  optional email, no login and no cookies. Every comment emails you one
+  message with Approve / Decline / Spam buttons; nothing appears on the site
+  until you tap one. Activated by pasting the deployed worker's URL into
+  `comments.apiUrl` in `src/_data/site.js`; leave it empty to switch comments
+  off entirely.
 
 ## Everyday tasks
 
@@ -79,5 +81,5 @@ Palette, type scale, and spacing live as CSS custom properties at the top of
 
 ## TODO after first deploy
 
-- [ ] Create a cusdis.com account, add the site, paste the App ID into `src/_data/site.js`
+- [ ] Deploy the comments worker (`comments-worker/README.md`) and paste its URL into `src/_data/site.js`
 - [ ] Replace sample posts and upload real photos to `bonsai-images`

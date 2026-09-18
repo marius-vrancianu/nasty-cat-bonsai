@@ -47,13 +47,6 @@
     if (themeColor) {
       themeColor.content = theme === "dark" ? "#222222" : "#e3dbca";
     }
-
-    // Keep the Cusdis comments widget in step, if present.
-    var cusdis = document.getElementById("cusdis_thread");
-    if (cusdis) {
-      cusdis.dataset.theme = theme;
-      if (window.CUSDIS && window.CUSDIS.setTheme) window.CUSDIS.setTheme(theme);
-    }
   }
 
   var buttons = Array.prototype.slice.call(

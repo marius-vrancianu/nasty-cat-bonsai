@@ -1,0 +1,24 @@
+---
+permalink: /comments-posts.json
+eleventyExcludeFromCollections: true
+---
+{#- Every post that currently exists, and nothing else.
+
+    The comments worker fetches this once a week and deletes the stored
+    comments of any post that has dropped off it — after a 30-day grace
+    period and a warning email, because a renamed post looks exactly like a
+    deleted one from the other end.
+
+    Deliberately its own file rather than a read of search.json: that one
+    carries the full text of every post (wasteful to fetch weekly) and its
+    shape belongs to the search feature. This is a contract with the worker,
+    so it should be free to stay this boring.
+
+    These paths are NOT run through HtmlBasePlugin — it only rewrites href
+    and src in HTML — so they match the data-post attribute the widget
+    sends, which is the same raw page.url. Keep it that way. -#}
+[
+{%- for post in collections.posts %}
+  {{ post.url | dump | safe }}{{ "," if not loop.last }}
+{%- endfor %}
+]
