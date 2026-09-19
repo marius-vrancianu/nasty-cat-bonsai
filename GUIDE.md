@@ -563,19 +563,21 @@ of letters and numbers. Copy it.
 `PUT-YOUR-KV-NAMESPACE-ID-HERE` with the ID (keep the quote marks). Commit.
 
 **Step 4 — Find your worker address.** In Cloudflare, **Compute (Workers)** →
-**Workers & Pages**. Somewhere on that page is your `workers.dev` subdomain —
-if you have never used Workers it asks you to choose one. Pick something
-short, e.g. `nastycat`. Your worker's address will then be:
+**Workers & Pages**, then scroll to the **Account details** box near the
+bottom. The **Subdomain** row is what you want — it was assigned when you
+made the account, so there is nothing to choose and no prompt to wait for.
+(The page will also say "No projects found" until the first deploy. That is
+expected.)
+
+Your worker's address is its name from `wrangler.toml` on that subdomain:
 
 ```
-https://nasty-cat-comments.nastycat.workers.dev
+https://nasty-cat-comments.marius-v-vrancianu.workers.dev
 ```
 
-Put that address in **two files**, via the GitHub pencil icon, with no
-trailing slash:
-
-- `comments-worker/wrangler.toml` → the `WORKER_URL` line
-- `src/_data/site.js` → the `apiUrl` line
+That address is already filled into **both** files it belongs in —
+`comments-worker/wrangler.toml` (`WORKER_URL`) and `src/_data/site.js`
+(`apiUrl`). You only need to touch them if the subdomain ever changes.
 
 **Step 5 — Cloudflare API token.** In Cloudflare, click your profile icon
 (top right) → **Profile** → **API Tokens** → **Create Token**. Choose the
