@@ -16,10 +16,12 @@ export default {
     gaMeasurementId: "G-DPMW9G3Q5P",
   },
   comments: {
-    // Cusdis (https://cusdis.com) — anonymous nickname + comment widget.
-    // Paste the App ID from Dashboard → your website → Settings.
-    // Comments stay hidden on posts until this is filled in.
-    cusdisAppId: "4927068f-179e-4068-9d69-47919a85cb36",
+    // Our own comment worker — see comments-worker/README.md. This is the
+    // URL `wrangler deploy` prints, with no trailing slash.
+    //
+    // Comments stay hidden on posts until this is filled in, so leaving it
+    // empty is a clean way to switch them off entirely.
+    apiUrl: "https://nasty-cat-comments.marius-v-vrancianu.workers.dev",
   },
   images: {
     // Manifest listing ONLY the images that belong in the gallery

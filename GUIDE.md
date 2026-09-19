@@ -368,14 +368,55 @@ version stays up until a deploy succeeds.
 
 ## 6. Everything else you'll eventually wonder about
 
-### 6.1 Comments (Cusdis)
+### 6.1 Comments
 
 Visitor comments are **held for your approval** and appear on the site only
-after you approve them. Moderate at <https://cusdis.com/dashboard> (log in
-with the account you created). Do enable email notifications in the
-dashboard settings, or you'll never know someone commented. Comments are
-stored by Cusdis, not in GitHub — deleting them happens in that dashboard
-too.
+after you approve them. There is no dashboard to visit and nothing to log
+into: **you moderate entirely from your inbox.**
+
+Every new comment sends you one email containing the comment itself and
+three buttons:
+
+- **Approve** — publishes it. It is live on the site within a minute.
+- **Decline** — bins it quietly. Use this for off-topic or duplicate posts.
+- **Spam** — bins it *and* blocks the source: any links in it for a year, the
+  sender's email for a year, and their IP for 30 days. Anything matching
+  those is dropped silently from then on, and you are not emailed about it.
+  The page you land on lists exactly what it blocked and has an **Undo**
+  button if you misfired.
+
+Each button opens a page with one more button on it. That extra tap is
+deliberate: some email scanners visit every link in a message to check it is
+safe, and without the confirmation step they would silently approve or bin
+real comments.
+
+**Keep the emails.** Each one also carries a *remove this comment later*
+link that never expires, so your Gmail archive is your moderation history —
+search for the post title to find and unpublish an old comment.
+
+**Writing back.** If a commenter left an address, it is shown in the
+moderation email and that email is addressed back to them — so **hitting
+Reply in Gmail writes to the commenter**, not to the worker. That is the
+whole mechanism: a real answer from you, rather than an automated
+notification from a robot.
+
+Nothing on the site ever emails a reader. There is no mailing list and
+nothing for anyone to unsubscribe from.
+
+Addresses are stored encrypted, are never shown on the site, and are
+**deleted automatically after 90 days** whether you wrote back or not. If
+someone asks you to forget their address sooner, the moderation email has a
+*forget it now* link that deletes the address and leaves the comment alone.
+
+**Deleting a post deletes its comments.** Once a week the worker checks which
+posts still exist. If one has gone, you get an email saying its comments will
+be deleted in 30 days, with **Keep them** and **Delete now** buttons. The
+delay exists because *renaming* a post looks exactly like deleting one — put
+the old name back within the month and the comments reattach on their own.
+
+Comments are stored by the worker (Cloudflare), not in GitHub. Setting it up
+the first time is **6.11**, and it is all done from a browser. The technical
+side, backups and redeploying live in `comments-worker/README.md`.
 
 ### 6.2 Changing the design (colors, fonts, spacing)
 
@@ -501,3 +542,89 @@ at the root URL `marius-vrancianu.github.io`, that's where it goes.
 - The browser-tab icon is a small hand-drawn bonsai, the file
   `src/assets/img/favicon.svg` — upload a replacement under the exact
   same name (move B) to change it.
+
+### 6.11 Setting up the comments worker (one time)
+
+You need no software on your PC for this — no Node, no git, no command line.
+Two free accounts, a few values pasted into GitHub, and a button. Budget
+twenty minutes.
+
+**Step 1 — Cloudflare account.** Sign up at <https://dash.cloudflare.com/sign-up>
+with any email. It will push you to add a website or buy a domain: **skip
+that**, you never need one.
+
+**Step 2 — Make the storage.** In the Cloudflare dashboard, left sidebar →
+**Storage & Databases** → **KV** → **Create a namespace**. Call it
+`COMMENTS`. It appears in the list with an **ID** next to it — a long string
+of letters and numbers. Copy it.
+
+**Step 3 — Paste that ID into the repo.** On GitHub, open
+`comments-worker/wrangler.toml`, click the pencil icon, and replace
+`PUT-YOUR-KV-NAMESPACE-ID-HERE` with the ID (keep the quote marks). Commit.
+
+**Step 4 — Find your worker address.** In Cloudflare, **Compute (Workers)** →
+**Workers & Pages**, then scroll to the **Account details** box near the
+bottom. The **Subdomain** row is what you want — it was assigned when you
+made the account, so there is nothing to choose and no prompt to wait for.
+(The page will also say "No projects found" until the first deploy. That is
+expected.)
+
+Your worker's address is its name from `wrangler.toml` on that subdomain:
+
+```
+https://nasty-cat-comments.marius-v-vrancianu.workers.dev
+```
+
+That address is already filled into **both** files it belongs in —
+`comments-worker/wrangler.toml` (`WORKER_URL`) and `src/_data/site.js`
+(`apiUrl`). You only need to touch them if the subdomain ever changes.
+
+**Step 5 — Cloudflare API token.** In Cloudflare, click your profile icon
+(top right) → **Profile** → **API Tokens** → **Create Token**. Choose the
+**Edit Cloudflare Workers** template, accept the defaults, create it, and
+**copy the token now** — it is shown only once.
+
+**Step 6 — Resend account.** Sign up at <https://resend.com/signup>
+**using the Gmail address you want moderation mail to arrive at** — this
+matters, because without a domain Resend only delivers to the account owner.
+Then **API Keys** → **Create API Key**, permission **Sending access**, and
+copy the `re_...` key. Ignore everything about verifying domains.
+
+**Step 7 — Three random keys.** Use your password manager's generator three
+times, 32+ characters each, and **save all three in it**. They are:
+`SIGNING_KEY`, `EMAIL_KEY`, `HASH_KEY`. Losing `EMAIL_KEY` makes every stored
+email address permanently unreadable.
+
+**Step 8 — Put the six values into GitHub.** In this repo → **Settings** →
+**Secrets and variables** → **Actions** → **New repository secret**, six
+times:
+
+| Name | Value |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | from step 5 |
+| `SIGNING_KEY` | first random key |
+| `EMAIL_KEY` | second random key |
+| `HASH_KEY` | third random key |
+| `RESEND_API_KEY` | the `re_...` key from step 6 |
+| `ADMIN_EMAIL` | your Gmail address |
+
+GitHub encrypts these and never shows them again, which is why you keep your
+own copies in the password manager.
+
+**Step 9 — Press the button.** **Actions** tab → **Deploy comments worker** →
+**Run workflow**. It runs the test suite first and refuses to deploy if
+anything fails. Green tick means the worker is live.
+
+**Step 10 — Try it.** Deploy the site itself (**Actions** → **Deploy to
+GitHub Pages** → **Run workflow**), open any post, scroll to the bottom and
+leave yourself a comment. Take more than three seconds over it — anything
+faster is treated as a bot. Within a minute you should have an email with
+**Approve / Decline / Spam**. Approve it, reload the post, and there it is.
+
+If no email arrives, the usual cause is that `ADMIN_EMAIL` does not exactly
+match the address that owns the Resend account. Check Gmail's **Promotions**
+tab too.
+
+**Changing a key later** means editing the repository secret and running
+**Deploy comments worker** again — it pushes all five to Cloudflare on every
+run.

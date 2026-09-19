@@ -1,0 +1,27 @@
+name = "nasty-cat-comments"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Weekly orphan reconcile: Mondays at 04:17 UTC. An odd minute on purpose —
+# the whole internet schedules crons on the hour.
+[triggers]
+crons = ["17 4 * * 1"]
+
+[vars]
+SITE_URL = "https://marius-vrancianu.github.io/nasty-cat-bonsai"
+SITE_ORIGIN = "https://marius-vrancianu.github.io"
+SITE_NAME = "Nasty Cat Bonsai"
+FROM_EMAIL = "onboarding@resend.dev"
+# The worker's own address: <name above>.<your workers.dev subdomain>. Every
+# moderation link in every email is built from it, so it must match exactly
+# and carry no trailing slash.
+WORKER_URL = "https://nasty-cat-comments.marius-v-vrancianu.workers.dev"
+
+[[kv_namespaces]]
+binding = "COMMENTS"
+id = "de7e16abcb10441bb5bb53807b743fba"
+
+# Secrets are NOT set here — they go in with `wrangler secret put`:
+#   SIGNING_KEY  RESEND_API_KEY
+#   EMAIL_KEY    ADMIN_EMAIL
+#   HASH_KEY
