@@ -1,0 +1,58 @@
+# Manual deploy of the comments worker to Cloudflare.
+#
+# Same rule as the site: nothing is published automatically. Go to the repo's
+# Actions tab, pick "Deploy comments worker", and press "Run workflow".
+#
+# This exists so the worker can be set up and maintained entirely from a
+# browser — no Node, no git clone and no wrangler on your own machine. The
+# CLI route still works if you ever want it; see comments-worker/README.md.
+#
+# Repository secrets this needs (Settings → Secrets and variables → Actions):
+#
+#   CLOUDFLARE_API_TOKEN  from the Cloudflare dashboard — see the README
+#   SIGNING_KEY           three long random strings, generated once and kept
+#   EMAIL_KEY             in your password manager. EMAIL_KEY especially:
+#   HASH_KEY              change it and stored addresses become unreadable.
+#   RESEND_API_KEY        the re_... key from resend.com
+#   ADMIN_EMAIL           where moderation mail goes
+#
+# The five worker secrets are pushed to Cloudflare on every run, so changing
+# one here and re-running is all it takes to rotate it.
+name: Deploy comments worker
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The worker has no dependencies, so this is the whole test suite:
+      # 42 checks against a fake KV and a fake mail provider. A failure here
+      # stops the deploy, which is the point of running it first.
+      - name: Test
+        working-directory: comments-worker
+        run: npm test
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: comments-worker
+          secrets: |
+            SIGNING_KEY
+            EMAIL_KEY
+            HASH_KEY
+            RESEND_API_KEY
+            ADMIN_EMAIL
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          EMAIL_KEY: ${{ secrets.EMAIL_KEY }}
+          HASH_KEY: ${{ secrets.HASH_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}

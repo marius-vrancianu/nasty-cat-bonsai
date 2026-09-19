@@ -414,7 +414,8 @@ be deleted in 30 days, with **Keep them** and **Delete now** buttons. The
 delay exists because *renaming* a post looks exactly like deleting one — put
 the old name back within the month and the comments reattach on their own.
 
-Comments are stored by the worker (Cloudflare), not in GitHub. The technical
+Comments are stored by the worker (Cloudflare), not in GitHub. Setting it up
+the first time is **6.11**, and it is all done from a browser. The technical
 side, backups and redeploying live in `comments-worker/README.md`.
 
 ### 6.2 Changing the design (colors, fonts, spacing)
@@ -541,3 +542,87 @@ at the root URL `marius-vrancianu.github.io`, that's where it goes.
 - The browser-tab icon is a small hand-drawn bonsai, the file
   `src/assets/img/favicon.svg` — upload a replacement under the exact
   same name (move B) to change it.
+
+### 6.11 Setting up the comments worker (one time)
+
+You need no software on your PC for this — no Node, no git, no command line.
+Two free accounts, a few values pasted into GitHub, and a button. Budget
+twenty minutes.
+
+**Step 1 — Cloudflare account.** Sign up at <https://dash.cloudflare.com/sign-up>
+with any email. It will push you to add a website or buy a domain: **skip
+that**, you never need one.
+
+**Step 2 — Make the storage.** In the Cloudflare dashboard, left sidebar →
+**Storage & Databases** → **KV** → **Create a namespace**. Call it
+`COMMENTS`. It appears in the list with an **ID** next to it — a long string
+of letters and numbers. Copy it.
+
+**Step 3 — Paste that ID into the repo.** On GitHub, open
+`comments-worker/wrangler.toml`, click the pencil icon, and replace
+`PUT-YOUR-KV-NAMESPACE-ID-HERE` with the ID (keep the quote marks). Commit.
+
+**Step 4 — Find your worker address.** In Cloudflare, **Compute (Workers)** →
+**Workers & Pages**. Somewhere on that page is your `workers.dev` subdomain —
+if you have never used Workers it asks you to choose one. Pick something
+short, e.g. `nastycat`. Your worker's address will then be:
+
+```
+https://nasty-cat-comments.nastycat.workers.dev
+```
+
+Put that address in **two files**, via the GitHub pencil icon, with no
+trailing slash:
+
+- `comments-worker/wrangler.toml` → the `WORKER_URL` line
+- `src/_data/site.js` → the `apiUrl` line
+
+**Step 5 — Cloudflare API token.** In Cloudflare, click your profile icon
+(top right) → **Profile** → **API Tokens** → **Create Token**. Choose the
+**Edit Cloudflare Workers** template, accept the defaults, create it, and
+**copy the token now** — it is shown only once.
+
+**Step 6 — Resend account.** Sign up at <https://resend.com/signup>
+**using the Gmail address you want moderation mail to arrive at** — this
+matters, because without a domain Resend only delivers to the account owner.
+Then **API Keys** → **Create API Key**, permission **Sending access**, and
+copy the `re_...` key. Ignore everything about verifying domains.
+
+**Step 7 — Three random keys.** Use your password manager's generator three
+times, 32+ characters each, and **save all three in it**. They are:
+`SIGNING_KEY`, `EMAIL_KEY`, `HASH_KEY`. Losing `EMAIL_KEY` makes every stored
+email address permanently unreadable.
+
+**Step 8 — Put the six values into GitHub.** In this repo → **Settings** →
+**Secrets and variables** → **Actions** → **New repository secret**, six
+times:
+
+| Name | Value |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | from step 5 |
+| `SIGNING_KEY` | first random key |
+| `EMAIL_KEY` | second random key |
+| `HASH_KEY` | third random key |
+| `RESEND_API_KEY` | the `re_...` key from step 6 |
+| `ADMIN_EMAIL` | your Gmail address |
+
+GitHub encrypts these and never shows them again, which is why you keep your
+own copies in the password manager.
+
+**Step 9 — Press the button.** **Actions** tab → **Deploy comments worker** →
+**Run workflow**. It runs the test suite first and refuses to deploy if
+anything fails. Green tick means the worker is live.
+
+**Step 10 — Try it.** Deploy the site itself (**Actions** → **Deploy to
+GitHub Pages** → **Run workflow**), open any post, scroll to the bottom and
+leave yourself a comment. Take more than three seconds over it — anything
+faster is treated as a bot. Within a minute you should have an email with
+**Approve / Decline / Spam**. Approve it, reload the post, and there it is.
+
+If no email arrives, the usual cause is that `ADMIN_EMAIL` does not exactly
+match the address that owns the Resend account. Check Gmail's **Promotions**
+tab too.
+
+**Changing a key later** means editing the repository secret and running
+**Deploy comments worker** again — it pushes all five to Cloudflare on every
+run.

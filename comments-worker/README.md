@@ -20,7 +20,28 @@ dashboard, no login, and nothing that expires — which is the entire point.
 - Deletes a post's comments when the post itself disappears, after a 30-day
   grace period and a warning email.
 
-## First deploy
+## First deploy — from a browser
+
+The whole thing can be set up and maintained without Node, git or wrangler on
+your own machine, the same way the site itself deploys. See GUIDE.md §6.11 for
+the click-by-click version; in short:
+
+1. Create a KV namespace called `COMMENTS` in the Cloudflare dashboard
+   (**Storage & Databases → KV → Create**) and paste its id into
+   `wrangler.toml`.
+2. Create a Cloudflare API token with the **Edit Cloudflare Workers** template.
+3. Add six repository secrets under **Settings → Secrets and variables →
+   Actions**: `CLOUDFLARE_API_TOKEN`, `SIGNING_KEY`, `EMAIL_KEY`, `HASH_KEY`,
+   `RESEND_API_KEY`, `ADMIN_EMAIL`.
+4. **Actions → Deploy comments worker → Run workflow.**
+
+That workflow runs the test suite first and refuses to deploy if it fails.
+It also pushes the five worker secrets on every run, so rotating one means
+changing it in GitHub and pressing the button again.
+
+## First deploy — from a terminal
+
+Only if you prefer it. Everything above happens here instead:
 
 ```sh
 npm install -g wrangler
