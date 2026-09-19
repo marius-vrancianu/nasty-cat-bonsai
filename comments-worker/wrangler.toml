@@ -18,7 +18,7 @@ WORKER_URL = "https://nasty-cat-comments.YOUR-SUBDOMAIN.workers.dev"
 
 [[kv_namespaces]]
 binding = "COMMENTS"
-id = "PUT-YOUR-KV-NAMESPACE-ID-HERE"
+id = "de7e16abcb10441bb5bb53807b743fba"
 
 # Secrets are NOT set here — they go in with `wrangler secret put`:
 #   SIGNING_KEY  RESEND_API_KEY
