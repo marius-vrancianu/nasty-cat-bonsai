@@ -21,7 +21,7 @@ export default {
     //
     // Comments stay hidden on posts until this is filled in, so leaving it
     // empty is a clean way to switch them off entirely.
-    apiUrl: "",
+    apiUrl: "https://nasty-cat-comments.marius-v-vrancianu.workers.dev",
   },
   images: {
     // Manifest listing ONLY the images that belong in the gallery

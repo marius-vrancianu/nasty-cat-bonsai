@@ -12,9 +12,10 @@ SITE_URL = "https://marius-vrancianu.github.io/nasty-cat-bonsai"
 SITE_ORIGIN = "https://marius-vrancianu.github.io"
 SITE_NAME = "Nasty Cat Bonsai"
 FROM_EMAIL = "onboarding@resend.dev"
-# Set this to the deployed worker's own URL after the first `wrangler deploy`
-# prints it — the moderation links in every email are built from it.
-WORKER_URL = "https://nasty-cat-comments.YOUR-SUBDOMAIN.workers.dev"
+# The worker's own address: <name above>.<your workers.dev subdomain>. Every
+# moderation link in every email is built from it, so it must match exactly
+# and carry no trailing slash.
+WORKER_URL = "https://nasty-cat-comments.marius-v-vrancianu.workers.dev"
 
 [[kv_namespaces]]
 binding = "COMMENTS"
