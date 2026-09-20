@@ -414,23 +414,27 @@
   var typed = "";        // type-ahead buffer
   var typedAt = 0;
 
+  // A row is the tree, then its photo count spelled out the way the old
+  // <option> spelled it. Both the menu rows and the closed button are
+  // built through here, so the two always read the same — and since the
+  // count is real text rather than a decoration, it is also what a screen
+  // reader announces, with no aria-label standing in for it.
+  function fillRow(node, name, count) {
+    node.textContent = "";
+    node.appendChild(el("span", "tree-filter-name", name));
+    if (count) {
+      node.appendChild(el("span", "tree-filter-count",
+        "(" + count + " progression photo" + (count === 1 ? "" : "s") + ")"));
+    }
+  }
+
   function addOption(value, name, count) {
     var li = el("li", "tree-filter-option");
     li.setAttribute("role", "option");
     li.setAttribute("aria-selected", "false");
     li.setAttribute("data-value", value);
     li.tabIndex = -1;
-    li.appendChild(el("span", "tree-filter-name", name));
-    if (count) {
-      var badge = el("span", "tree-filter-count", String(count));
-      badge.setAttribute("aria-hidden", "true");
-      li.appendChild(badge);
-      // On screen the count is a bare number in the corner, which keeps
-      // each row to one line on a phone; the label spells it out again so
-      // the row is still announced the way the old <option> was.
-      li.setAttribute("aria-label",
-        name + " (" + count + " progression photo" + (count === 1 ? "" : "s") + ")");
-    }
+    fillRow(li, name, count);
     filterList.appendChild(li);
     options.push({ value: value, name: name, node: li });
   }
@@ -519,7 +523,7 @@
       if (shown) visible.push(i);
     });
     // Mirror the state onto the filter control (built further down).
-    if (filterValue) filterValue.textContent = activeTree || ALL_TREES;
+    if (filterValue) fillRow(filterValue, activeTree || ALL_TREES, counts[activeTree]);
     options.forEach(function (o) {
       o.node.setAttribute("aria-selected", o.value === activeTree ? "true" : "false");
     });

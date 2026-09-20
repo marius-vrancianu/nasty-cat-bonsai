@@ -1973,14 +1973,14 @@ a { color: inherit; }
   margin: -12px 0 28px;
 }
 
-/* The control sizes to whatever is chosen, but not below 24rem — enough
-   for all but the longest "Species, anno culto YYYY", so picking a tree
-   doesn't visibly resize the box each time. On a phone the min is the
-   column itself and the control simply spans it. */
+/* The control sizes to whatever is chosen, but not below 28rem — enough
+   for all but the longest "Species, anno culto YYYY" and its count, so
+   picking a tree doesn't visibly resize the box each time. On a phone the
+   min is the column itself and the control simply spans it. */
 .tree-filter {
   position: relative;
   display: inline-block;
-  min-width: min(100%, 24rem);
+  min-width: min(100%, 28rem);
   max-width: 100%;
 }
 
@@ -2009,7 +2009,16 @@ a { color: inherit; }
 .tree-filter-button:hover,
 .tree-filter-button:focus-visible { border-color: var(--rust); outline: none; }
 
-.tree-filter-value { flex: 1 1 auto; min-width: 0; }
+/* The closed control carries the same two parts as a menu row, laid out
+   the same way, so what it shows is what was picked, word for word. */
+.tree-filter-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
 
 .tree-filter-chevron {
   flex: none;
@@ -2097,10 +2106,18 @@ a { color: inherit; }
   box-shadow: inset 2px 0 0 var(--washi);
 }
 
-/* Phones: the control spans the column, and so does its menu. */
+/* Phones: the control spans the column, and so does its menu. The count
+   drops to its own line under the tree rather than sharing one with it —
+   at this width the pair doesn't fit, and a deliberate second line reads
+   better than a tree name broken mid-phrase to make room. */
 @media (max-width: 520px) {
   .tree-filter { display: block; }
   .tree-filter-list { right: 0; width: auto; max-width: none; }
+
+  .tree-filter-option,
+  .tree-filter-value { display: block; }
+
+  .tree-filter-count { display: block; margin-top: 2px; }
 }
 
 .gallery-grid {
