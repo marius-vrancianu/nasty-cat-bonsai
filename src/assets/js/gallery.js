@@ -247,6 +247,7 @@
   });
 
   function openLightbox(i) {
+    closeMenu(false);
     lastFocused = document.activeElement;
     document.documentElement.classList.add("lightbox-open");
     box.hidden = false;
@@ -373,7 +374,6 @@
   // dropdown shows each unique value; picking one hides every card not
   // featuring that tree.
 
-  var select = document.getElementById("tree-filter");
   var trees = [];
   var counts = {};
   items.forEach(function (it) {
@@ -390,6 +390,126 @@
     return a.replace(/^\+/, "").localeCompare(b.replace(/^\+/, ""));
   });
 
+  /* The control is a button plus a listbox of our own (markup in
+     gallery.njk), not a <select>. A <select>'s popup is drawn by the
+     browser: its highlight is the OS accent — blue in Chrome, grey in
+     Edge — which no stylesheet can reach, and Android opens it as a
+     full-screen dialog. This one is markup, so it takes the theme's
+     accent and stays a menu under the button everywhere.
+
+     What it owes the control it replaces: keyboard operation (arrows,
+     Home/End, Enter, Escape, type-ahead), a screen-reader announcement
+     that still reads the photo count out loud, and picking an option by
+     writing the hash rather than by filtering directly — syncFromHash
+     does the filtering for every route into it. */
+
+  var ALL_TREES = "All trees";
+  var filterRoot = document.querySelector(".tree-filter");
+  var filterBtn = document.getElementById("tree-filter-button");
+  var filterValue = document.getElementById("tree-filter-value");
+  var filterList = document.getElementById("tree-filter-list");
+  var options = [];      // [{ value, name, node }]; options[0] is "All trees"
+  var activeIdx = -1;    // the option holding focus while the menu is open
+  var menuOpen = false;
+  var typed = "";        // type-ahead buffer
+  var typedAt = 0;
+
+  function addOption(value, name, count) {
+    var li = el("li", "tree-filter-option");
+    li.setAttribute("role", "option");
+    li.setAttribute("aria-selected", "false");
+    li.setAttribute("data-value", value);
+    li.tabIndex = -1;
+    li.appendChild(el("span", "tree-filter-name", name));
+    if (count) {
+      var badge = el("span", "tree-filter-count", String(count));
+      badge.setAttribute("aria-hidden", "true");
+      li.appendChild(badge);
+      // On screen the count is a bare number in the corner, which keeps
+      // each row to one line on a phone; the label spells it out again so
+      // the row is still announced the way the old <option> was.
+      li.setAttribute("aria-label",
+        name + " (" + count + " progression photo" + (count === 1 ? "" : "s") + ")");
+    }
+    filterList.appendChild(li);
+    options.push({ value: value, name: name, node: li });
+  }
+
+  function indexOfValue(value) {
+    for (var i = 0; i < options.length; i++) {
+      if (options[i].value === value) return i;
+    }
+    return -1;
+  }
+
+  // Focus really moves to the option, rather than being pointed at with
+  // aria-activedescendant: TalkBack and VoiceOver follow real focus far
+  // more reliably. The class is what the stylesheet draws, since a
+  // programmatic focus doesn't reliably count as :focus-visible.
+  function markActive(i) {
+    activeIdx = i;
+    options.forEach(function (o, k) {
+      o.node.classList.toggle("is-active", k === i);
+    });
+    if (i !== -1) {
+      // preventScroll + scrollIntoView("nearest"): focus on its own would
+      // centre the option, which yanks the page about on a long list.
+      options[i].node.focus({ preventScroll: true });
+      options[i].node.scrollIntoView({ block: "nearest" });
+    }
+  }
+
+  function openMenu() {
+    if (menuOpen || !options.length) return;
+    menuOpen = true;
+    filterList.hidden = false;
+    filterBtn.setAttribute("aria-expanded", "true");
+    var i = indexOfValue(activeTree);
+    markActive(i === -1 ? 0 : i);
+  }
+
+  function closeMenu(refocus) {
+    if (!menuOpen) return;
+    menuOpen = false;
+    // Focus is on an option about to be hidden, and hiding the element
+    // under it drops focus to the top of the page — so park it on the
+    // button first, whether or not the caller asked for the button back.
+    if (refocus || filterList.contains(document.activeElement)) filterBtn.focus();
+    filterList.hidden = true;
+    filterBtn.setAttribute("aria-expanded", "false");
+    markActive(-1);
+  }
+
+  // Picking only writes the hash; syncFromHash does the rest, exactly as
+  // it does for a card click, a deep link or the Back button.
+  function choose(value) {
+    closeMenu(true);
+    if (value) {
+      location.hash = hashString(value, "");
+    } else if (location.hash) {
+      // strip the hash without leaving a dangling "#"
+      history.pushState("", "", location.pathname + location.search);
+      syncFromHash();
+    }
+  }
+
+  // Jump to the next option starting with what was typed. A second letter
+  // inside the timeout extends the search rather than restarting it, and
+  // the "+" on a lost tree is ignored — nobody types it looking for one.
+  function typeAhead(ch) {
+    var now = Date.now();
+    typed = (now - typedAt > 700 ? "" : typed) + ch.toLowerCase();
+    typedAt = now;
+    var from = typed.length > 1 ? activeIdx : activeIdx + 1;
+    for (var n = 0; n < options.length; n++) {
+      var k = (from + n + options.length) % options.length;
+      if (options[k].name.replace(/^\+/, "").toLowerCase().indexOf(typed) === 0) {
+        markActive(k);
+        return;
+      }
+    }
+  }
+
   function applyFilter(tree) {
     activeTree = trees.indexOf(tree) !== -1 ? tree : "";
     visible = [];
@@ -398,7 +518,11 @@
       card.hidden = !shown;
       if (shown) visible.push(i);
     });
-    if (select) select.value = activeTree;
+    // Mirror the state onto the filter control (built further down).
+    if (filterValue) filterValue.textContent = activeTree || ALL_TREES;
+    options.forEach(function (o) {
+      o.node.setAttribute("aria-selected", o.value === activeTree ? "true" : "false");
+    });
   }
 
   // Single source of truth: the hash. Covers card clicks, tag/tree deep
@@ -423,28 +547,69 @@
   window.addEventListener("hashchange", syncFromHash);
   window.addEventListener("popstate", syncFromHash);
 
-  if (select && trees.length) {
-    var all = el("option", null, "All trees");
-    all.value = "";
-    select.appendChild(all);
-    trees.forEach(function (t) {
-      var n = counts[t];
-      var o = el("option", null, t + " (" + n + " progression photo" + (n === 1 ? "" : "s") + ")");
-      o.value = t;
-      select.appendChild(o);
+  if (filterRoot && trees.length) {
+    addOption("", ALL_TREES, 0);
+    trees.forEach(function (t) { addOption(t, t, counts[t]); });
+
+    filterBtn.addEventListener("click", function () {
+      if (menuOpen) closeMenu(true);
+      else openMenu();
     });
 
-    select.addEventListener("change", function () {
-      if (select.value) {
-        location.hash = hashString(select.value, "");
-      } else if (location.hash) {
-        // strip the hash without leaving a dangling "#"
-        history.pushState("", "", location.pathname + location.search);
-        syncFromHash();
+    // Enter and Space reach the click handler above on their own; the
+    // arrows are the ones a button does nothing with.
+    filterBtn.addEventListener("keydown", function (e) {
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      e.preventDefault();
+      var wasOpen = menuOpen;
+      openMenu();
+      if (!wasOpen && e.key === "ArrowUp" && !activeTree) markActive(options.length - 1);
+    });
+
+    filterList.addEventListener("click", function (e) {
+      var li = e.target.closest(".tree-filter-option");
+      if (li) choose(li.getAttribute("data-value"));
+    });
+
+    // Focus sits on an option while the menu is open, so these arrive here.
+    filterList.addEventListener("keydown", function (e) {
+      var last = options.length - 1;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        markActive(activeIdx >= last ? 0 : activeIdx + 1);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        markActive(activeIdx <= 0 ? last : activeIdx - 1);
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        markActive(0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        markActive(last);
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        if (activeIdx !== -1) choose(options[activeIdx].value);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeMenu(true);
+      } else if (e.key === "Tab") {
+        // Hand focus back to the button first, so the browser's own Tab
+        // continues from the control rather than from the top of the page.
+        closeMenu(true);
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        typeAhead(e.key);
       }
     });
 
-    select.parentElement.hidden = false;
+    // Anywhere else — a tap on the grid, a click on the page — dismisses it.
+    document.addEventListener("pointerdown", function (e) {
+      if (menuOpen && !filterRoot.contains(e.target)) closeMenu(false);
+    });
+    filterRoot.addEventListener("focusout", function (e) {
+      if (menuOpen && !filterRoot.contains(e.relatedTarget)) closeMenu(false);
+    });
+
+    filterRoot.parentElement.hidden = false;
   }
 
   syncFromHash();

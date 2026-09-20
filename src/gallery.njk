@@ -6,11 +6,31 @@ permalink: /gallery/
 <h1 class="page-title">Gallery</h1>
 
 {% if gallery.length %}
-{#- Per-tree progression filter. gallery.js fills the options from the
-    manifest's `trees` arrays and unhides the control; with no `trees`
-    values (or without JS) the full gallery just shows as-is. #}
+{#- Per-tree progression filter. A button + listbox rather than a
+    <select>, because the native control's popup is drawn by the browser:
+    its highlight is the OS accent (blue in Chrome, grey in Edge) with no
+    way to reach it from CSS, and on Android it opens as a full-screen
+    dialog. This one is ours, so it follows the theme on every platform.
+    gallery.js fills the options from the manifest's `trees` arrays and
+    unhides the control; with no `trees` values (or without JS) the full
+    gallery just shows as-is. #}
 <div class="gallery-filter" hidden>
-  <select id="tree-filter" aria-label="Filter photos by tree"></select>
+  <div class="tree-filter">
+    <span class="visually-hidden" id="tree-filter-hint">Filter photos by tree:</span>
+    <button type="button" class="tree-filter-button" id="tree-filter-button"
+            aria-haspopup="listbox" aria-expanded="false"
+            aria-controls="tree-filter-list"
+            aria-labelledby="tree-filter-hint tree-filter-value">
+      <span class="tree-filter-value" id="tree-filter-value">All trees</span>
+      <svg class="tree-filter-chevron" width="12" height="8" viewBox="0 0 12 8"
+           aria-hidden="true" focusable="false">
+        <path d="M1 1.5l5 5 5-5" fill="none" stroke="currentColor"
+              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <ul class="tree-filter-list" id="tree-filter-list" role="listbox"
+        aria-label="Filter photos by tree" hidden></ul>
+  </div>
 </div>
 
 <div id="gallery" class="gallery-grid">
