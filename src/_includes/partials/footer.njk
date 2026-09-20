@@ -1,5 +1,10 @@
 <footer class="site-footer">
   <nav class="footer-nav" aria-label="Site">
+    {#- The footer is on the inner pages only (page.njk, post.njk), never on
+        the home page itself, so "home" here never points at the page you
+        are already reading. It repeats the header's back-link on purpose:
+        at the foot of a long post that link is a screen away. #}
+    <a href="/">home</a>
     <a href="/about/">about</a>
     <a href="/blog/">blog</a>
     <a href="/gallery/">gallery</a>

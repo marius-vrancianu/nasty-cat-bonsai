@@ -1460,7 +1460,7 @@ a { color: inherit; }
   border-top: 1px solid var(--hairline);
 }
 
-/* Quiet cross-navigation between the inner pages. */
+/* Quiet cross-navigation: home, then the three inner pages. */
 .footer-nav {
   display: flex;
   gap: 10px;
