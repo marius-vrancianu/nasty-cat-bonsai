@@ -33,14 +33,15 @@ permalink: /gallery/
   </div>
 </div>
 
+{#- The card's href is the full-size original on the CDN — what the
+    lightbox opens, and what a visitor gets with JavaScript off. The <img>
+    inside it is a build-cut thumbnail; see galleryThumb in
+    eleventy.config.js for why the two are not the same file. #}
 <div id="gallery" class="gallery-grid">
   {%- for item in gallery %}
   <a class="gallery-card" href="{{ site.images.cdn }}{{ item.file }}">
     <div class="cdn-frame" style="aspect-ratio: {{ item.ratio or "3/4" }}">
-      <img src="{{ site.images.cdn }}{{ item.file }}"
-           alt="{{ item.alt or (item.species + " bonsai, " + ((item.style or "") | lower) + " style") }}"
-           loading="lazy" decoding="async"
-           onerror="this.parentElement.classList.add('missing');this.parentElement.setAttribute('data-file','{{ item.file }}')">
+      {% galleryThumb item, loop.index0 %}
     </div>
     <div class="gallery-card-caption">
       <div class="gallery-card-species">{{ item.species }}</div>

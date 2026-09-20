@@ -28,7 +28,16 @@ export default {
     // (raw.githubusercontent.com updates within minutes of a push).
     manifest:
       "https://raw.githubusercontent.com/marius-vrancianu/bonsai-images/main/gallery.json",
-    // Image bytes are served via jsDelivr's CDN.
+    // Image bytes are served via jsDelivr's CDN. This is what a VISITOR
+    // fetches: the full-size original, opened from the lightbox and from a
+    // post's {% cdnimg %}.
     cdn: "https://cdn.jsdelivr.net/gh/marius-vrancianu/bonsai-images@main/",
+    // Where the BUILD reads the same bytes from, to cut the gallery grid's
+    // thumbnails. Nobody's browser ever sees this host — only the GitHub
+    // Actions runner does — so raw.githubusercontent.com being blocked on
+    // some corporate networks (the reason the manifest is baked in at
+    // build time, see _data/gallery.js) does not matter here, and it is
+    // the origin rather than a cache, so a replaced photo is never stale.
+    source: "https://raw.githubusercontent.com/marius-vrancianu/bonsai-images/main/",
   },
 };

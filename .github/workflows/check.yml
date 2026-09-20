@@ -29,6 +29,22 @@ jobs:
       - name: The drawings match their generator
         run: python3 tools/gen-hills.py --check
 
+      # The gallery's thumbnails are cut during the build from the photos in
+      # bonsai-images (see galleryThumb in eleventy.config.js), and every
+      # source it downloads is kept in .cache/. Carrying that between runs
+      # means a build only fetches photos added since the last one; without
+      # it every run re-downloads the whole gallery, which is already tens of
+      # megabytes and is meant to grow. The key is this run and the
+      # restore-key is the bare prefix — the rolling-cache pattern: each run
+      # restores the newest cache that exists and saves a fresh one, so the
+      # cache follows the gallery rather than pinning to one state of it.
+      - name: Keep the downloaded photos between runs
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: gallery-sources-${{ github.run_id }}
+          restore-keys: gallery-sources-
+
       - run: npm run build
 
       # Playwright is deliberately not a dependency of the site — see the top

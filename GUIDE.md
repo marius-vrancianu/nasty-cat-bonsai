@@ -62,11 +62,17 @@ never appears, no matter where it's uploaded. That's the whole system.
 
 ### 1.1 Prepare the photo (on your PC)
 
-- **Format:** WebP is ideal, JPEG is fine. To convert/compress for free, use
-  <https://squoosh.app> in your browser (drag photo in, pick WebP, quality
-  ~75, save).
-- **Size:** resize so the longest side is **1600–2000 px**. Phone photos
-  straight off the camera are 5–10× bigger than needed and slow the page.
+- **Format:** WebP or JPEG, either is fine. (The deploy makes its own WebP
+  thumbnails for the Gallery grid — see 1.5 — so the format you upload only
+  affects the full-size photo someone opens by clicking a card. WebP is
+  still a little kinder there. To convert/compress for free, use
+  <https://squoosh.app> in your browser: drag the photo in, pick WebP,
+  quality ~75, save.)
+- **Size:** resize so the longest side is **1600–2000 px**. This is the
+  photo people get when they click a card, *and* it is what the thumbnails
+  are cut from — so under 1600 px starts to show, and over 2000 px only
+  makes the click slower. Phone photos straight off the camera are 5–10×
+  bigger than needed.
 - **Name:** lowercase, no spaces, descriptive: `maple-repot-2026.webp`,
   `tree-10.webp`. **Never reuse a name that already exists** (see 1.4 why).
 
@@ -161,6 +167,30 @@ Paste the file's content into <https://jsonlint.com> to find the exact spot.
 - **Wait ~5 minutes between committing `gallery.json` and deploying** —
   see step 7 in 1.3.
 - Hard-refresh your browser (**Ctrl+F5**) when checking.
+
+### 1.5 What the deploy does to your photos (nothing you have to do)
+
+The Gallery grid shows each photo in a card about 350 pixels wide, but the
+file you upload is around 2000 px. Handing a visitor the big one to fill a
+small card is what used to make the Gallery crawl on a first visit — on a
+desktop screen it came to roughly **14 MB before a single tree appeared**.
+
+So the deploy now cuts each photo down to a set of small WebP copies (400,
+560, 760 and 900 px wide) and puts *those* in the grid; the browser picks
+whichever fits its screen. The same screenful is about **0.3 MB** now.
+Clicking a card still opens your full-size original — that is the one place
+the detail is worth the wait.
+
+You do not have to make these, name them, or upload them. Two things follow
+from it that are worth knowing:
+
+- **The first deploy after adding photos takes a little longer** — it has to
+  fetch and shrink each new one. Photos it has already seen cost nothing, so
+  it is only ever the new ones.
+- **A photo listed in `gallery.json` that isn't actually in the repo now
+  fails the deploy** rather than showing a hatched box on the live site. The
+  error names the file. That is on purpose: a typo is easier to fix when the
+  deploy tells you than when a visitor finds it.
 
 ---
 

@@ -45,6 +45,14 @@
   <meta property="article:published_time" content="{{ page.date | rfc3339 }}">
   {%- endif %}
   <meta name="twitter:card" content="summary_large_image">
+  {#- The gallery's thumbnails are served from here, but the full-size photo
+      a lightbox or a post opens is not: it comes from the CDN, and on a cold
+      visit the browser has to resolve, connect and shake hands with that host
+      before the first byte of it moves. Doing that here overlaps it with the
+      rest of the page instead. `crossorigin` because images are fetched
+      anonymously — without it the browser opens a second connection and the
+      first one was wasted. #}
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
   {#- The body face, fetched in parallel with the CSS instead of after it —
       shortens the flash of fallback Georgia on first visit. `crossorigin`
