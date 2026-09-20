@@ -24,6 +24,17 @@
     return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
   }
 
+  /* The stored choice — the same thing the inline script in <head> reads
+     before first paint. With no storage to read (private mode, storage
+     blocked) the document itself is the only record there is, so it stands. */
+  function saved() {
+    try {
+      return localStorage.getItem(KEY) === "dark" ? "dark" : "light";
+    } catch (e) {
+      return current();
+    }
+  }
+
   function apply(theme) {
     if (theme === "dark") {
       document.documentElement.dataset.theme = "dark";
@@ -70,4 +81,23 @@
   });
 
   apply(current());
+
+  /* Back and Forward can restore a page from the browser's back/forward
+     cache exactly as it was left — DOM, scripts and all — without running a
+     line of this file again. A theme chosen on a later page therefore never
+     reached the restored one: switch to dark on any inner page, press Back,
+     and the home page came back in daylight, because that document had
+     never heard of the choice.
+
+     `pageshow` is the one event that fires on that path, and `persisted`
+     is what tells a restore apart from an ordinary load — on an ordinary
+     load the inline script in <head> has already done this, before first
+     paint, and doing it again here would be for nothing.
+
+     This reads the stored choice rather than deciding anything, so it
+     cannot disagree with the toggle: both sides of the switch go through
+     apply(), and localStorage stays the one record of what was picked. */
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted) apply(saved());
+  });
 })();
