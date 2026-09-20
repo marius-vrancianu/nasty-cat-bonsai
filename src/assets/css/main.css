@@ -20,6 +20,20 @@
      Written out as --rust at 12% rather than as a mix so it is one value
      to retune, the way the hairlines above are. */
   --accent-soft: rgba(154, 33, 4, 0.12);
+  /* Elevation. A shadow is ink spilled on paper, which is exactly why the
+     dark theme cannot borrow these two: near-black against a #222222 page
+     is nothing at all, and a gallery card lifted under the pointer with no
+     sign that it had. Dark draws the same two gestures in light instead —
+     same offsets, same blur, the paper colour where the ink was — so a card
+     still rises and a panel still floats, in the one medium that shows
+     against that ground.
+
+     --lift-card is the tighter of the two: a card leaving the page under
+     the pointer, the shadow pulled in to hug its lower edge.
+     --lift-panel is the softer halo of something already floating over the
+     page — the tree menu, the consent banner. */
+  --lift-card: 0 14px 28px -18px rgba(28, 26, 23, 0.4);
+  --lift-panel: 0 6px 24px rgba(28, 26, 23, 0.18);
   /* The home page's hill backdrop: one ink at three strengths, but written
      out as three OPAQUE tones rather than three alphas. That is not an
      optimisation, it is the only way a nearer hill can hide a further one.
@@ -108,6 +122,13 @@
   /* --rust at 18%, not 12%: a wash of a mid-tone olive on the dark paper
      lifts it less than the same wash of red lifts the light one. */
   --accent-soft: rgba(134, 145, 75, 0.18);
+  /* Light where the day theme spends ink — see the note there. The card
+     asks 0.75 against the light theme's 0.4 because a glow spreads into a
+     dark ground far less readily than a shadow pools on a pale one; the
+     panel asks less, 0.13, because it is a wide soft wash rather than a
+     tight one and the same strength would read as a lit border. */
+  --lift-card: 0 14px 28px -18px rgba(215, 202, 176, 0.75);
+  --lift-panel: 0 6px 24px rgba(215, 202, 176, 0.13);
   /* DARK'S HILLS ARE OLIVE, not paper. They were #e2dbcb and its greys —
      the light theme's ramp turned upside down — and the backdrop read as a
      photographic negative of the day one. Olive makes it a night landscape
@@ -2051,7 +2072,7 @@ a { color: inherit; }
   background: var(--washi);
   border: 1px solid var(--hairline-strong);
   border-radius: 4px;
-  box-shadow: 0 6px 24px rgba(28, 26, 23, 0.18);
+  box-shadow: var(--lift-panel);
 }
 
 .tree-filter-list[hidden] { display: none; }
@@ -2145,7 +2166,7 @@ a { color: inherit; }
 .gallery-card:hover,
 .gallery-card:focus-visible {
   transform: translateY(-3px);
-  box-shadow: 0 14px 28px -18px rgba(28, 26, 23, 0.4);
+  box-shadow: var(--lift-card);
 }
 
 /* filtered out by the tree dropdown (must beat display: block above) */
@@ -2305,7 +2326,7 @@ html.lightbox-open body {
   background: var(--washi);
   border: 1px solid var(--hairline-strong);
   border-radius: 6px;
-  box-shadow: 0 6px 24px rgba(28, 26, 23, 0.18);
+  box-shadow: var(--lift-panel);
 }
 
 .consent-text {
