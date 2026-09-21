@@ -524,6 +524,15 @@ in, export once as AVIF (quality ~60) and once as WebP (quality ~80),
 then repeat with the width resized to 800 px. Replacing only `hero.jpg`
 would leave most visitors seeing the old picture.
 
+**Export `hero.jpg` itself at quality ~86, not at maximum.** Almost no
+browser ever fetches it — they all take the AVIF or WebP above — but it
+is the picture Facebook, WhatsApp and the rest show when somebody shares
+a link to the site, so it travels further than any other file here. The
+one in the repo came in at 1.1 MB straight out of the editor and is 287 KB
+now, with the title lettering pixel-for-pixel the same. In Squoosh, tick
+**"Turn off chroma subsampling"** when you export it: it costs a few KB
+and keeps the red katakana from smearing at its edges.
+
 **Important:** the homepage geometry (the mat/stroke and the position of
 the nav) is computed from this image's exact proportions (1134×1286). A
 same-proportioned image drops right in; a different shape needs three
