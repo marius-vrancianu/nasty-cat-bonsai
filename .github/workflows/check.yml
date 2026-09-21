@@ -29,19 +29,39 @@ jobs:
       - name: The drawings match their generator
         run: python3 tools/gen-hills.py --check
 
-      # The gallery's thumbnails are cut during the build from the photos in
-      # bonsai-images (see galleryThumb in eleventy.config.js), and every
-      # source it downloads is kept in .cache/. Carrying that between runs
-      # means a build only fetches photos added since the last one; without
-      # it every run re-downloads the whole gallery, which is already tens of
-      # megabytes and is meant to grow. The key is this run and the
-      # restore-key is the bare prefix — the rolling-cache pattern: each run
-      # restores the newest cache that exists and saves a fresh one, so the
-      # cache follows the gallery rather than pinning to one state of it.
-      - name: Keep the downloaded photos between runs
+      # The site's thumbnails are cut during the build from the photos in
+      # bonsai-images (see cdnImg in eleventy.config.js). Two directories
+      # have to survive between runs, and they are not the same saving:
+      #
+      #   .cache                 the DOWNLOADED sources. Without it every run
+      #                          re-fetches the whole gallery, already tens
+      #                          of megabytes and meant to grow.
+      #   _site/assets/photos    the ENCODED copies. Without it every run
+      #                          re-encodes all of them from those sources —
+      #                          measured at 0.13s per photo, so about 40
+      #                          seconds a deploy once the gallery is in the
+      #                          hundreds. This is what "a photo it has
+      #                          already seen costs nothing" (GUIDE 1.5)
+      #                          always claimed and did not do.
+      #
+      # eleventy-img names each output after a hash of the bytes that made
+      # it, so restoring the directory is enough: a build skips any file
+      # already sitting there and works only on photos it has not seen.
+      #
+      # The key is this run and the restore-key is the bare prefix — the
+      # rolling-cache pattern: each run restores the newest cache that
+      # exists and saves a fresh one, so the cache follows the gallery
+      # rather than pinning to one state of it. A consequence worth knowing:
+      # a photo dropped from gallery.json leaves its encoded copies behind
+      # for good, since nothing here prunes. They are unreferenced and cost
+      # only artifact size. Deleting the cache in the Actions tab is the
+      # reset button, at the price of one slow build.
+      - name: Keep the downloaded and encoded photos between runs
         uses: actions/cache@v4
         with:
-          path: .cache
+          path: |
+            .cache
+            _site/assets/photos
           key: gallery-sources-${{ github.run_id }}
           restore-keys: gallery-sources-
 
