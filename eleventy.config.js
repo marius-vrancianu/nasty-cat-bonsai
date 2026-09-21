@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import { HtmlBasePlugin } from "@11ty/eleventy";
 import Image from "@11ty/eleventy-img";
 import site from "./src/_data/site.js";
@@ -147,12 +150,84 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
   );
 }
 
+/* Strip CSS comments, and only comments.
+ *
+ * Strings are why this is a small state machine rather than a regular
+ * expression: `content: "/* not a comment *\/"` is legal CSS, and a bare
+ * /\/\*[\s\S]*?\*\// would cut the file in half at one. Nothing else is
+ * rewritten — no value shortened, no selector merged, no rule reordered —
+ * so this cannot change what the page looks like, only how much of the
+ * file is prose.
+ */
+function stripCssComments(css) {
+  let out = "";
+  let i = 0;
+  let quote = null; // the quote character we are inside, or null
+  while (i < css.length) {
+    const c = css[i];
+    if (quote) {
+      out += c;
+      if (c === "\\") { out += css[i + 1] || ""; i += 2; continue; }
+      if (c === quote) quote = null;
+      i++;
+      continue;
+    }
+    if (c === '"' || c === "'") { quote = c; out += c; i++; continue; }
+    if (c === "/" && css[i + 1] === "*") {
+      const end = css.indexOf("*/", i + 2);
+      if (end === -1) break; // unterminated: drop the rest, as a browser would
+      i = end + 2;
+      continue;
+    }
+    out += c;
+    i++;
+  }
+  return out
+    .replace(/[ \t]+$/gm, "")  // trailing space a removed comment left behind
+    .replace(/\n{3,}/g, "\n\n") // and the runs of blank lines
+    .trim() + "\n";
+}
+
 export default function (eleventyConfig) {
   // Rewrites root-relative URLs (/assets/..., /blog/...) to include the
   // /nasty-cat-bonsai/ path prefix in the built output.
   eleventyConfig.addPlugin(HtmlBasePlugin);
 
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
+
+  /* ---- The stylesheet goes out without its notes ------------------------
+     main.css is two thirds comment by weight — 92KB of file, 31KB of rules
+     — and those comments are the point of it: every colour in the dark
+     theme carries the contrast ratio it was solved to, and the hill figures
+     say which script writes them. They belong in the repo, and nothing here
+     touches the file on disk.
+
+     What they do not belong in is the copy a visitor downloads. The
+     stylesheet is render-blocking — nothing paints until it has arrived —
+     and compressed, the notes are most of it: 28.8KB over the wire against
+     6.5KB for the same rules with the prose taken out. That is ~22KB on the
+     first load of every page, spent on text no browser reads.
+
+     This runs after the build rather than as a transform because the
+     stylesheet is passthrough-copied, and passthrough copy does not go
+     through transforms — it is a file copy, and the copy is what has to be
+     edited. */
+  eleventyConfig.on("eleventy.after", async ({ dir }) => {
+    const cssDir = path.join(dir.output, "assets", "css");
+    if (!fs.existsSync(cssDir)) return;
+    let saved = 0;
+    for (const name of fs.readdirSync(cssDir)) {
+      if (!name.endsWith(".css")) continue;
+      const file = path.join(cssDir, name);
+      const before = fs.readFileSync(file, "utf8");
+      const after = stripCssComments(before);
+      fs.writeFileSync(file, after);
+      saved += before.length - after.length;
+    }
+    if (saved > 0) {
+      console.log(`[css] ${(saved / 1024).toFixed(1)}KB of comments left in the repo, not in the build`);
+    }
+  });
 
   eleventyConfig.addFilter("readableDate", (date) =>
     new Intl.DateTimeFormat("en-US", {
