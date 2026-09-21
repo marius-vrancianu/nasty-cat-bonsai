@@ -139,6 +139,9 @@ reflected in the URL (`…/gallery/#tree=…`), so you can share a link
 straight to one tree's history. Photos without a `trees` field simply
 never match a dropdown option — fine while you're catching up on tagging.
 
+The dropdown always searches the **whole** gallery, however many photos
+are on screen (see 1.6) — it never sees only part of it.
+
 To **add** a photo: copy an existing entry (from `{` to `}`), paste it after
 another entry, edit the values. **Watch the commas**: every entry is
 separated from the next by a comma, but the *last* entry has no comma after
@@ -191,6 +194,32 @@ from it that are worth knowing:
   fails the deploy** rather than showing a hatched box on the live site. The
   error names the file. That is on purpose: a typo is easier to fix when the
   deploy tells you than when a visitor finds it.
+
+### 1.6 "Show more" — why the Gallery doesn't show everything at once
+
+Once the Gallery passes **50 photos**, it draws the first 50 and puts a
+**Show more** button under them, with a count beside it ("Showing 50 of
+287 photos"). Each press adds another 50.
+
+This is about scrolling, not speed. On a phone the grid is a single
+column, so 300 photos is about 160 screens of flicking to reach the
+bottom; 50 is about 27. Nothing is being fetched when you press the
+button — every photo is already in the page, just not drawn yet, and a
+browser doesn't download a picture it isn't showing.
+
+Three things worth knowing:
+
+- **The dropdown is unaffected.** Picking a tree searches all of your
+  photos, not just the 50 on screen. And since a single tree's
+  progression is rarely 50 photos, choosing one usually makes the button
+  disappear entirely — you see that tree's whole history at once.
+- **The lightbox ignores it.** Arrowing through a tree never stops at
+  photo 50; the grid quietly draws itself out behind you.
+- **Shared links still work.** A link to one photo (`…/gallery/#photo=…`)
+  opens it wherever it sits in the gallery, even the 200th.
+
+Nothing to configure. If you ever want a different number, it is the
+`BATCH` value at the top of `src/assets/js/gallery.js`.
 
 ---
 

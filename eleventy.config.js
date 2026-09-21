@@ -5,7 +5,7 @@ import { HtmlBasePlugin } from "@11ty/eleventy";
 import Image from "@11ty/eleventy-img";
 import site from "./src/_data/site.js";
 
-/* ---- Gallery thumbnails --------------------------------------------------
+/* ---- Thumbnails -----------------------------------------------------------
    The grid used to hand a visitor the full-size photo — a ~2000px, ~700KB
    JPEG — to fill a card that renders about 350 CSS pixels wide. Measured on
    the 22 photos in the manifest, a 1440px desktop pulled 21 of them on first
@@ -21,6 +21,8 @@ import site from "./src/_data/site.js";
 
    The full-size original is untouched and still comes from the CDN. That is
    what the lightbox opens, and it is the only place the detail is wanted.
+
+   The blog's images go the same way now — see the ladders further down.
 
    Cost: every source has to be downloaded and encoded once. eleventy-img
    names each output after a hash of the bytes that made it, so a build only
