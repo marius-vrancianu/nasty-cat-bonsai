@@ -286,9 +286,21 @@ a clicked tag combine: "posts tagged *repotting* that mention *akadama*".
 ### 3.3 Thumbnails
 
 `thumb:` is the small image on the blog index card. Upload it to
-`bonsai-images/blog/` (move B), ~800 px wide, ideally landscape (the card
-crops to 4:3), then reference it as above. If you omit `thumb:`, the card
-shows the striped placeholder pattern — fine while drafting.
+`bonsai-images/blog/` (move B), ideally landscape (the card crops to 4:3),
+then reference it as above. If you omit `thumb:`, the card shows the
+striped placeholder pattern — fine while drafting.
+
+**Upload it at full size.** You used to want to shrink these by hand; you
+don't any more. The deploy cuts blog images down the same way it cuts
+gallery photos (see 1.5) — the card is drawn 200 px wide and now fetches a
+200 px copy instead of the original. On a blog index that is the difference
+between a fraction of a megabyte and one full-size photo per post, all at
+once.
+
+Unlike a gallery photo, a blog image that isn't uploaded yet does **not**
+fail the deploy — the post publishes and the picture shows the hatched box
+with its filename on it until you upload the file. You can write the post
+first and add the photos after.
 
 ### 3.4 Formatting text (Markdown cheat sheet)
 
@@ -313,6 +325,11 @@ Same as the About page — upload to `bonsai-images/blog/`, then:
 ```
 {% cdnimg "blog/roots-closeup.webp", "Root ball after combing", "More feeder roots than expected." %}
 ```
+
+Upload the full-size file; the deploy makes the smaller copies the page
+actually uses, exactly as it does for `thumb:` above. The three parts are
+the filename, the alt text (what a screen reader reads, and what shows if
+the picture fails), and an optional caption printed under the photo.
 
 ### 3.6 Embedding YouTube videos
 
