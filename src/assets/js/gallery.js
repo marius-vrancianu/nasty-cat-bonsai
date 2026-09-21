@@ -31,6 +31,29 @@
   var activeTree = "";
   var openedByPush = false; // whether Back should close the lightbox
 
+  /* ---- How much of the gallery is on screen ---------------------------
+     Two different questions, and conflating them is the way this goes
+     wrong:
+
+       visible   which photos pass the tree filter. The LIGHTBOX walks
+                 this, all of it, so stepping through a progression never
+                 stops at a batch edge.
+       shown     how many of those are drawn in the grid. The GRID walks
+                 this.
+
+     A card is in the page either way — every one of them is in the HTML,
+     and a browser does not fetch a lazy <img> it is not displaying, so a
+     card outside the batch costs nothing but a DOM node. This is
+     revealing, not loading.
+
+     50 is the batch. The gallery is one column on a phone, which is
+     about 27 screens of scroll per batch and roughly six of them for a
+     gallery in the hundreds; the alternative was 164 screens in one go.
+     A filtered tree is almost never this long, so picking one makes the
+     control disappear. */
+  var BATCH = 50;
+  var shown = BATCH;
+
   function el(tag, className, text) {
     var node = document.createElement(tag);
     if (className) node.className = className;
@@ -206,6 +229,9 @@
 
   function show(i) {
     current = i;
+    // Stepping past the batch draws the grid out to here, so closing on
+    // this photo lands on a card that exists.
+    revealThrough(i);
     var item = items[i];
     body.textContent = "";
     body.appendChild(frame(item, cards[i]));
@@ -256,11 +282,27 @@
   }
 
   function closeLightbox() {
+    var wasOn = current;
     box.hidden = true;
     document.documentElement.classList.remove("lightbox-open");
     current = null;
     openedByPush = false; // any close path invalidates the pending Back
-    if (lastFocused) lastFocused.focus();
+
+    /* Focus goes back to the photo just closed, not to whatever held it
+       when the lightbox opened. After stepping through a progression
+       those are different cards, and the one on screen a moment ago is
+       the one to return to; revealThrough() has already drawn the grid
+       out that far, so it is there to receive it.
+
+       It also covers the case that had no answer before: arriving
+       straight on #photo=..., where nothing was ever focused and
+       document.activeElement is the body. Focusing the body is focusing
+       nothing, which dropped a keyboard reader at the top of the page. */
+    var card = wasOn === null ? null : cards[wasOn];
+    if (card && !card.hidden) card.focus();
+    else if (lastFocused && lastFocused.focus && document.contains(lastFocused)) {
+      lastFocused.focus();
+    }
   }
 
   // Close on user intent (X, Esc, backdrop tap, swipe down). If the
@@ -514,18 +556,91 @@
     }
   }
 
+  /* Who is drawn, decided in one place. Both the filter and the batch
+     window have an opinion about a card, so they are answered together
+     and `hidden` is written once — two owners of one attribute would
+     take turns undoing each other. */
+  function render() {
+    var want = [];
+    var i;
+    for (i = 0; i < cards.length; i++) want[i] = true; // hidden unless shown
+    var limit = Math.min(shown, visible.length);
+    for (var k = 0; k < limit; k++) want[visible[k]] = false;
+    for (i = 0; i < cards.length; i++) {
+      // Reading .hidden is a property read, not a layout read, so this
+      // costs nothing and saves writing to cards that already agree.
+      if (cards[i].hidden !== want[i]) cards[i].hidden = want[i];
+    }
+    updateMore();
+  }
+
   function applyFilter(tree) {
-    activeTree = trees.indexOf(tree) !== -1 ? tree : "";
+    var next = trees.indexOf(tree) !== -1 ? tree : "";
+    // A different tree is a different gallery, so it starts at the top.
+    // The same tree is not: this runs on every hash change, and resetting
+    // here would throw away a Show more the moment a photo was opened.
+    if (next !== activeTree) shown = BATCH;
+    activeTree = next;
+
     visible = [];
     cards.forEach(function (card, i) {
-      var shown = !activeTree || treesOf(items[i]).indexOf(activeTree) !== -1;
-      card.hidden = !shown;
-      if (shown) visible.push(i);
+      if (!activeTree || treesOf(items[i]).indexOf(activeTree) !== -1) visible.push(i);
     });
+    render();
+
     // Mirror the state onto the filter control (built further down).
     if (filterValue) fillRow(filterValue, activeTree || ALL_TREES, counts[activeTree]);
     options.forEach(function (o) {
       o.node.setAttribute("aria-selected", o.value === activeTree ? "true" : "false");
+    });
+  }
+
+  /* Draw at least as far as one photo, for the two routes that can land
+     past the batch: a link to #photo=<file> deep in the gallery, and the
+     lightbox stepping beyond the edge, which must leave a real card
+     behind it to hand focus back to on close. Only ever reveals more. */
+  function revealThrough(index) {
+    var pos = visible.indexOf(index);
+    if (pos === -1 || pos < shown) return;
+    shown = Math.ceil((pos + 1) / BATCH) * BATCH;
+    render();
+  }
+
+  /* ---- Show more ------------------------------------------------------ */
+
+  var moreWrap = document.querySelector(".gallery-more");
+  var moreBtn = moreWrap && moreWrap.querySelector(".gallery-more-button");
+  var moreCount = moreWrap && moreWrap.querySelector(".gallery-more-count");
+
+  function updateMore() {
+    if (!moreWrap) return;
+    var total = visible.length;
+    // Nothing to reveal: the whole of this selection already fits.
+    if (total <= BATCH) {
+      moreWrap.hidden = true;
+      return;
+    }
+    var drawn = Math.min(shown, total);
+    moreWrap.hidden = false;
+    moreBtn.hidden = drawn >= total;
+    moreCount.textContent =
+      "Showing " + drawn + " of " + total +
+      (activeTree ? " photos of this tree" : " photos");
+  }
+
+  if (moreBtn) {
+    moreBtn.addEventListener("click", function () {
+      var firstNew = visible[shown]; // the card the next batch starts at
+      shown += BATCH;
+      render();
+      /* Focus only moves when the button goes away with it. While it is
+         still there, staying put is what a reader expects — the count
+         beside it is a live region and says what happened. When the last
+         batch lands the button hides, and focus would fall to the top of
+         the page, so it is handed to the first card just revealed. */
+      if (moreBtn.hidden && firstNew !== undefined && cards[firstNew]) {
+        cards[firstNew].focus();
+      }
     });
   }
 
@@ -540,6 +655,9 @@
         if (items[k].file === h.photo) { idx = k; break; }
       }
       if (idx !== -1) {
+        // A link straight to a photo past the batch draws the grid out to
+        // it first, so there is a card behind the lightbox to close onto.
+        revealThrough(idx);
         if (box.hidden) openLightbox(idx);
         else if (current !== idx) show(idx);
         return;

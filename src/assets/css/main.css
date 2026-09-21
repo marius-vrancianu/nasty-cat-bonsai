@@ -2192,6 +2192,57 @@ a { color: inherit; }
   padding: 8px 0 40px;
 }
 
+/* The foot of the grid once the gallery outgrows one batch. Centred
+   under the columns rather than aligned to one of them: the grid has no
+   single edge to hang it on — which column it would sit under changes
+   with the viewport — and the middle is the one place that reads as
+   belonging to all of them.
+
+   Hidden entirely while everything fits, which for a tree's own
+   progression is nearly always: a dozen photos never reaches the batch,
+   so picking a tree makes this disappear. */
+.gallery-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0 40px;
+}
+
+.gallery-more[hidden] { display: none; }
+
+/* The same face as the comment form's submit, which is the site's one
+   other "do the thing" button. */
+.gallery-more-button {
+  font: inherit;
+  font-size: 15px;
+  padding: 9px 26px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--rust);
+  color: var(--washi);
+  border: 1px solid var(--rust);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.gallery-more-button:hover,
+.gallery-more-button:focus-visible {
+  background: var(--rust-hover);
+  border-color: var(--rust-hover);
+}
+
+.gallery-more-button[hidden] { display: none; }
+
+/* Reads the count out loud when it changes (role="status"), so pressing
+   the button says what happened rather than leaving a screen reader to
+   discover it. Kept when the button goes, as the tally of a gallery
+   fully shown. */
+.gallery-more-count {
+  margin: 0;
+  font-size: 13px;
+  color: var(--olive);
+}
+
 /* Lightbox */
 .lightbox {
   position: fixed;
