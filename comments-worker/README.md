@@ -23,7 +23,7 @@ dashboard, no login, and nothing that expires — which is the entire point.
 ## First deploy — from a browser
 
 The whole thing can be set up and maintained without Node, git or wrangler on
-your own machine, the same way the site itself deploys. See GUIDE.md §6.11 for
+your own machine, the same way the site itself deploys. See GUIDE.md §6.10 for
 the click-by-click version; in short:
 
 1. Create a KV namespace called `COMMENTS` in the Cloudflare dashboard

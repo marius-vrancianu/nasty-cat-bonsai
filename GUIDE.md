@@ -497,7 +497,7 @@ delay exists because *renaming* a post looks exactly like deleting one — put
 the old name back within the month and the comments reattach on their own.
 
 Comments are stored by the worker (Cloudflare), not in GitHub. Setting it up
-the first time is **6.11**, and it is all done from a browser. The technical
+the first time is **6.10**, and it is all done from a browser. The technical
 side, backups and redeploying live in `comments-worker/README.md`.
 
 ### 6.2 Changing the design (colors, fonts, spacing)
@@ -615,14 +615,7 @@ Open <http://localhost:8080/nasty-cat-bonsai/>. It live-reloads as you edit
 files. (As an RPA developer you'll be fine — but genuinely, the
 edit-on-GitHub workflow covers everything.)
 
-### 6.9 The old `marius-vrancianu.github.io` repo
-
-Your user-site repo is currently unused (it holds an early staging copy of
-this site on a side branch, plus open PR #1). Safe to close that PR and
-delete the branch. Keep the repo — if you ever want a personal landing page
-at the root URL `marius-vrancianu.github.io`, that's where it goes.
-
-### 6.10 URLs, RSS, favicon
+### 6.9 URLs, RSS, favicon
 
 - New posts get `…/nasty-cat-bonsai/blog/<file-name>/` automatically.
 - RSS feed: `…/nasty-cat-bonsai/feed.xml` (the footer's RSS icon) — updates
@@ -640,7 +633,7 @@ at the root URL `marius-vrancianu.github.io`, that's where it goes.
   `src/assets/img/favicon.svg` — upload a replacement under the exact
   same name (move B) to change it.
 
-### 6.11 Setting up the comments worker (one time)
+### 6.10 Setting up the comments worker (one time)
 
 You need no software on your PC for this — no Node, no git, no command line.
 Two free accounts, a few values pasted into GitHub, and a button. Budget
