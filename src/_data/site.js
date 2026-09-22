@@ -28,12 +28,13 @@ export default {
     // (raw.githubusercontent.com updates within minutes of a push).
     manifest:
       "https://raw.githubusercontent.com/marius-vrancianu/bonsai-images/main/gallery.json",
-    // jsDelivr's CDN — the FULL-SIZE original, which is what the lightbox
-    // opens and what a gallery card links to. Everything drawn on a page
-    // (grid cards, post thumbnails, figures inside a post) is a build-cut
-    // copy served from the site itself; this host is reached only for the
-    // full-size photo, or as the fallback when the build could not fetch
-    // a source to cut.
+    // jsDelivr's CDN — the FULL-SIZE original, which is what a gallery card
+    // links to ("open in new tab", or no JavaScript) and what a post's
+    // share preview (og:image) points at. Everything drawn on a page (grid
+    // cards, the lightbox, post thumbnails, figures inside a post) is a
+    // build-cut copy served from the site itself; this host is otherwise
+    // reached only as the fallback when the build could not fetch a source
+    // to cut.
     cdn: "https://cdn.jsdelivr.net/gh/marius-vrancianu/bonsai-images@main/",
     // Where the BUILD reads the same bytes from, to cut every copy the
     // pages draw. Nobody's browser ever sees this host — only the GitHub

@@ -19,8 +19,9 @@ import site from "./src/_data/site.js";
    one it needs. Same five photos, measured: 14 KB each at 400w against
    724 KB — the desktop screenful drops from 14 MB to about 0.3.
 
-   The full-size original is untouched and still comes from the CDN. That is
-   what the lightbox opens, and it is the only place the detail is wanted.
+   The full-size original is untouched and still on the CDN, behind the
+   card's link. The lightbox has its own, larger build-cut copies — see
+   "The lightbox's photo" further down.
 
    The blog's images go the same way now — see the ladders further down.
 
@@ -42,7 +43,7 @@ const THUMB_WIDTHS = [400, 560, 760, 900];
 /* Below sharp's default of 80. These are viewed at a third to a half of
    their pixel size — every one of them is downscaled again by the browser
    — and 74 takes about a fifth off the file for a difference that does not
-   survive that. The full-size original the lightbox opens is untouched. */
+   survive that. The lightbox's copies are cut separately, at 82. */
 const THUMB_QUALITY = 74;
 
 /* What the card actually measures, which is what the browser needs in order
@@ -94,7 +95,7 @@ const EAGER_CARDS = 4;
 /* ---- The blog's images ---------------------------------------------------
    The gallery stopped handing out full-size photos; the blog had not. A
    post card's thumbnail is drawn 200 CSS px wide and was fetching the same
-   ~2000px original the lightbox opens, and so was every photo in the body
+   ~2000px original the lightbox then opened, and so was every photo in the body
    of a post. On a blog index that is one full-size photo per post, all of
    them at once, for a column of postage stamps.
 

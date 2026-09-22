@@ -18,9 +18,11 @@ built with [Eleventy](https://www.11ty.dev/) and served by GitHub Pages at
   - `blog/…` — photos embedded in blog posts, and post thumbnails (never
     shown in the gallery)
 
-  Upload everything at full size. The build cuts the smaller copies each
-  page actually draws — gallery cards, post thumbnails and in-post figures
-  alike — and serves those; the originals stay on the CDN for the lightbox.
+  Upload everything at full size (1600–2000 px on the long side). The
+  build cuts the copies each page actually draws — gallery cards, the
+  lightbox, post thumbnails and in-post figures alike — and serves those
+  from this site. Visitors almost never download an original; it stays on
+  the CDN for "open image in new tab" and for share previews of posts.
   - `gallery.json` — the manifest that decides *exactly* what the gallery
     shows, with captions. Blog images are separated simply by not being
     listed here.
@@ -65,7 +67,7 @@ The blog index, post page, and RSS feed update automatically at build time.
 
 ```json
 { "file": "gallery/tree-10.webp", "species": "Chinese Elm",
-  "style": "Broom", "date": "Jul 2026", "ratio": "4/3",
+  "style": "Broom", "date": "Jul 2026", "ratio": "2000/1500",
   "notes": "Longer caption shown in the lightbox." }
 ```
 
@@ -74,17 +76,25 @@ The blog index, post page, and RSS feed update automatically at build time.
    makes the gallery load on networks that block `raw.githubusercontent.com`,
    and what lets search engines see the photos at all.)
 
-The deploy also cuts each photo down to the handful of small WebP sizes the
-grid actually draws; you upload one full-size file and nothing else. Wait
+`ratio` is the photo's exact pixel size, `"width/height"` — the card crops
+to it. The deploy cuts each photo into the WebP sizes the grid and the
+lightbox draw; you upload one full-size file and nothing else. Wait
 ~5 minutes between committing `gallery.json` and deploying, so the build
-reads the new version. Never overwrite a photo under the same name —
-jsDelivr caches `@main` URLs for up to a week. Upload under a new name and
-point `file` at it. Full details in [GUIDE.md](GUIDE.md) §1.
+reads the new version. Never overwrite a photo under the same name — the
+build reuses a downloaded photo for up to 30 days, and jsDelivr caches
+`@main` URLs for up to a week. Upload under a new name and point `file` at
+it. Full details in [GUIDE.md](GUIDE.md) §1.
 
 ### Publish
 
 Pushing to `main` does **not** deploy. When you're happy with a locally
 tested state: Actions tab → **Deploy to GitHub Pages** → *Run workflow*.
+
+The other workflow, **Check the hills**, runs on every push and never
+publishes: it renders the homepage in Chromium and checks the hill backdrop
+still agrees with `tools/gen-hills.py` and the figures in `main.css`
+(run it locally with `python3 tools/gen-hills.py --check`, then
+`node tools/check-hills.mjs` after a build — see the top of that file).
 
 ## Design tokens
 

@@ -62,17 +62,21 @@ never appears, no matter where it's uploaded. That's the whole system.
 
 ### 1.1 Prepare the photo (on your PC)
 
-- **Format:** WebP or JPEG, either is fine. (The deploy makes its own WebP
-  thumbnails for the Gallery grid — see 1.5 — so the format you upload only
-  affects the full-size photo someone opens by clicking a card. WebP is
-  still a little kinder there. To convert/compress for free, use
-  <https://squoosh.app> in your browser: drag the photo in, pick WebP,
-  quality ~75, save.)
-- **Size:** resize so the longest side is **1600–2000 px**. This is the
-  photo people get when they click a card, *and* it is what the thumbnails
-  are cut from — so under 1600 px starts to show, and over 2000 px only
-  makes the click slower. Phone photos straight off the camera are 5–10×
-  bigger than needed.
+- **Format:** WebP or JPEG, either is fine. The deploy makes its own WebP
+  copies of every photo — the small ones in the Gallery grid *and* the
+  large one that opens when someone clicks a card (see 1.5) — so visitors
+  almost never download the file you upload. It is only fetched by
+  "open image in new tab", by a browser with JavaScript off, and by
+  Facebook/WhatsApp building a share preview of a post. WebP keeps the
+  `bonsai-images` repo smaller, which matters as it grows. To
+  convert/compress for free, use <https://squoosh.app> in your browser:
+  drag the photo in, pick WebP, quality ~75, save.
+- **Size:** resize so the longest side is **1600–2000 px**. Every copy the
+  site shows is cut from this file, and the largest one the viewer uses is
+  1800 px wide — so under 1600 px starts to show on big screens, and over
+  2000 px buys nothing: it only makes deploys slower and the images repo
+  bigger. Phone photos straight off the camera are 5–10× bigger than
+  needed.
 - **Name:** lowercase, no spaces, descriptive: `maple-repot-2026.webp`,
   `tree-10.webp`. **Never reuse a name that already exists** (see 1.4 why).
 
@@ -113,7 +117,7 @@ Each entry looks like:
   "trees": ["Acer palmatum, anno culto 2024"],
   "style": "Informal upright",
   "date": "Jul 2026",
-  "ratio": "3/4",
+  "ratio": "1500/2000",
   "alt": "Japanese maple in a blue glazed pot",
   "notes": "Repotted this spring; the nebari is finally flaring."
 }
@@ -128,7 +132,7 @@ What each field does on the site:
 | `trees` | **Tree identity** — powers the "one tree over the years" dropdown at the top of the Gallery | Optional. Always a list, even for one tree: `"trees": ["Ficus benjamina, anno culto 2012"]`. Every photo of the same tree must carry the *exact same* string — **copy-paste it from another of its photos**, never retype. The convention is `Species, anno culto <year training started>`, with a leading `+` for trees no longer in the collection (shown as typed). A photo with several trees in frame (exhibitions, group shots) lists them all — `"trees": ["Ficus benjamina, anno culto 2012", "Murraya paniculata, anno culto 2021"]` — and shows up under each |
 | `style` + `date` | **Subtitle** — the small "Informal upright · Jul 2026" line | |
 | `notes` | **Description** — longer text, shown only in the lightbox (after clicking) | Optional |
-| `ratio` | Shape of the card: `"3/4"` = portrait, `"4/3"` = landscape, `"1/1"` = square | Match your photo's orientation |
+| `ratio` | Shape of the card, and of the photo in the lightbox | Your photo's **exact** pixel size, written `"width/height"` — e.g. `"1500/2000"` for a portrait 1500 × 2000 px file (Windows: right-click → Properties → Details). The card crops the photo to this shape, so a rough `"3/4"` on a photo that is really 1557 × 1800 trims its edges. Left out, the card falls back to 3/4 |
 | `alt` | Screen-reader / SEO description of what's *in* the photo | Optional but good practice. One plain sentence describing the visible scene ("Weeping fig with exposed roots in a green oval pot, against black") — not a keyword list |
 
 **The progression dropdown.** Each unique string across the `trees` lists
@@ -161,12 +165,13 @@ Paste the file's content into <https://jsonlint.com> to find the exact spot.
   it's being built, so run the deploy workflow (section 5) when you're done
   editing. (This is what makes the gallery load reliably everywhere and be
   indexable by search engines.)
-- **New** image files: on the CDN within minutes, so they show as soon as
-  the deploy that lists them is live.
-- **Replacing an existing file under the same name: up to 7 days** (the CDN
-  caches aggressively). This is why you never overwrite — upload the fixed
-  photo under a new name (`maple-repot-2026-b.webp`) and update `file` in
-  `gallery.json` instead.
+- **New** image files: show as soon as the deploy that lists them is live.
+- **Replacing an existing file under the same name: up to 30 days.** The
+  deploy remembers every photo it has already downloaded, by name, for 30
+  days, so it keeps cutting copies from the *old* picture; the CDN behind
+  "open in new tab" holds its own copy for up to 7. This is why you never
+  overwrite — upload the fixed photo under a new name
+  (`maple-repot-2026-b.webp`) and update `file` in `gallery.json` instead.
 - **Wait ~5 minutes between committing `gallery.json` and deploying** —
   see step 7 in 1.3.
 - Hard-refresh your browser (**Ctrl+F5**) when checking.
@@ -181,15 +186,21 @@ desktop screen it came to roughly **14 MB before a single tree appeared**.
 So the deploy now cuts each photo down to a set of small WebP copies (400,
 560, 760 and 900 px wide) and puts *those* in the grid; the browser picks
 whichever fits its screen. The same screenful is about **0.3 MB** now.
-Clicking a card still opens your full-size original — that is the one place
-the detail is worth the wait.
+Clicking a card opens a second, larger set of copies the deploy also cuts
+(900, 1300 and 1800 px wide) — about 200 KB instead of the ~700 KB
+original, and served from the site itself rather than from a separate CDN,
+so it opens noticeably faster. Your original stays in `bonsai-images`
+untouched; it is what "open image in new tab" gives.
 
 You do not have to make these, name them, or upload them. Two things follow
 from it that are worth knowing:
 
 - **The first deploy after adding photos takes a little longer** — it has to
   fetch and shrink each new one. Photos it has already seen cost nothing, so
-  it is only ever the new ones.
+  it is only ever the new ones. One exception: GitHub throws that memory
+  away after **about a week with no activity** in the repo, and the next
+  deploy then redoes every photo. It still works — it just takes a few
+  minutes longer, once.
 - **A photo listed in `gallery.json` that isn't actually in the repo now
   fails the deploy** rather than showing a hatched box on the live site. The
   error names the file. That is on purpose: a typo is easier to fix when the
@@ -225,7 +236,7 @@ Three things worth knowing:
   opens it wherever it sits in the gallery, even the 200th.
 
 Nothing to configure. If you ever want a different number, it is the
-`BATCH` value at the top of `src/assets/js/gallery.js`.
+`BATCH` value near the top of `src/assets/js/gallery.js`.
 
 ---
 
@@ -446,6 +457,14 @@ the gallery manifest in that case) — recheck your last commit, or see 6.3
 to undo it. A failed deploy never breaks the live site; the previous
 version stays up until a deploy succeeds.
 
+**The other workflow you'll see: "Check the hills".** It runs by itself on
+every commit and **never publishes anything** — it renders the homepage in a
+real browser and checks that the hill backdrop behind the cat still lines up
+(a few figures in `main.css` have to agree with the drawings). A red ✗ there
+does not mean your deploy failed, and it cannot stop you deploying. If it
+goes red after you edited a post or `gallery.json`, it's not your edit —
+mention it to whoever maintains the design side.
+
 ---
 
 ## 6. Everything else you'll eventually wonder about
@@ -583,15 +602,19 @@ show the math) and the `width`/`height`/`sizes` values on the homepage
 
 ### 6.6 Theme toggle
 
-The moon/sun button top-right. Every visitor starts in light; dark is a
-per-visitor choice remembered by their browser. There's nothing to
+The moon/sun button top-right of every inner page — and, on the homepage,
+the sun in the sky behind the cat (click it). Every visitor starts in light;
+dark is a per-visitor choice remembered by their browser. There's nothing to
 maintain; it just works.
 
 ### 6.7 What not to touch (unless you mean it)
 
 - `eleventy.config.js`, `package.json`, `package-lock.json`,
-  `src/_data/gallery.js`, `.github/workflows/deploy.yml` — the build
+  `src/_data/gallery.js`, everything in `.github/workflows/` — the build
   machinery.
+- `tools/` — the scripts that draw and check the homepage hills (see 6.2).
+- `comments-worker/` — the comments backend; it has its own README and is
+  redeployed separately (6.10).
 - `src/_includes/` — page templates (HTML skeletons). Editable, but a typo
   here breaks every page at once, so change one thing at a time and deploy
   after each.
@@ -635,6 +658,12 @@ edit-on-GitHub workflow covers everything.)
 
 ### 6.10 Setting up the comments worker (one time)
 
+> **Already done for this site** (September 2026): the storage ID and the
+> worker address are in the repo and the worker is live. Nothing here needs
+> repeating. The steps stay for the day you rebuild it — a new Cloudflare
+> account, a lost key — and step 8's table is the list to check if comments
+> ever stop arriving.
+
 You need no software on your PC for this — no Node, no git, no command line.
 Two free accounts, a few values pasted into GitHub, and a button. Budget
 twenty minutes.
@@ -649,8 +678,9 @@ that**, you never need one.
 of letters and numbers. Copy it.
 
 **Step 3 — Paste that ID into the repo.** On GitHub, open
-`comments-worker/wrangler.toml`, click the pencil icon, and replace
-`PUT-YOUR-KV-NAMESPACE-ID-HERE` with the ID (keep the quote marks). Commit.
+`comments-worker/wrangler.toml`, click the pencil icon, and replace the
+value after `id =` under `[[kv_namespaces]]` with the new ID (keep the
+quote marks). Commit.
 
 **Step 4 — Find your worker address.** In Cloudflare, **Compute (Workers)** →
 **Workers & Pages**, then scroll to the **Account details** box near the

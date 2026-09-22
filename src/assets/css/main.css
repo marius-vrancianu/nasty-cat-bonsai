@@ -1453,8 +1453,8 @@ a { color: inherit; }
 
 /* <main tabindex="-1"> (the skip-link target) is click-focusable, and
    Chrome renders a blinking text caret wherever you click inside it.
-   Hide that; real text fields get their caret back. (The comments
-   widget lives in its own iframe and is unaffected either way.) */
+   Hide that; real text fields get their caret back — which covers the
+   comment form, since the thread lives in this page's own DOM. */
 #main { caret-color: transparent; }
 #main input,
 #main textarea { caret-color: var(--ink); }
