@@ -20,11 +20,11 @@ permalink: /blog/
     {% for post in collections.posts %}
     {%- set ptags = post.data.tags | displayTags %}
     <article class="post-card" data-tags="{{ ptags | join('||') }}">
-      <a class="post-card-thumb cdn-frame" href="{{ post.url }}" tabindex="-1" aria-hidden="true">
-        {%- if post.data.thumb %}
-        {% postThumb post.data.thumb %}
-        {%- endif %}
-      </a>
+      {%- if post.data.thumb %}
+      {% postThumb post.data.thumb, post.url %}
+      {%- else %}
+      <a class="post-card-thumb cdn-frame" href="{{ post.url }}" tabindex="-1" aria-hidden="true"></a>
+      {%- endif %}
       <div class="post-card-body">
         <div class="post-card-date">{{ post.date | readableDate }}</div>
         <h2 class="post-card-heading"><a class="post-card-title" href="{{ post.url }}">{{ post.data.title }}</a></h2>

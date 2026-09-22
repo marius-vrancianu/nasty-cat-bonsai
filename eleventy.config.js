@@ -143,8 +143,10 @@ const FIGURE_QUALITY = 80;
                  TCP handshake, no TLS negotiation — which on a cold visit
                  is 100-300ms of nothing happening before the first byte.
 
-   The original is untouched and still what the card links to: "open image
-   in new tab" gives it, and so does a visitor with JavaScript off.
+   The card's own link is the largest of these copies too, so "open image
+   in new tab" and a visitor with JavaScript off get the same picture the
+   lightbox shows, from the same place. The original in bonsai-images is
+   never handed to a visitor at all — see "Where the photos come from".
 
    Widths against what the lightbox draws: fit() gives the photo up to
    min(94vw, 1100px), so a phone at 390 CSS px and 3x wants ~1100, a 1x
@@ -172,14 +174,83 @@ const LIGHTBOX_SIZES = "(max-width: 700px) 96vw, 1100px";
    the photo does arrive the page moves as little as possible. */
 const UNKNOWN_RATIO = "3 / 2";
 
+/* ---- Where the photos come from -----------------------------------------
+   Every copy the site shows is cut here, at build time, from the photo in
+   the bonsai-images repo. Two ways to reach that photo:
+
+     IMAGES_DIR set   a checkout of bonsai-images on this disk — what the
+                      deploy and the check workflows do. The whole repo
+                      arrives in one authenticated git clone.
+     IMAGES_DIR unset one download per photo from raw.githubusercontent.com
+                      — the local preview's default, so it needs no setup.
+
+   The checkout is the one that scales, for two reasons that only show up
+   once the gallery is in the hundreds:
+
+     rate limit   raw.githubusercontent.com limits anonymous downloads per
+                  IP since May 2025, and GitHub drops the Actions cache
+                  after a week without use, so a deploy after a quiet week
+                  used to ask for every photo at once, from a shared runner
+                  IP. A clone is one request.
+     freshness    eleventy-img names a copy after a hash of what it was cut
+                  from. For a local file that is the file's bytes; for a URL
+                  it is only the URL. So from a URL, a photo replaced under
+                  the same name kept its old copies for as long as the cache
+                  lived; from a checkout it gets new ones on the next build.
+                  And the raw host serves through a cache of its own, which
+                  is why gallery.json used to need five minutes between
+                  commit and deploy. A clone is the commit itself.
+
+   NO VISITOR EVER FETCHES FROM EITHER. What a browser gets is the copies,
+   served from this site. The site used to hand out the originals too, from
+   jsDelivr — behind each gallery card's link and as a post's share-preview
+   image — and jsDelivr stops serving a GitHub repo once it passes about
+   50MB, which this one reaches at around seventy photos. Nothing here
+   depends on it now. */
+const IMAGES_DIR = process.env.IMAGES_DIR ? path.resolve(process.env.IMAGES_DIR) : null;
+
+function sourceOf(file) {
+  if (!IMAGES_DIR) return site.images.source + file;
+  const local = path.join(IMAGES_DIR, file);
+  // eleventy-img would say something less plain about a missing path.
+  if (!fs.existsSync(local)) throw new Error(`${file} is not in ${IMAGES_DIR}`);
+  return local;
+}
+
+/* Every file the build cut or reused, this run. What is in
+   _site/assets/photos and NOT in here is a copy of a photo that has since
+   been removed, renamed or replaced — see the pruning in eleventy.after. */
+const PHOTOS_DIR = "_site/assets/photos/";
+const photosInUse = new Set();
+
+/* One call into eleventy-img, and the only one: it sets where copies go and
+   notes each one as in use. */
+async function cut(file, options) {
+  const metadata = await Image(sourceOf(file), {
+    ...options,
+    // Every build-cut copy lands here, gallery and blog alike — the
+    // workflows keep this directory between runs so a photo is only ever
+    // encoded once.
+    outputDir: PHOTOS_DIR,
+    urlPath: "/assets/photos/",
+    cacheOptions: { duration: "30d" },
+  });
+  for (const entries of Object.values(metadata)) {
+    for (const e of entries) photosInUse.add(path.resolve(e.outputPath));
+  }
+  return metadata;
+}
+
 const esc = (s) =>
   String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-/* The onerror hook every CDN-backed image on the site carries: it turns the
+/* The onerror hook every build-cut image on the site carries: it turns the
    frame around a photo that did not arrive into the hatched box with the
-   filename written on it, rather than leaving a broken-image glyph. */
+   filename written on it, rather than leaving a broken-image glyph. A
+   photo the build could not cut is marked that way at build time instead
+   (see frame() below); this covers the one that fails in the browser. */
 const missingHook = (file) =>
   `this.parentElement.classList.add('missing');` +
   `this.parentElement.setAttribute('data-file','${esc(file)}')`;
@@ -198,45 +269,30 @@ const missingHook = (file) =>
  *   alt      already-escaped alt text
  *   attrs    loading/fetchpriority, as a leading-space string
  *   strict   true  -> a source the build cannot fetch fails a CI build
- *            false -> always degrade to the full-size original on the CDN
+ *            false -> always degrade to the hatched "missing" frame
  *
- * Returns { html, width, height, src, srcset } — the <img> tag, the shape
- * of the largest copy cut (for a caller that has to reserve the right
- * space for it), and the urls, for a caller that wants the same copies on
- * a tag of its own. Everything but html is null when the source could not
- * be fetched and the tag is a bare CDN fallback, because then nothing
- * here knows the shape and no copies were cut.
+ * Returns { html, width, height, src, srcset, full } — the <img> tag, the
+ * shape of the largest copy cut (for a caller that has to reserve the
+ * right space for it), and the urls, for a caller that wants the same
+ * copies on a tag of its own; `full` is the largest copy's url. EVERYTHING
+ * is null when the source could not be had: there is no picture to show,
+ * and frame() draws the hatched box with the filename in its place.
  */
 async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
   const missing = missingHook(file);
   let sources;
   try {
-    const metadata = await Image(site.images.source + file, {
+    const metadata = await cut(file, {
       widths,
       formats: ["webp"],
       sharpWebpOptions: { quality },
-      // Every build-cut copy lands here, gallery and blog alike — the
-      // deploy workflow keeps this directory between runs so a photo is
-      // only ever encoded once. Names are a hash of the bytes that made
-      // them, so nothing collides and nothing goes stale.
-      outputDir: "_site/assets/photos/",
-      urlPath: "/assets/photos/",
-      cacheOptions: { duration: "30d" },
     });
     sources = metadata.webp;
   } catch (err) {
     const why = `Could not build a thumbnail for ${file}: ${err.message}`;
     if (strict && process.env.CI) throw new Error(why);
-    console.warn(`[images] ${why} — falling back to the full-size original`);
-    return {
-      html:
-        `<img src="${esc(site.images.cdn + file)}" alt="${alt}"` +
-        `${attrs} decoding="async" onerror="${missing}">`,
-      width: null,
-      height: null,
-      src: null,
-      srcset: null,
-    };
+    console.warn(`[images] ${why} — drawing the missing-photo frame`);
+    return { html: null, width: null, height: null, src: null, srcset: null, full: null };
   }
 
   const srcset = sources.map((s) => `${s.url} ${s.width}w`).join(", ");
@@ -254,7 +310,76 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
     height: biggest.height,
     src: fallback.url,
     srcset,
+    full: biggest.url,
   };
+}
+
+/* The frame around a build-cut image — the element that draws the striped
+   placeholder, and the hatched box with the filename when there is no
+   photo. When the build could not cut one, that box is decided here, in
+   the markup, so it shows with or without JavaScript and no request is
+   made for a picture that is known not to exist.
+
+     tag    the frame's element ("div", or "a" for a post card's thumb)
+     cls    extra classes beside cdn-frame
+     style  inline style, e.g. the aspect ratio
+     attrs  anything else, as a leading-space string
+     img    what cdnImg() returned
+     file   the source path, for the label on the hatched box */
+function frame({ tag = "div", cls = "", style = "", attrs = "", img, file }) {
+  const missing = !img.html;
+  const classes = ["cdn-frame", cls, missing ? "missing" : ""].filter(Boolean).join(" ");
+  return (
+    `<${tag} class="${classes}"` +
+    (missing ? ` data-file="${esc(file)}"` : "") +
+    (style ? ` style="${esc(style)}"` : "") +
+    `${attrs}>${missing ? "" : img.html}</${tag}>`
+  );
+}
+
+/* The lightbox's copies of a gallery photo, cut once per build however many
+   places ask: the card's <img> carries them for the script, and the card's
+   own href is the largest of them. */
+const lightboxCuts = new Map();
+function lightboxOf(file) {
+  if (!lightboxCuts.has(file)) {
+    lightboxCuts.set(file, cdnImg({
+      file,
+      widths: LIGHTBOX_WIDTHS,
+      sizes: LIGHTBOX_SIZES,
+      quality: LIGHTBOX_QUALITY,
+      alt: "",
+      attrs: "",
+      strict: true,
+    }));
+  }
+  return lightboxCuts.get(file);
+}
+
+/* ---- Share previews ------------------------------------------------------
+   The picture Facebook, WhatsApp and the rest show when a post is shared.
+   It used to be the post's `thumb` original on jsDelivr; it is a copy cut
+   here now, like everything else, at the 1200px width those previews are
+   drawn from.
+
+   JPEG, not WebP: this is fetched by the sharing sites' scrapers rather
+   than by a browser, and JPEG is the one format every one of them has
+   always accepted. It is fetched once per share, not per visit, so the
+   format's size is no cost to a reader. */
+const OG_WIDTH = 1200;
+const OG_QUALITY = 82;
+const HERO_OG = {
+  url: "/assets/img/hero.jpg",
+  width: 1134,
+  height: 1286,
+};
+
+function ogTags(absUrl, width, height) {
+  return (
+    `<meta property="og:image" content="${esc(absUrl)}">\n` +
+    `  <meta property="og:image:width" content="${width}">\n` +
+    `  <meta property="og:image:height" content="${height}">`
+  );
 }
 
 /* Strip CSS comments, and only comments.
@@ -336,6 +461,44 @@ export default function (eleventyConfig) {
     }
   });
 
+  /* ---- Copies of photos that are no longer shown -------------------------
+     The workflows restore _site/assets/photos from the last run, so a photo
+     is encoded once — and, until this, kept for good: remove a photo from
+     gallery.json, rename it, or replace it and its old copies stayed in the
+     directory and were published with every deploy after. About 550KB per
+     photo, against GitHub Pages' 1GB cap on a whole site.
+
+     So after a full build, anything in the directory that this build did
+     not cut or reuse is deleted — including from the cache the workflow
+     saves, which stops growing with it.
+
+     Only after a full one-off build, never under --serve or --watch: a
+     rebuild there may render only the page that changed, and the pages it
+     skipped would look unused. And never when nothing was cut at all,
+     which is an offline build with an empty gallery, not a site that
+     shows no photos. */
+  eleventyConfig.on("eleventy.before", () => {
+    photosInUse.clear();
+    lightboxCuts.clear();
+  });
+
+  eleventyConfig.on("eleventy.after", ({ runMode, incremental }) => {
+    if (runMode !== "build" || incremental) return;
+    if (photosInUse.size === 0 || !fs.existsSync(PHOTOS_DIR)) return;
+    let count = 0;
+    let bytes = 0;
+    for (const name of fs.readdirSync(PHOTOS_DIR)) {
+      const file = path.resolve(PHOTOS_DIR, name);
+      if (photosInUse.has(file)) continue;
+      bytes += fs.statSync(file).size;
+      fs.rmSync(file);
+      count++;
+    }
+    if (count > 0) {
+      console.log(`[images] removed ${count} copies no page uses (${(bytes / 1048576).toFixed(1)}MB)`);
+    }
+  });
+
   eleventyConfig.addFilter("readableDate", (date) =>
     new Intl.DateTimeFormat("en-US", {
       month: "long",
@@ -367,14 +530,27 @@ export default function (eleventyConfig) {
   // become absolute using the deployed base URL, which already carries the
   // /nasty-cat-bonsai path prefix — mirroring what HtmlBasePlugin does for
   // on-site pages. Protocol-relative "//host" URLs are left alone.
+  //
+  // srcset too, one candidate at a time: a feed reader that picks from it
+  // — most do, for the sharper copy — resolves a relative path against
+  // the host root and loses the /nasty-cat-bonsai prefix, which is a
+  // broken picture in every photo of every post.
+  const absolute = (url, base) => (/^\/(?!\/)/.test(url) ? base + url : url);
   eleventyConfig.addFilter("absoluteHtml", (html, base) =>
-    String(html).replace(/(href|src)="\/(?!\/)/g, `$1="${base}/`)
+    String(html)
+      .replace(/(href|src)="\/(?!\/)/g, `$1="${base}/`)
+      .replace(/srcset="([^"]*)"/g, (m, list) =>
+        `srcset="${list
+          .split(",")
+          .map((c) => c.trim().replace(/^\S+/, (url) => absolute(url, base)))
+          .join(", ")}"`
+      )
   );
 
   /* A photo from the images repo, inline in a post or on the About page:
        {% cdnimg "blog/repot-01.webp", "Roots after combing out", "Optional caption" %}
      The <img> is a build-cut copy at the widths a 680px column asks for;
-     the original stays on the CDN, untouched. A caption may carry markup,
+     the original stays in bonsai-images, untouched. A caption may carry markup,
      so it is passed through as written — it comes from the post's own
      source, not from anything a visitor can reach. */
   eleventyConfig.addAsyncShortcode("cdnimg", async function (file, alt, caption) {
@@ -403,18 +579,18 @@ export default function (eleventyConfig) {
       img.width && img.height ? `${img.width} / ${img.height}` : UNKNOWN_RATIO;
     const cap = caption ? `<figcaption>${caption}</figcaption>` : "";
     return `<figure class="post-figure">
-  <div class="cdn-frame" style="aspect-ratio: ${ratio}">${img.html}</div>
+  ${frame({ style: `aspect-ratio: ${ratio}`, img, file })}
   ${cap}
 </figure>`;
   });
 
-  /* A post card's thumbnail on the blog index:
-       {% postThumb post.data.thumb %}
+  /* A post card's thumbnail on the blog index, frame and link included:
+       {% postThumb post.data.thumb, post.url %}
      Drawn 200 CSS px wide, so it is cut to that rather than to the ~2000px
      the original is. Decorative — the card's title is the link a reader
      follows and the thumb sits inside an aria-hidden anchor — hence the
      empty alt. */
-  eleventyConfig.addAsyncShortcode("postThumb", async function (file) {
+  eleventyConfig.addAsyncShortcode("postThumb", async function (file, url) {
     /* The card's thumbnail keeps its 4:3 frame and crops to it — unlike a
        figure in a post, this one is a fixed slot in a row of them, and a
        column of cards whose pictures were each a different height would
@@ -429,10 +605,46 @@ export default function (eleventyConfig) {
       attrs: ` loading="lazy"`,
       strict: false,
     });
-    return img.html;
+    return frame({
+      tag: "a",
+      cls: "post-card-thumb",
+      attrs: ` href="${esc(url)}" tabindex="-1" aria-hidden="true"`,
+      img,
+      file,
+    });
   });
 
-  /* One gallery card's <img>, with the thumbnails above behind it.
+  /* A post's share-preview image, for the <head>:
+       {% ogImage thumb %}
+     Falls back to the hero — what every other page shares — when the
+     thumb has not been uploaded yet. */
+  eleventyConfig.addAsyncShortcode("ogImage", async function (file) {
+    try {
+      const { jpeg } = await cut(file, {
+        widths: [OG_WIDTH],
+        formats: ["jpeg"],
+        sharpJpegOptions: { quality: OG_QUALITY, progressive: true },
+      });
+      const og = jpeg[jpeg.length - 1];
+      return ogTags(site.url + og.url, og.width, og.height);
+    } catch (err) {
+      console.warn(`[images] No share image for ${file}: ${err.message} — using the hero`);
+      return ogTags(site.url + HERO_OG.url, HERO_OG.width, HERO_OG.height);
+    }
+  });
+
+  /* Where a gallery card links: the largest of the lightbox's copies, which
+     is what "open image in new tab" and a visitor without JavaScript get.
+       <a class="gallery-card" href="{% galleryHref item %}">
+     Only a local build that could not reach the photo has no copy to link
+     to, and the card links nowhere — CI fails the build instead. */
+  eleventyConfig.addAsyncShortcode("galleryHref", async function (item) {
+    const large = await lightboxOf(item.file);
+    return large.full ? esc(large.full) : "#";
+  });
+
+  /* One gallery card's picture — frame and <img> — with the thumbnails
+     above behind it.
        {% galleryThumb item, loop.index0 %}
      `eager` is for the first row only: those photos are what the page is,
      so waiting for the lazy pass to notice them costs the one moment that
@@ -441,16 +653,15 @@ export default function (eleventyConfig) {
      A photo the build cannot fetch or encode is a broken manifest entry,
      and it is treated the way _data/gallery.js treats a broken manifest:
      on CI it fails the deploy, so the previous good site stays up, and
-     locally it degrades to the CDN original so the page still builds
-     offline — with the same onerror hook the cards have always carried to
-     name the missing file on screen. */
+     locally it degrades to the hatched frame with the filename on it, so
+     the page still builds offline. */
   eleventyConfig.addAsyncShortcode("galleryThumb", async function (item, index) {
     const alt = esc(
       item.alt ||
         `${item.species} bonsai, ${String(item.style || "").toLowerCase()} style`
     );
     /* The card's own thumbnail, and — carried on the same tag — what the
-       lightbox should open instead of the CDN original. It rides here
+       lightbox should open. It rides here
        rather than in #gallery-data because this is where the build
        already knows it; the script reads it off the grid image it is
        replacing. Two attributes per card, which gzip barely notices
@@ -471,19 +682,11 @@ export default function (eleventyConfig) {
           index < EAGER_CARDS ? ` fetchpriority="high"` : ` loading="lazy"`,
         strict: true,
       }),
-      cdnImg({
-        file: item.file,
-        widths: LIGHTBOX_WIDTHS,
-        sizes: LIGHTBOX_SIZES,
-        quality: LIGHTBOX_QUALITY,
-        alt,
-        attrs: "",
-        strict: true,
-      }),
+      lightboxOf(item.file),
     ]);
 
     // No build-cut large copy (a local build that could not fetch the
-    // source): say nothing, and gallery.js falls back to the original.
+    // source): say nothing, and gallery.js falls back to the card's link.
     const lb = large.srcset
       ? ` data-lb-src="${esc(withBase(large.src))}"` +
         ` data-lb-srcset="${esc(
@@ -492,8 +695,12 @@ export default function (eleventyConfig) {
         ` data-lb-sizes="${esc(LIGHTBOX_SIZES)}"`
       : "";
 
-    // The card's frame is shaped by the manifest's `ratio`, in gallery.njk.
-    return img.html.replace("<img ", `<img${lb} `);
+    // The card's frame is shaped by the manifest's `ratio`.
+    return frame({
+      style: `aspect-ratio: ${item.ratio || "3/4"}`,
+      img: { html: img.html && img.html.replace("<img ", `<img${lb} `) },
+      file: item.file,
+    });
   });
 
   // Responsive, privacy-friendly YouTube embed for posts:

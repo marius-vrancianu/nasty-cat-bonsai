@@ -33,17 +33,15 @@ permalink: /gallery/
   </div>
 </div>
 
-{#- The card's href is the full-size original on the CDN — what a visitor
-    gets with JavaScript off or from "open in new tab". The <img> inside it
-    is a build-cut thumbnail, and the lightbox opens a larger build-cut copy
-    carried on that same <img> as data-lb-*; see galleryThumb in
-    eleventy.config.js for why none of the three is the same file. #}
+{#- The card's href is the largest of the lightbox's build-cut copies —
+    what a visitor gets with JavaScript off or from "open in new tab". The
+    <img> inside it is a build-cut thumbnail, and the lightbox's copies ride
+    on that same <img> as data-lb-*; see galleryThumb and galleryHref in
+    eleventy.config.js for why the thumbnail is not the same file. #}
 <div id="gallery" class="gallery-grid">
   {%- for item in gallery %}
-  <a class="gallery-card" href="{{ site.images.cdn }}{{ item.file }}">
-    <div class="cdn-frame" style="aspect-ratio: {{ item.ratio or "3/4" }}">
-      {% galleryThumb item, loop.index0 %}
-    </div>
+  <a class="gallery-card" href="{% galleryHref item %}">
+    {% galleryThumb item, loop.index0 %}
     <div class="gallery-card-caption">
       <div class="gallery-card-species">{{ item.species }}</div>
       <div class="gallery-card-meta">{{ item.style }} · {{ item.date }}</div>

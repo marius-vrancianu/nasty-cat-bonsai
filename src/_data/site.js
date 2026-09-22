@@ -24,24 +24,18 @@ export default {
     apiUrl: "https://nasty-cat-comments.marius-v-vrancianu.workers.dev",
   },
   images: {
-    // Manifest listing ONLY the images that belong in the gallery
-    // (raw.githubusercontent.com updates within minutes of a push).
+    // Manifest listing ONLY the images that belong in the gallery, for a
+    // local preview (raw.githubusercontent.com updates within minutes of a
+    // push). The workflows read gallery.json from their checkout instead.
     manifest:
       "https://raw.githubusercontent.com/marius-vrancianu/bonsai-images/main/gallery.json",
-    // jsDelivr's CDN — the FULL-SIZE original, which is what a gallery card
-    // links to ("open in new tab", or no JavaScript) and what a post's
-    // share preview (og:image) points at. Everything drawn on a page (grid
-    // cards, the lightbox, post thumbnails, figures inside a post) is a
-    // build-cut copy served from the site itself; this host is otherwise
-    // reached only as the fallback when the build could not fetch a source
-    // to cut.
-    cdn: "https://cdn.jsdelivr.net/gh/marius-vrancianu/bonsai-images@main/",
-    // Where the BUILD reads the same bytes from, to cut every copy the
-    // pages draw. Nobody's browser ever sees this host — only the GitHub
-    // Actions runner does — so raw.githubusercontent.com being blocked on
-    // some corporate networks (the reason the manifest is baked in at
-    // build time, see _data/gallery.js) does not matter here, and it is
-    // the origin rather than a cache, so a replaced photo is never stale.
+    // Where a LOCAL PREVIEW reads the photos from, to cut every copy the
+    // pages draw. The workflows do not use it: they check out bonsai-images
+    // and point IMAGES_DIR at it (see "Where the photos come from" in
+    // eleventy.config.js). Nobody's browser ever sees this host — every
+    // picture a visitor gets is a copy served from the site itself — so
+    // raw.githubusercontent.com being blocked on some corporate networks
+    // does not matter here.
     source: "https://raw.githubusercontent.com/marius-vrancianu/bonsai-images/main/",
   },
 };

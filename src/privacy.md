@@ -7,7 +7,7 @@ permalink: /privacy/
 
 # Privacy Policy
 
-*Last updated: 21 September 2026*
+*Last updated: 22 September 2026*
 
 **Data controller:** Marius Vasile VRÂNCIANU — [marius.v.vrancianu@gmail.com](mailto:marius.v.vrancianu@gmail.com)
 
@@ -29,7 +29,7 @@ This is a personal, non-commercial website. I collect as little data as possible
 
 *How long any of it is kept:* comments stay as long as the post they are on. If I delete a post, its comments — and any addresses stored with them — are deleted automatically within about a month. Addresses go after 90 days regardless. You can ask me to delete your comment, or just your address, at any time.
 
-**Images.** Most pictures you see — the gallery grid, blog thumbnails and the photos inside posts — are resized when the site is built and served from GitHub Pages along with the rest of it, so no third party is involved. Opening a photo full-size from the gallery fetches it from the jsDelivr CDN, which receives your IP address in order to send you the file. Legal basis: legitimate interest (Art. 6(1)(f) GDPR).
+**Images.** Every picture on the site — the gallery, blog thumbnails and the photos inside posts — is resized when the site is built and served from GitHub Pages along with the rest of it, so viewing them involves no third party.
 
 **Embedded videos.** Some posts embed YouTube videos in privacy-enhanced mode (youtube-nocookie.com). YouTube (Google) receives data about you only if you play a video.
 
