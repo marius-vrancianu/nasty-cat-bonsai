@@ -88,9 +88,11 @@ in your own mail client, from your own mailbox.
 None. No dependencies to bump, no tokens that expire, no server to patch.
 
 The free tiers it lives inside: 100,000 Worker requests/day, 100,000 KV
-reads/day, **1,000 KV writes/day**, and 100 Resend emails/day. The write
-limit is the tightest, which is why every free check in `validate.js` runs
-before anything touches storage.
+reads/day, **1,000 KV writes/day**, and 100 Resend emails/day (3,000 a
+month, but the daily cap binds first). The KV write limit is the tightest
+of them, which is why every free check in `validate.js` runs before
+anything touches storage. Checked against Cloudflare's and Resend's
+published limits, September 2026.
 
 ## Routes
 
@@ -121,8 +123,11 @@ post:<slug>           approved comments only — one read serves a page
 block:ip:<fp>         30 days
 block:email:<fp>      1 year
 block:domain:<host>   1 year
+unspam:<id>           what a Spam press blocked, so Undo can lift it  (30 days)
 used:<fp>             spent single-use tokens
+rl:w:<fp>, rl:d:<fp>  rate-limit counters, per 10 minutes and per day
 orphan:<slug>         a vanished post, and when its clock started
+meta:*                counters the weekly job keeps between runs
 ```
 
 No raw IP address is ever written, and no response can emit an email address.

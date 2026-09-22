@@ -124,7 +124,7 @@ What each field does on the site:
 | Field | Where it shows | Notes |
 | --- | --- | --- |
 | `file` | — | Path of the image inside the repo. Must match exactly. |
-| `species` | **Title** — teal/rust heading on the card and lightbox | |
+| `species` | **Title** — the rust heading on the card and in the lightbox | |
 | `trees` | **Tree identity** — powers the "one tree over the years" dropdown at the top of the Gallery | Optional. Always a list, even for one tree: `"trees": ["Ficus benjamina, anno culto 2012"]`. Every photo of the same tree must carry the *exact same* string — **copy-paste it from another of its photos**, never retype. The convention is `Species, anno culto <year training started>`, with a leading `+` for trees no longer in the collection (shown as typed). A photo with several trees in frame (exhibitions, group shots) lists them all — `"trees": ["Ficus benjamina, anno culto 2012", "Murraya paniculata, anno culto 2021"]` — and shows up under each |
 | `style` + `date` | **Subtitle** — the small "Informal upright · Jul 2026" line | |
 | `notes` | **Description** — longer text, shown only in the lightbox (after clicking) | Optional |
@@ -195,6 +195,12 @@ from it that are worth knowing:
   error names the file. That is on purpose: a typo is easier to fix when the
   deploy tells you than when a visitor finds it.
 
+Blog images — post thumbnails and the photos inside posts — go through the
+same machinery, cut to the sizes those pages draw instead of the gallery's
+(see 3.3 and 3.5). The one difference is that a missing blog image does
+**not** fail the deploy, so you can publish a post before its photos are
+uploaded.
+
 ### 1.6 "Show more" — why the Gallery doesn't show everything at once
 
 Once the Gallery passes **50 photos**, it draws the first 50 and puts a
@@ -240,7 +246,7 @@ where you want the photo:
 ```
 
 The three parts: file path, alt text (description for screen readers —
-required), caption (optional — shows under the image in teal; leave it out
+required), caption (optional — shows under the image in olive; leave it out
 entirely if not wanted).
 
 After editing, **deploy** (section 5) to publish.
@@ -338,7 +344,7 @@ first and add the photos after.
 | `## Heading` | Section heading (accent color, like "Timing the repot") |
 | `**bold**` | **bold** |
 | `*italic*` | *italic* |
-| `> quoted text` | The teal italic pull-quote style |
+| `> quoted text` | The olive italic pull-quote style |
 | `- item` (one per line) | Bulleted list |
 | `1. item` | Numbered list |
 | `[text](https://url)` | Link |
@@ -501,7 +507,8 @@ All design knobs live in **one file**: `src/assets/css/main.css` in
 used everywhere:
 
 - Light theme: the first `:root { ... }` block (`--washi` paper, `--ink`
-  text, `--rust` accent, `--teal` secondary).
+  text, `--rust` accent, `--olive` secondary — captions, pull-quotes and
+  status lines).
 - Dark theme: the `:root[data-theme="dark"] { ... }` block right below it.
 
 Change a value there, commit, deploy — the whole site follows.
@@ -522,6 +529,11 @@ in `main.css` — a bigger job than a color tweak.
 Below the variables, the CSS is organized in commented sections (homepage,
 gallery, blog...). It's safe to experiment: deploy is manual and undo is
 two clicks.
+
+Those comments are **stripped from the copy visitors download** — they are
+two thirds of the file, and it is the one file that has to arrive before
+anything appears on screen. Nothing is rewritten but the comments, and only
+in the built copy; write as many as you like, the repo keeps them all.
 
 ### 6.3 Undo — reverting a bad commit
 
