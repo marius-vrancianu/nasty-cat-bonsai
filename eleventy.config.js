@@ -52,6 +52,45 @@ const THUMB_QUALITY = 74;
    or the browser will fetch the wrong size with complete confidence. */
 const THUMB_SIZES = "(max-width: 700px) 92vw, 360px";
 
+/* How many cards are fetched without waiting to be scrolled to.
+   FOUR, and this note exists because the obvious improvement was tried,
+   measured, and did nothing — so the next person does not spend the
+   afternoon again.
+
+   The grid is masonry, which CSS builds by filling column 1 top to
+   bottom, then column 2, so a photo's place in the markup is not its
+   place on the page. At 1440px the columns hold 0-4, 5-11, 12-17 and
+   18-21, and a visitor sees 0, 1, 5, 6, 12, 13, 18, 19 without
+   scrolling. Cards 2 and 3 therefore ask to be fetched early from below
+   the fold, while six of the eight photos actually on screen do not.
+
+   THE OBVIOUS FIX IS NOT THE FIX. Narrowing this to two — 0 and 1 are on
+   screen at every width measured — is free and correct-looking and buys
+   nothing: 364ms against 374ms for the eight visible photos on a
+   throttled desktop, which is inside the run-to-run spread. A trace of
+   when each request STARTS says why:
+
+     photo  0, 1   (eager)  request begins at ~140 ms
+     photo  5 ... 19 (lazy) request begins at ~630 ms
+
+   The cost is not that priority is spent on the wrong cards. It is that
+   the right cards say `loading="lazy"`, and a lazy image is not asked
+   for until layout has run — about 490ms of waiting for nothing. Moving
+   priority around does not touch that, because those six are lazy either
+   way.
+
+   What would touch it is fetching them eagerly, and the first row at four
+   or five columns reaches ~80% of the way down the batch, so "eagerly"
+   means very nearly all of it — fine at 22 photos, which the lazy pass
+   fetches within the second anyway, and 950KB of thumbnails at a batch of
+   fifty. That is a bandwidth decision, not a tidiness one.
+
+   The clean answer is for the source order to be the visual order, which
+   means a row-major grid and no ragged bottom edge. See .gallery-grid in
+   main.css. Until then this stays at four: it is no worse than two on any
+   screen measured, and better on a tall one, where card 2 is visible. */
+const EAGER_CARDS = 4;
+
 /* ---- The blog's images ---------------------------------------------------
    The gallery stopped handing out full-size photos; the blog had not. A
    post card's thumbnail is drawn 200 CSS px wide and was fetching the same
@@ -427,7 +466,8 @@ export default function (eleventyConfig) {
         sizes: THUMB_SIZES,
         quality: THUMB_QUALITY,
         alt,
-        attrs: index < 4 ? ` fetchpriority="high"` : ` loading="lazy"`,
+        attrs:
+          index < EAGER_CARDS ? ` fetchpriority="high"` : ` loading="lazy"`,
         strict: true,
       }),
       cdnImg({

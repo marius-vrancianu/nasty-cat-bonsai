@@ -2146,6 +2146,18 @@ a { color: inherit; }
   .tree-filter-count { display: block; margin-top: 2px; }
 }
 
+/* Masonry, and the one thing it costs is worth writing down: CSS fills
+   these columns top to bottom, one after another, so a photo's place in
+   the markup is not its place on the page. Nothing at build time can say
+   which photos land on the first screen, because that depends on how many
+   columns fit, and one file is served to every width. EAGER_CARDS in
+   eleventy.config.js carries the measurements: what it costs, and why
+   the obvious fix for it is not one.
+
+   Row-major — a grid rather than columns — would make the two orders the
+   same and let every visible photo be marked, at the price of the ragged
+   bottom edge that makes this look like a wall of photographs rather than
+   a table of them. That was a deliberate trade, not an oversight. */
 .gallery-grid {
   columns: 280px;
   column-gap: 20px;
