@@ -84,6 +84,19 @@
     var gridImg = card.querySelector("img");
     var img = el("img");
     var d = gridImg && gridImg.dataset;
+
+    /* The card's own thumbnail, stretched and blurred under the photo
+       until it lands. currentSrc rather than src: that is the candidate
+       the browser actually chose out of the srcset, so it is the file it
+       certainly holds — asking for any other would start a download,
+       which is the opposite of the point. A card whose thumbnail has not
+       loaded gives an empty string and no placeholder, which is where
+       this started. */
+    var thumb = gridImg && (gridImg.currentSrc || gridImg.getAttribute("src"));
+    if (thumb) {
+      f.style.setProperty("--lqip", 'url("' + thumb.replace(/"/g, "%22") + '")');
+    }
+
     if (d && d.lbSrcset) {
       // sizes before srcset before src: the browser picks its candidate
       // as soon as it has srcset, and needs sizes in hand to pick well.
@@ -95,11 +108,23 @@
     }
     img.alt = gridImg ? gridImg.alt : item.species;
     img.decoding = "async";
+    // This is the one thing the reader is waiting for, so it goes ahead of
+    // whatever grid thumbnails are still trickling in behind the overlay.
+    img.setAttribute("fetchpriority", "high");
+
+    // Revealed on arrival, and on failure too — the frame then shows the
+    // hatched box, and leaving the blur up over it would only muddle it.
+    var reveal = function () { f.classList.add("is-loaded"); };
+    img.addEventListener("load", reveal, { once: true });
     img.addEventListener("error", function () {
       f.classList.add("missing");
       f.setAttribute("data-file", item.file);
-    });
+      reveal();
+    }, { once: true });
+
     f.appendChild(img);
+    // A cached photo can be complete before a listener could ever fire.
+    if (img.complete && img.naturalWidth > 0) reveal();
     return f;
   }
 

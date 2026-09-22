@@ -2325,10 +2325,57 @@ html.lightbox-open body {
   background: none; /* no placeholder texture behind lightbox photos */
 }
 
+/* THE THUMBNAIL, HELD UNDER THE PHOTO WHILE IT ARRIVES.
+   The card that was just clicked is showing a small copy of this very
+   picture, already downloaded and certainly in cache — so there is no
+   reason for the viewer to open empty. gallery.js hands that copy over as
+   --lqip and it is drawn here, blurred, until the full one loads and
+   fades over it.
+
+   It is not a spinner and deliberately so: a spinner says "wait", and what
+   there is to show instead is the right photograph, merely soft. The
+   blur is what keeps a 400px copy stretched over 1100 from reading as a
+   fault; scale(1.03) pushes the blur's own soft edge past the frame,
+   which is clipped.
+
+   With no --lqip — a card whose thumbnail had not loaded yet, which only
+   a deep link can reach — there is no background-image and this is
+   invisible, which is where it started. */
+.lightbox-body .cdn-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--lqip);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(14px);
+  transform: scale(1.03);
+}
+
+/* Gone once the photo is here. Also gone if the photo never comes: the
+   frame then draws its own hatched box with the filename, and a blurred
+   ghost underneath it would only muddle that. */
+.lightbox-body .cdn-frame.is-loaded::before,
+.lightbox-body .cdn-frame.missing::before { opacity: 0; }
+
 .lightbox-body .cdn-frame img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  opacity: 0;
+}
+
+.lightbox-body .cdn-frame.is-loaded img { opacity: 1; }
+
+/* The cross-fade itself is the one part that is decoration, so it is the
+   one part that asks first. Without it the swap still happens — it just
+   happens at once, which is what someone who turned motion off wants. */
+@media (prefers-reduced-motion: no-preference) {
+  .lightbox-body .cdn-frame::before,
+  .lightbox-body .cdn-frame img {
+    transition: opacity 0.28s ease;
+  }
 }
 
 .lightbox-caption {
