@@ -84,6 +84,14 @@ const FIGURE_WIDTHS = [400, 680, 960, 1360];
 const FIGURE_SIZES = "(max-width: 767px) 92vw, 680px";
 const FIGURE_QUALITY = 80;
 
+/* The shape to reserve for a figure whose source the build could not
+   fetch, and whose proportions are therefore unknown. Only ever seen on a
+   photo that has not been uploaded yet: the frame draws the hatched box
+   with the filename on it, and something has to give that box a height.
+   3/2 because it is the commonest shape a camera produces, so on the day
+   the photo does arrive the page moves as little as possible. */
+const UNKNOWN_RATIO = "3 / 2";
+
 const esc = (s) =>
   String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -112,7 +120,10 @@ const missingHook = (file) =>
  *   strict   true  -> a source the build cannot fetch fails a CI build
  *            false -> always degrade to the full-size original on the CDN
  *
- * Returns the <img> tag as a string.
+ * Returns { html, width, height } — the <img> tag, and the shape of the
+ * largest copy cut, for a caller that has to reserve the right space for
+ * it. width/height are null when the source could not be fetched and the
+ * tag is a bare CDN fallback, because then nothing here knows the shape.
  */
 async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
   const missing = missingHook(file);
@@ -135,8 +146,13 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
     const why = `Could not build a thumbnail for ${file}: ${err.message}`;
     if (strict && process.env.CI) throw new Error(why);
     console.warn(`[images] ${why} — falling back to the full-size original`);
-    return `<img src="${esc(site.images.cdn + file)}" alt="${alt}"` +
-      `${attrs} decoding="async" onerror="${missing}">`;
+    return {
+      html:
+        `<img src="${esc(site.images.cdn + file)}" alt="${alt}"` +
+        `${attrs} decoding="async" onerror="${missing}">`,
+      width: null,
+      height: null,
+    };
   }
 
   const srcset = sources.map((s) => `${s.url} ${s.width}w`).join(", ");
@@ -145,11 +161,14 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
   // ever is the one fetched it is not the heaviest.
   const fallback = sources[Math.floor((sources.length - 1) / 2)];
   const biggest = sources[sources.length - 1];
-  return (
-    `<img src="${fallback.url}" srcset="${srcset}" sizes="${sizes}"` +
-    ` width="${biggest.width}" height="${biggest.height}" alt="${alt}"` +
-    `${attrs} decoding="async" onerror="${missing}">`
-  );
+  return {
+    html:
+      `<img src="${fallback.url}" srcset="${srcset}" sizes="${sizes}"` +
+      ` width="${biggest.width}" height="${biggest.height}" alt="${alt}"` +
+      `${attrs} decoding="async" onerror="${missing}">`,
+    width: biggest.width,
+    height: biggest.height,
+  };
 }
 
 /* Strip CSS comments, and only comments.
@@ -282,9 +301,23 @@ export default function (eleventyConfig) {
       attrs: ` loading="lazy"`,
       strict: false,
     });
+    /* THE FRAME TAKES THE PHOTO'S OWN PROPORTIONS. It used to be 16/10 for
+       every picture on the site, with the image cropped to fill it, and a
+       tree is the wrong subject to do that to: an upright loses its apex
+       off the top and its nebari off the bottom, which are the two things
+       the photograph is of. Nobody reports that as a fault. They conclude
+       the photographs are badly composed.
+
+       So the shape comes from the file, and the only thing decided here is
+       the width — the text column, so a picture never runs wider than the
+       words around it. The height follows. The ratio is taken from the
+       largest copy actually cut rather than from the original, so it is
+       the shape of the bytes the browser will be handed, to the pixel. */
+    const ratio =
+      img.width && img.height ? `${img.width} / ${img.height}` : UNKNOWN_RATIO;
     const cap = caption ? `<figcaption>${caption}</figcaption>` : "";
     return `<figure class="post-figure">
-  <div class="cdn-frame">${img}</div>
+  <div class="cdn-frame" style="aspect-ratio: ${ratio}">${img.html}</div>
   ${cap}
 </figure>`;
   });
@@ -296,7 +329,12 @@ export default function (eleventyConfig) {
      follows and the thumb sits inside an aria-hidden anchor — hence the
      empty alt. */
   eleventyConfig.addAsyncShortcode("postThumb", async function (file) {
-    return cdnImg({
+    /* The card's thumbnail keeps its 4:3 frame and crops to it — unlike a
+       figure in a post, this one is a fixed slot in a row of them, and a
+       column of cards whose pictures were each a different height would
+       read as a broken list rather than as a set. The photo it stands for
+       is shown uncropped on the post itself. */
+    const img = await cdnImg({
       file,
       widths: POST_THUMB_WIDTHS,
       sizes: POST_THUMB_SIZES,
@@ -305,6 +343,7 @@ export default function (eleventyConfig) {
       attrs: ` loading="lazy"`,
       strict: false,
     });
+    return img.html;
   });
 
   /* One gallery card's <img>, with the thumbnails above behind it.
@@ -324,7 +363,7 @@ export default function (eleventyConfig) {
       item.alt ||
         `${item.species} bonsai, ${String(item.style || "").toLowerCase()} style`
     );
-    return cdnImg({
+    const img = await cdnImg({
       file: item.file,
       widths: THUMB_WIDTHS,
       sizes: THUMB_SIZES,
@@ -333,6 +372,8 @@ export default function (eleventyConfig) {
       attrs: index < 4 ? ` fetchpriority="high"` : ` loading="lazy"`,
       strict: true,
     });
+    // The card's frame is shaped by the manifest's `ratio`, in gallery.njk.
+    return img.html;
   });
 
   // Responsive, privacy-friendly YouTube embed for posts:

@@ -1853,7 +1853,11 @@ a { color: inherit; }
   white-space: nowrap;
 }
 
-.post-figure .cdn-frame { aspect-ratio: 16 / 10; }
+/* A figure in a post carries no aspect-ratio of its own: cdnimg writes the
+   photo's own onto the element, so the frame is the shape of the picture
+   and object-fit: cover has nothing left to crop. Width is the text
+   column; height follows from the file. See the shortcode in
+   eleventy.config.js for why this stopped being 16/10. */
 
 /* ==========================================================================
    Blog index
