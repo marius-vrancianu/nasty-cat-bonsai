@@ -68,13 +68,31 @@
     return Array.isArray(item.trees) ? item.trees : item.trees ? [item.trees] : [];
   }
 
-  // Full-size photo for the lightbox; src and alt are taken from the
-  // card's grid image, which the build already pointed at the CDN.
+  /* The photo for the lightbox. The build cuts a copy at the widths this
+     actually draws and hangs it off the grid image as data-lb-*; that is
+     what opens. It is a few hundred KB against the original's ~700, and —
+     the part that is felt more on a cold visit — it comes from this site,
+     down the connection the page is already using, rather than opening a
+     new one to the CDN.
+
+     The original is still what the card links to, so "open image in new
+     tab" and a visitor without JavaScript both still get it. If the build
+     could not cut a copy there are no data-lb-* to read and this falls
+     back to that same original, which is what it always used. */
   function frame(item, card) {
     var f = el("div", "cdn-frame");
     var gridImg = card.querySelector("img");
     var img = el("img");
-    img.src = card.href;
+    var d = gridImg && gridImg.dataset;
+    if (d && d.lbSrcset) {
+      // sizes before srcset before src: the browser picks its candidate
+      // as soon as it has srcset, and needs sizes in hand to pick well.
+      img.sizes = d.lbSizes || "";
+      img.srcset = d.lbSrcset;
+      img.src = d.lbSrc;
+    } else {
+      img.src = card.href;
+    }
     img.alt = gridImg ? gridImg.alt : item.species;
     img.decoding = "async";
     img.addEventListener("error", function () {
@@ -83,6 +101,30 @@
     });
     f.appendChild(img);
     return f;
+  }
+
+  /* The neighbours, so the next step is instant. This waits for the photo
+     on screen to finish first, which is the whole point of it being a
+     function: fired immediately — as it used to be — it put three
+     downloads in flight at once and the two nobody had asked for competed
+     with the one somebody was waiting for. At ~700KB each that was 2.1MB
+     racing itself on the first click of a cold visit. */
+  function preloadNeighbours(i) {
+    var pos = visible.indexOf(i);
+    if (pos === -1 || visible.length < 2) return;
+    [1, -1].forEach(function (delta) {
+      var n = visible[(pos + delta + visible.length) % visible.length];
+      if (n === i) return;
+      var g = cards[n].querySelector("img");
+      var pre = new Image();
+      if (g && g.dataset.lbSrcset) {
+        pre.sizes = g.dataset.lbSizes || "";
+        pre.srcset = g.dataset.lbSrcset;
+        pre.src = g.dataset.lbSrc;
+      } else {
+        pre.src = cards[n].href;
+      }
+    });
   }
 
   /* ---- URL hash state ------------------------------------------------ */
@@ -249,14 +291,16 @@
     // so stepping through a tree doesn't fill the browser history.
     replaceHash(activeTree, item.file);
 
-    // Decode ahead: fetch the neighbours in the current filtered set so
-    // the next swipe/arrow shows instantly.
-    var pos = visible.indexOf(i);
-    if (pos !== -1 && visible.length > 1) {
-      [1, -1].forEach(function (d) {
-        var n = visible[(pos + d + visible.length) % visible.length];
-        if (n !== i) new Image().src = cards[n].href;
-      });
+    /* Fetch the neighbours only once this photo has arrived, so they are
+       never in the way of it. On error too: a photo that cannot load must
+       not leave stepping ahead unprepared for good. */
+    var shown = body.firstChild.querySelector("img");
+    if (shown.complete) {
+      preloadNeighbours(i);
+    } else {
+      var ahead = function () { preloadNeighbours(i); };
+      shown.addEventListener("load", ahead, { once: true });
+      shown.addEventListener("error", ahead, { once: true });
     }
   }
 

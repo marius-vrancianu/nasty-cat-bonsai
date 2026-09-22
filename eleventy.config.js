@@ -84,6 +84,46 @@ const FIGURE_WIDTHS = [400, 680, 960, 1360];
 const FIGURE_SIZES = "(max-width: 767px) 92vw, 680px";
 const FIGURE_QUALITY = 80;
 
+/* ---- The lightbox's photo -------------------------------------------------
+   Clicking a card used to fetch the full-size original from the CDN — a
+   ~700KB JPEG, measured at a 696KB mean over the 22 photos in the
+   manifest, on a connection to a host the page has not opened yet. That
+   was invisible while the GRID was also serving originals, because by the
+   time anyone clicked, the browser already had the file. Cutting the grid
+   down to thumbnails took that away and left the click paying for it.
+
+   So the lightbox gets its own copies, cut here like everything else and
+   served from this site. Two things fall out of that, and the second is
+   the larger:
+
+     size        783KB -> about 200KB at the width a lightbox actually
+                 draws. Measured per photo further down in the commit.
+     connection  it is the same origin as the page, so it travels down
+                 the HTTP/2 connection that is already open. No DNS, no
+                 TCP handshake, no TLS negotiation — which on a cold visit
+                 is 100-300ms of nothing happening before the first byte.
+
+   The original is untouched and still what the card links to: "open image
+   in new tab" gives it, and so does a visitor with JavaScript off.
+
+   Widths against what the lightbox draws: fit() gives the photo up to
+   min(94vw, 1100px), so a phone at 390 CSS px and 3x wants ~1100, a 1x
+   desktop wants up to 1100, and a 2x desktop wants 2200 and takes the top
+   of the ladder. Quality 82 rather than the grid's 74 — this is the one
+   place the detail is being looked at rather than glanced past. */
+/* The site is served from a subdirectory, and HtmlBasePlugin puts that
+   prefix on href and src for us. It does not know about any other
+   attribute, so the lightbox urls — which travel as data-lb-* and are
+   read by script rather than followed by the browser — have to carry it
+   themselves. Same constant the config returns as pathPrefix below, so
+   the two can never drift. */
+const PATH_PREFIX = "/nasty-cat-bonsai/";
+const withBase = (url) => PATH_PREFIX.replace(/\/$/, "") + url;
+
+const LIGHTBOX_WIDTHS = [900, 1300, 1800];
+const LIGHTBOX_QUALITY = 82;
+const LIGHTBOX_SIZES = "(max-width: 700px) 96vw, 1100px";
+
 /* The shape to reserve for a figure whose source the build could not
    fetch, and whose proportions are therefore unknown. Only ever seen on a
    photo that has not been uploaded yet: the frame draws the hatched box
@@ -120,10 +160,12 @@ const missingHook = (file) =>
  *   strict   true  -> a source the build cannot fetch fails a CI build
  *            false -> always degrade to the full-size original on the CDN
  *
- * Returns { html, width, height } — the <img> tag, and the shape of the
- * largest copy cut, for a caller that has to reserve the right space for
- * it. width/height are null when the source could not be fetched and the
- * tag is a bare CDN fallback, because then nothing here knows the shape.
+ * Returns { html, width, height, src, srcset } — the <img> tag, the shape
+ * of the largest copy cut (for a caller that has to reserve the right
+ * space for it), and the urls, for a caller that wants the same copies on
+ * a tag of its own. Everything but html is null when the source could not
+ * be fetched and the tag is a bare CDN fallback, because then nothing
+ * here knows the shape and no copies were cut.
  */
 async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
   const missing = missingHook(file);
@@ -152,6 +194,8 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
         `${attrs} decoding="async" onerror="${missing}">`,
       width: null,
       height: null,
+      src: null,
+      srcset: null,
     };
   }
 
@@ -168,6 +212,8 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
       `${attrs} decoding="async" onerror="${missing}">`,
     width: biggest.width,
     height: biggest.height,
+    src: fallback.url,
+    srcset,
   };
 }
 
@@ -363,17 +409,50 @@ export default function (eleventyConfig) {
       item.alt ||
         `${item.species} bonsai, ${String(item.style || "").toLowerCase()} style`
     );
-    const img = await cdnImg({
-      file: item.file,
-      widths: THUMB_WIDTHS,
-      sizes: THUMB_SIZES,
-      quality: THUMB_QUALITY,
-      alt,
-      attrs: index < 4 ? ` fetchpriority="high"` : ` loading="lazy"`,
-      strict: true,
-    });
+    /* The card's own thumbnail, and — carried on the same tag — what the
+       lightbox should open instead of the CDN original. It rides here
+       rather than in #gallery-data because this is where the build
+       already knows it; the script reads it off the grid image it is
+       replacing. Two attributes per card, which gzip barely notices
+       since every one of them is the same shape.
+
+       Cut as a second ladder rather than by extending the first: the
+       thumbnail ladder stops at 900 on purpose, and a 3x phone asking
+       for a 359px card would otherwise start picking 1300 off a shared
+       srcset and fetch twice what the card can show. */
+    const [img, large] = await Promise.all([
+      cdnImg({
+        file: item.file,
+        widths: THUMB_WIDTHS,
+        sizes: THUMB_SIZES,
+        quality: THUMB_QUALITY,
+        alt,
+        attrs: index < 4 ? ` fetchpriority="high"` : ` loading="lazy"`,
+        strict: true,
+      }),
+      cdnImg({
+        file: item.file,
+        widths: LIGHTBOX_WIDTHS,
+        sizes: LIGHTBOX_SIZES,
+        quality: LIGHTBOX_QUALITY,
+        alt,
+        attrs: "",
+        strict: true,
+      }),
+    ]);
+
+    // No build-cut large copy (a local build that could not fetch the
+    // source): say nothing, and gallery.js falls back to the original.
+    const lb = large.srcset
+      ? ` data-lb-src="${esc(withBase(large.src))}"` +
+        ` data-lb-srcset="${esc(
+          large.srcset.replace(/(^|, )(\/)/g, (m, sep) => sep + withBase("/").slice(0, -1) + "/")
+        )}"` +
+        ` data-lb-sizes="${esc(LIGHTBOX_SIZES)}"`
+      : "";
+
     // The card's frame is shaped by the manifest's `ratio`, in gallery.njk.
-    return img.html;
+    return img.html.replace("<img ", `<img${lb} `);
   });
 
   // Responsive, privacy-friendly YouTube embed for posts:
@@ -393,7 +472,7 @@ export default function (eleventyConfig) {
       data: "_data",
       output: "_site",
     },
-    pathPrefix: "/nasty-cat-bonsai/",
+    pathPrefix: PATH_PREFIX,
     markdownTemplateEngine: "njk",
     htmlTemplateEngine: "njk",
   };
