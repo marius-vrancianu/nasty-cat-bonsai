@@ -1938,6 +1938,15 @@ a { color: inherit; }
   margin-bottom: 6px;
 }
 
+/* The card's title is a heading as well as a link — a reader moving by
+   headings gets the list of posts, which is what the blog index is. The
+   anchor keeps the class and all of the styling; this only undoes what an
+   h2 brings with it. */
+.post-card-heading {
+  margin: 0;
+  font-weight: 400;
+}
+
 .post-card-title {
   display: inline-block;
   font-size: 24px;
