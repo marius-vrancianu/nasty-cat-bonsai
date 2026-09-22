@@ -1805,14 +1805,6 @@ a { color: inherit; }
   border-top: 1px solid var(--hairline);
 }
 
-.comments-placeholder {
-  margin-top: 40px;
-  padding: 24px;
-  border: 1px dashed var(--hairline-strong);
-  font-size: 14px;
-  text-align: center;
-}
-
 /* ==========================================================================
    CDN image frames — show a patterned placeholder until/unless a real
    image loads (keeps the design's washi-stripe look for missing files)
@@ -1853,7 +1845,11 @@ a { color: inherit; }
   white-space: nowrap;
 }
 
-.post-figure .cdn-frame { aspect-ratio: 16 / 10; }
+/* A figure in a post carries no aspect-ratio of its own: cdnimg writes the
+   photo's own onto the element, so the frame is the shape of the picture
+   and object-fit: cover has nothing left to crop. Width is the text
+   column; height follows from the file. See the shortcode in
+   eleventy.config.js for why this stopped being 16/10. */
 
 /* ==========================================================================
    Blog index
@@ -1932,6 +1928,15 @@ a { color: inherit; }
   font-size: 13px;
   letter-spacing: 0.02em;
   margin-bottom: 6px;
+}
+
+/* The card's title is a heading as well as a link — a reader moving by
+   headings gets the list of posts, which is what the blog index is. The
+   anchor keeps the class and all of the styling; this only undoes what an
+   h2 brings with it. */
+.post-card-heading {
+  margin: 0;
+  font-weight: 400;
 }
 
 .post-card-title {
@@ -2190,6 +2195,57 @@ a { color: inherit; }
   font-size: 15px;
   color: var(--olive);
   padding: 8px 0 40px;
+}
+
+/* The foot of the grid once the gallery outgrows one batch. Centred
+   under the columns rather than aligned to one of them: the grid has no
+   single edge to hang it on — which column it would sit under changes
+   with the viewport — and the middle is the one place that reads as
+   belonging to all of them.
+
+   Hidden entirely while everything fits, which for a tree's own
+   progression is nearly always: a dozen photos never reaches the batch,
+   so picking a tree makes this disappear. */
+.gallery-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0 40px;
+}
+
+.gallery-more[hidden] { display: none; }
+
+/* The same face as the comment form's submit, which is the site's one
+   other "do the thing" button. */
+.gallery-more-button {
+  font: inherit;
+  font-size: 15px;
+  padding: 9px 26px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--rust);
+  color: var(--washi);
+  border: 1px solid var(--rust);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.gallery-more-button:hover,
+.gallery-more-button:focus-visible {
+  background: var(--rust-hover);
+  border-color: var(--rust-hover);
+}
+
+.gallery-more-button[hidden] { display: none; }
+
+/* Reads the count out loud when it changes (role="status"), so pressing
+   the button says what happened rather than leaving a screen reader to
+   discover it. Kept when the button goes, as the tally of a gallery
+   fully shown. */
+.gallery-more-count {
+  margin: 0;
+  font-size: 13px;
+  color: var(--olive);
 }
 
 /* Lightbox */

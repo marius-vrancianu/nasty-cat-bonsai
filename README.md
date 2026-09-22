@@ -15,7 +15,12 @@ built with [Eleventy](https://www.11ty.dev/) and served by GitHub Pages at
   holds all photos, served via CDN — nothing image-heavy is committed here
   (except the homepage hero, which is a core design asset).
   - `gallery/…` — photos that appear in the gallery
-  - `blog/…` — photos embedded in blog posts (never shown in the gallery)
+  - `blog/…` — photos embedded in blog posts, and post thumbnails (never
+    shown in the gallery)
+
+  Upload everything at full size. The build cuts the smaller copies each
+  page actually draws — gallery cards, post thumbnails and in-post figures
+  alike — and serves those; the originals stay on the CDN for the lightbox.
   - `gallery.json` — the manifest that decides *exactly* what the gallery
     shows, with captions. Blog images are separated simply by not being
     listed here.
@@ -64,10 +69,17 @@ The blog index, post page, and RSS feed update automatically at build time.
   "notes": "Longer caption shown in the lightbox." }
 ```
 
-No site rebuild needed — the gallery reads the manifest in the browser.
-(Note: image *bytes* go through jsDelivr, which caches `@main` URLs for up
-to a week; the manifest is read from `raw.githubusercontent.com`, which
-updates within ~5 minutes.)
+3. Deploy. The photo list is baked into the page while the site builds, so
+   gallery edits go live with the next deploy — not before. (This is what
+   makes the gallery load on networks that block `raw.githubusercontent.com`,
+   and what lets search engines see the photos at all.)
+
+The deploy also cuts each photo down to the handful of small WebP sizes the
+grid actually draws; you upload one full-size file and nothing else. Wait
+~5 minutes between committing `gallery.json` and deploying, so the build
+reads the new version. Never overwrite a photo under the same name —
+jsDelivr caches `@main` URLs for up to a week. Upload under a new name and
+point `file` at it. Full details in [GUIDE.md](GUIDE.md) §1.
 
 ### Publish
 
@@ -77,9 +89,15 @@ tested state: Actions tab → **Deploy to GitHub Pages** → *Run workflow*.
 ## Design tokens
 
 Palette, type scale, and spacing live as CSS custom properties at the top of
-`src/assets/css/main.css`. Typeface is Proza Libre (Google Fonts).
+`src/assets/css/main.css`. Typeface is Proza Libre, **self-hosted** from
+`src/assets/fonts/` (SIL Open Font License) — no visitor's browser ever
+talks to Google to fetch it. The comments in `main.css` carry the reasoning
+behind the palette, including the contrast ratio every dark-theme colour
+was solved to; they are stripped from the copy visitors download.
 
-## TODO after first deploy
+## Still to do before launch
 
-- [ ] Deploy the comments worker (`comments-worker/README.md`) and paste its URL into `src/_data/site.js`
-- [ ] Replace sample posts and upload real photos to `bonsai-images`
+- [x] Deploy the comments worker and paste its URL into `src/_data/site.js` — done
+- [ ] Replace the sample posts in `src/posts/` with real ones
+- [ ] Upload the blog images the sample posts reference (they 404 today, so
+      those pages show the hatched placeholder with the filename on it)

@@ -51,6 +51,19 @@ permalink: /gallery/
   {%- endfor %}
 </div>
 
+{#- The grid shows a batch at a time once the gallery outgrows one.
+    Every card is in the HTML either way — a hidden card costs no image
+    bytes, because a browser does not fetch a lazy <img> it is not
+    displaying — so this is gallery.js revealing what is already here,
+    not fetching more. Without JavaScript nothing is hidden and the whole
+    gallery is there, which is the one thing paginated pages could not do.
+    The control ships hidden and gallery.js unhides it, the same bargain
+    the tree filter and the theme toggle make. #}
+<div class="gallery-more" hidden>
+  <button type="button" class="gallery-more-button">Show more</button>
+  <p class="gallery-more-count" role="status"></p>
+</div>
+
 {# Item metadata (ratio, notes, …) for the lightbox, so gallery.js never
    has to re-fetch the manifest. "</" is escaped so notes text can never
    close this script block. #}

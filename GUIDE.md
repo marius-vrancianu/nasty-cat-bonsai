@@ -124,7 +124,7 @@ What each field does on the site:
 | Field | Where it shows | Notes |
 | --- | --- | --- |
 | `file` | — | Path of the image inside the repo. Must match exactly. |
-| `species` | **Title** — teal/rust heading on the card and lightbox | |
+| `species` | **Title** — the rust heading on the card and in the lightbox | |
 | `trees` | **Tree identity** — powers the "one tree over the years" dropdown at the top of the Gallery | Optional. Always a list, even for one tree: `"trees": ["Ficus benjamina, anno culto 2012"]`. Every photo of the same tree must carry the *exact same* string — **copy-paste it from another of its photos**, never retype. The convention is `Species, anno culto <year training started>`, with a leading `+` for trees no longer in the collection (shown as typed). A photo with several trees in frame (exhibitions, group shots) lists them all — `"trees": ["Ficus benjamina, anno culto 2012", "Murraya paniculata, anno culto 2021"]` — and shows up under each |
 | `style` + `date` | **Subtitle** — the small "Informal upright · Jul 2026" line | |
 | `notes` | **Description** — longer text, shown only in the lightbox (after clicking) | Optional |
@@ -138,6 +138,9 @@ this file, and the lightbox arrows stay within that tree. The choice is
 reflected in the URL (`…/gallery/#tree=…`), so you can share a link
 straight to one tree's history. Photos without a `trees` field simply
 never match a dropdown option — fine while you're catching up on tagging.
+
+The dropdown always searches the **whole** gallery, however many photos
+are on screen (see 1.6) — it never sees only part of it.
 
 To **add** a photo: copy an existing entry (from `{` to `}`), paste it after
 another entry, edit the values. **Watch the commas**: every entry is
@@ -192,6 +195,38 @@ from it that are worth knowing:
   error names the file. That is on purpose: a typo is easier to fix when the
   deploy tells you than when a visitor finds it.
 
+Blog images — post thumbnails and the photos inside posts — go through the
+same machinery, cut to the sizes those pages draw instead of the gallery's
+(see 3.3 and 3.5). The one difference is that a missing blog image does
+**not** fail the deploy, so you can publish a post before its photos are
+uploaded.
+
+### 1.6 "Show more" — why the Gallery doesn't show everything at once
+
+Once the Gallery passes **50 photos**, it draws the first 50 and puts a
+**Show more** button under them, with a count beside it ("Showing 50 of
+287 photos"). Each press adds another 50.
+
+This is about scrolling, not speed. On a phone the grid is a single
+column, so 300 photos is about 160 screens of flicking to reach the
+bottom; 50 is about 27. Nothing is being fetched when you press the
+button — every photo is already in the page, just not drawn yet, and a
+browser doesn't download a picture it isn't showing.
+
+Three things worth knowing:
+
+- **The dropdown is unaffected.** Picking a tree searches all of your
+  photos, not just the 50 on screen. And since a single tree's
+  progression is rarely 50 photos, choosing one usually makes the button
+  disappear entirely — you see that tree's whole history at once.
+- **The lightbox ignores it.** Arrowing through a tree never stops at
+  photo 50; the grid quietly draws itself out behind you.
+- **Shared links still work.** A link to one photo (`…/gallery/#photo=…`)
+  opens it wherever it sits in the gallery, even the 200th.
+
+Nothing to configure. If you ever want a different number, it is the
+`BATCH` value at the top of `src/assets/js/gallery.js`.
+
 ---
 
 ## 2. The About page
@@ -211,7 +246,7 @@ where you want the photo:
 ```
 
 The three parts: file path, alt text (description for screen readers —
-required), caption (optional — shows under the image in teal; leave it out
+required), caption (optional — shows under the image in olive; leave it out
 entirely if not wanted).
 
 After editing, **deploy** (section 5) to publish.
@@ -286,9 +321,21 @@ a clicked tag combine: "posts tagged *repotting* that mention *akadama*".
 ### 3.3 Thumbnails
 
 `thumb:` is the small image on the blog index card. Upload it to
-`bonsai-images/blog/` (move B), ~800 px wide, ideally landscape (the card
-crops to 4:3), then reference it as above. If you omit `thumb:`, the card
-shows the striped placeholder pattern — fine while drafting.
+`bonsai-images/blog/` (move B), ideally landscape (the card crops to 4:3),
+then reference it as above. If you omit `thumb:`, the card shows the
+striped placeholder pattern — fine while drafting.
+
+**Upload it at full size.** You used to want to shrink these by hand; you
+don't any more. The deploy cuts blog images down the same way it cuts
+gallery photos (see 1.5) — the card is drawn 200 px wide and now fetches a
+200 px copy instead of the original. On a blog index that is the difference
+between a fraction of a megabyte and one full-size photo per post, all at
+once.
+
+Unlike a gallery photo, a blog image that isn't uploaded yet does **not**
+fail the deploy — the post publishes and the picture shows the hatched box
+with its filename on it until you upload the file. You can write the post
+first and add the photos after.
 
 ### 3.4 Formatting text (Markdown cheat sheet)
 
@@ -297,7 +344,7 @@ shows the striped placeholder pattern — fine while drafting.
 | `## Heading` | Section heading (accent color, like "Timing the repot") |
 | `**bold**` | **bold** |
 | `*italic*` | *italic* |
-| `> quoted text` | The teal italic pull-quote style |
+| `> quoted text` | The olive italic pull-quote style |
 | `- item` (one per line) | Bulleted list |
 | `1. item` | Numbered list |
 | `[text](https://url)` | Link |
@@ -313,6 +360,11 @@ Same as the About page — upload to `bonsai-images/blog/`, then:
 ```
 {% cdnimg "blog/roots-closeup.webp", "Root ball after combing", "More feeder roots than expected." %}
 ```
+
+Upload the full-size file; the deploy makes the smaller copies the page
+actually uses, exactly as it does for `thumb:` above. The three parts are
+the filename, the alt text (what a screen reader reads, and what shows if
+the picture fails), and an optional caption printed under the photo.
 
 ### 3.6 Embedding YouTube videos
 
@@ -445,7 +497,7 @@ delay exists because *renaming* a post looks exactly like deleting one — put
 the old name back within the month and the comments reattach on their own.
 
 Comments are stored by the worker (Cloudflare), not in GitHub. Setting it up
-the first time is **6.11**, and it is all done from a browser. The technical
+the first time is **6.10**, and it is all done from a browser. The technical
 side, backups and redeploying live in `comments-worker/README.md`.
 
 ### 6.2 Changing the design (colors, fonts, spacing)
@@ -455,7 +507,8 @@ All design knobs live in **one file**: `src/assets/css/main.css` in
 used everywhere:
 
 - Light theme: the first `:root { ... }` block (`--washi` paper, `--ink`
-  text, `--rust` accent, `--teal` secondary).
+  text, `--rust` accent, `--olive` secondary — captions, pull-quotes and
+  status lines).
 - Dark theme: the `:root[data-theme="dark"] { ... }` block right below it.
 
 Change a value there, commit, deploy — the whole site follows.
@@ -476,6 +529,11 @@ in `main.css` — a bigger job than a color tweak.
 Below the variables, the CSS is organized in commented sections (homepage,
 gallery, blog...). It's safe to experiment: deploy is manual and undo is
 two clicks.
+
+Those comments are **stripped from the copy visitors download** — they are
+two thirds of the file, and it is the one file that has to arrive before
+anything appears on screen. Nothing is rewritten but the comments, and only
+in the built copy; write as many as you like, the repo keeps them all.
 
 ### 6.3 Undo — reverting a bad commit
 
@@ -506,6 +564,15 @@ compressed copies for free at <https://squoosh.app>: drag the new image
 in, export once as AVIF (quality ~60) and once as WebP (quality ~80),
 then repeat with the width resized to 800 px. Replacing only `hero.jpg`
 would leave most visitors seeing the old picture.
+
+**Export `hero.jpg` itself at quality ~86, not at maximum.** Almost no
+browser ever fetches it — they all take the AVIF or WebP above — but it
+is the picture Facebook, WhatsApp and the rest show when somebody shares
+a link to the site, so it travels further than any other file here. The
+one in the repo came in at 1.1 MB straight out of the editor and is 287 KB
+now, with the title lettering pixel-for-pixel the same. In Squoosh, tick
+**"Turn off chroma subsampling"** when you export it: it costs a few KB
+and keeps the red katakana from smearing at its edges.
 
 **Important:** the homepage geometry (the mat/stroke and the position of
 the nav) is computed from this image's exact proportions (1134×1286). A
@@ -548,14 +615,7 @@ Open <http://localhost:8080/nasty-cat-bonsai/>. It live-reloads as you edit
 files. (As an RPA developer you'll be fine — but genuinely, the
 edit-on-GitHub workflow covers everything.)
 
-### 6.9 The old `marius-vrancianu.github.io` repo
-
-Your user-site repo is currently unused (it holds an early staging copy of
-this site on a side branch, plus open PR #1). Safe to close that PR and
-delete the branch. Keep the repo — if you ever want a personal landing page
-at the root URL `marius-vrancianu.github.io`, that's where it goes.
-
-### 6.10 URLs, RSS, favicon
+### 6.9 URLs, RSS, favicon
 
 - New posts get `…/nasty-cat-bonsai/blog/<file-name>/` automatically.
 - RSS feed: `…/nasty-cat-bonsai/feed.xml` (the footer's RSS icon) — updates
@@ -573,7 +633,7 @@ at the root URL `marius-vrancianu.github.io`, that's where it goes.
   `src/assets/img/favicon.svg` — upload a replacement under the exact
   same name (move B) to change it.
 
-### 6.11 Setting up the comments worker (one time)
+### 6.10 Setting up the comments worker (one time)
 
 You need no software on your PC for this — no Node, no git, no command line.
 Two free accounts, a few values pasted into GitHub, and a button. Budget
