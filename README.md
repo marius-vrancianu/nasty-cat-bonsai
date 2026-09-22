@@ -12,15 +12,19 @@ built with [Eleventy](https://www.11ty.dev/) and served by GitHub Pages at
 
 - **This repo** holds the site source (`src/`) and builds to static HTML.
 - **The [`bonsai-images`](https://github.com/marius-vrancianu/bonsai-images) repo**
-  holds all photos, served via CDN — nothing image-heavy is committed here
-  (except the homepage hero, which is a core design asset).
+  holds all photos — nothing image-heavy is committed here (except the
+  homepage hero, which is a core design asset).
   - `gallery/…` — photos that appear in the gallery
   - `blog/…` — photos embedded in blog posts, and post thumbnails (never
     shown in the gallery)
 
-  Upload everything at full size. The build cuts the smaller copies each
-  page actually draws — gallery cards, post thumbnails and in-post figures
-  alike — and serves those; the originals stay on the CDN for the lightbox.
+  Upload everything at full size (1600–2000 px on the long side). The
+  build cuts the copies each page actually draws — gallery cards, the
+  lightbox, post thumbnails and in-post figures alike — and serves those
+  from this site, share previews included. No visitor ever downloads an
+  original: the deploy workflow checks the images repo out and cuts from
+  that (`IMAGES_DIR`, see "Where the photos come from" in
+  `eleventy.config.js`), and prunes the copies of photos no page uses.
   - `gallery.json` — the manifest that decides *exactly* what the gallery
     shows, with captions. Blog images are separated simply by not being
     listed here.
@@ -38,6 +42,9 @@ built with [Eleventy](https://www.11ty.dev/) and served by GitHub Pages at
 ```bash
 npm install        # first time only
 npm start          # → http://localhost:8080/nasty-cat-bonsai/
+
+# or, building from a local clone of bonsai-images, exactly as a deploy does:
+IMAGES_DIR=../bonsai-images npm start
 ```
 
 ### Write a blog post
@@ -65,7 +72,7 @@ The blog index, post page, and RSS feed update automatically at build time.
 
 ```json
 { "file": "gallery/tree-10.webp", "species": "Chinese Elm",
-  "style": "Broom", "date": "Jul 2026", "ratio": "4/3",
+  "style": "Broom", "date": "Jul 2026", "ratio": "2000/1500",
   "notes": "Longer caption shown in the lightbox." }
 ```
 
@@ -74,17 +81,24 @@ The blog index, post page, and RSS feed update automatically at build time.
    makes the gallery load on networks that block `raw.githubusercontent.com`,
    and what lets search engines see the photos at all.)
 
-The deploy also cuts each photo down to the handful of small WebP sizes the
-grid actually draws; you upload one full-size file and nothing else. Wait
-~5 minutes between committing `gallery.json` and deploying, so the build
-reads the new version. Never overwrite a photo under the same name —
-jsDelivr caches `@main` URLs for up to a week. Upload under a new name and
-point `file` at it. Full details in [GUIDE.md](GUIDE.md) §1.
+`ratio` is the photo's exact pixel size, `"width/height"` — the card crops
+to it. The deploy cuts each photo into the WebP sizes the grid and the
+lightbox draw; you upload one full-size file and nothing else. No waiting
+between committing `gallery.json` and deploying — the deploy reads the
+images repo's latest commit. Replacing a photo under the same name is fine:
+copies are named after the file's contents, so the next deploy picks it
+up. Full details in [GUIDE.md](GUIDE.md) §1.
 
 ### Publish
 
 Pushing to `main` does **not** deploy. When you're happy with a locally
 tested state: Actions tab → **Deploy to GitHub Pages** → *Run workflow*.
+
+The other workflow, **Check the hills**, runs on pushes that touch anything
+but Markdown, posts or the comments worker, and never publishes: it renders the homepage in Chromium and checks the hill backdrop
+still agrees with `tools/gen-hills.py` and the figures in `main.css`
+(run it locally with `python3 tools/gen-hills.py --check`, then
+`node tools/check-hills.mjs` after a build — see the top of that file).
 
 ## Design tokens
 

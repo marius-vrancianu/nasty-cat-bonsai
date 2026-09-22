@@ -35,7 +35,7 @@
   <meta property="og:description" content="{{ description or excerpt or site.description }}">
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
   {%- if thumb %}
-  <meta property="og:image" content="{{ site.images.cdn }}{{ thumb }}">
+  {% ogImage thumb %}
   {%- else %}
   <meta property="og:image" content="{{ site.url }}/assets/img/hero.jpg">
   <meta property="og:image:width" content="1134">
@@ -45,15 +45,11 @@
   <meta property="article:published_time" content="{{ page.date | rfc3339 }}">
   {%- endif %}
   <meta name="twitter:card" content="summary_large_image">
-  {#- No preconnect to the CDN any more. It was here because the lightbox
-      opened a full-size photo from jsDelivr and wanted the handshake done
-      in advance. The lightbox opens a build-cut copy from this origin now,
-      and so does every picture the pages draw, so on a normal visit the
-      CDN is never reached at all — it is behind a card's href, which is a
-      navigation, and behind the fallback for a photo not uploaded yet.
-      Preconnecting for that means every page pays a DNS lookup, a TCP
-      handshake and a TLS negotiation, and holds a connection open, for a
-      host most visitors never ask for. #}
+  {#- No preconnect to any image host. Every picture the site shows — the
+      grid, the lightbox, a card's own link, a post's share image — is a
+      build-cut copy served from this origin, down the connection the page
+      already has open. Nothing else is asked for until a visitor accepts
+      analytics. #}
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
   {#- The body face, fetched in parallel with the CSS instead of after it —
       shortens the flash of fallback Georgia on first visit. `crossorigin`

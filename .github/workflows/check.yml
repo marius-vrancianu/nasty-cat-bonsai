@@ -7,9 +7,22 @@
 # copies of those. When one drifts, nothing about CSS says so.
 name: Check the hills
 
+# Only when something that can move the backdrop changed. A post, a page's
+# text or the docs cannot, and each run installs a whole browser — minutes
+# of the Actions tab, and a red mark that is easy to mistake for a failed
+# deploy. The hills live on the home page only, but the build is the
+# deploy's own build, so templates, styles, scripts and config all count.
 on:
   push:
+    paths-ignore:
+      - "**.md"
+      - "src/posts/**"
+      - "comments-worker/**"
   pull_request:
+    paths-ignore:
+      - "**.md"
+      - "src/posts/**"
+      - "comments-worker/**"
   workflow_dispatch:
 
 jobs:
@@ -29,43 +42,44 @@ jobs:
       - name: The drawings match their generator
         run: python3 tools/gen-hills.py --check
 
-      # The site's thumbnails are cut during the build from the photos in
-      # bonsai-images (see cdnImg in eleventy.config.js). Two directories
-      # have to survive between runs, and they are not the same saving:
-      #
-      #   .cache                 the DOWNLOADED sources. Without it every run
-      #                          re-fetches the whole gallery, already tens
-      #                          of megabytes and meant to grow.
-      #   _site/assets/photos    the ENCODED copies. Without it every run
-      #                          re-encodes all of them from those sources —
-      #                          measured at 0.13s per photo, so about 40
-      #                          seconds a deploy once the gallery is in the
-      #                          hundreds. This is what "a photo it has
-      #                          already seen costs nothing" (GUIDE 1.5)
-      #                          always claimed and did not do.
-      #
-      # eleventy-img names each output after a hash of the bytes that made
-      # it, so restoring the directory is enough: a build skips any file
-      # already sitting there and works only on photos it has not seen.
+      # The photos themselves, and gallery.json, straight from the images
+      # repo: one git clone of its latest commit, rather than one download
+      # per photo from raw.githubusercontent.com. That host limits anonymous
+      # downloads and serves through a cache of its own; a clone is neither.
+      # See "Where the photos come from" in eleventy.config.js. Public repo,
+      # so the workflow's own token is enough.
+      - name: Check out the photos
+        uses: actions/checkout@v4
+        with:
+          repository: marius-vrancianu/bonsai-images
+          path: .images
+
+      # The copies the build cuts from those photos (see cdnImg in
+      # eleventy.config.js). Encoding is the slow part — measured at 0.13s
+      # per photo — so this directory survives between runs: eleventy-img
+      # names each copy after a hash of the photo that made it, and skips
+      # any it finds already here. A new photo costs one encoding; one it
+      # has seen costs nothing.
       #
       # The key is this run and the restore-key is the bare prefix — the
       # rolling-cache pattern: each run restores the newest cache that
       # exists and saves a fresh one, so the cache follows the gallery
-      # rather than pinning to one state of it. A consequence worth knowing:
-      # a photo dropped from gallery.json leaves its encoded copies behind
-      # for good, since nothing here prunes. They are unreferenced and cost
-      # only artifact size. Deleting the cache in the Actions tab is the
-      # reset button, at the price of one slow build.
-      - name: Keep the downloaded and encoded photos between runs
+      # rather than pinning to one state of it. The build deletes the copies
+      # of photos no page shows any more, so what is saved is always exactly
+      # the current gallery. GitHub drops a cache nobody has used for a
+      # week; the next run then encodes everything once, which is slow but
+      # harmless. Deleting the cache in the Actions tab is the reset button,
+      # at the same price.
+      - name: Keep the cut copies of the photos between runs
         uses: actions/cache@v4
         with:
-          path: |
-            .cache
-            _site/assets/photos
-          key: gallery-sources-${{ github.run_id }}
-          restore-keys: gallery-sources-
+          path: _site/assets/photos
+          key: photo-copies-${{ github.run_id }}
+          restore-keys: photo-copies-
 
       - run: npm run build
+        env:
+          IMAGES_DIR: .images
 
       # Playwright is deliberately not a dependency of the site — see the top
       # of tools/check-hills.mjs — so it is installed just for this job.
