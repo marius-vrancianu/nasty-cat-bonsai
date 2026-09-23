@@ -1,14 +1,11 @@
-/* Gallery lightbox. The photo grid itself is rendered at build time from
-   the bonsai-images manifest (see src/_data/gallery.js); each card is a
-   plain link to the full image, so the gallery works — and is indexable —
-   without JavaScript. This script upgrades those links into a lightbox
-   with keyboard navigation (desktop), swipe navigation (touch: left/right
-   to step, down to close — the arrow buttons are hidden by CSS there),
-   and a per-tree progression filter.
+/* Gallery: lightbox, per-tree filter and "Show more". The grid is rendered
+   at build time (src/gallery.njk); each card links to its photo's largest
+   build-cut copy, so the gallery works and is indexable without JS. This
+   script turns clicks into a lightbox with keyboard (desktop) and swipe
+   (touch: left/right to step, down to close) navigation.
 
-   URL state lives in the hash: #tree=<tree>&photo=<file>. Opening a
-   photo pushes one history entry (Back closes it); stepping through
-   photos replaces the entry, so the history never fills up. */
+   URL state lives in the hash: #tree=<tree>&photo=<file>. Opening a photo
+   pushes one history entry (Back closes it); stepping replaces it. */
 (function () {
   "use strict";
 
@@ -31,26 +28,18 @@
   var activeTree = "";
   var openedByPush = false; // whether Back should close the lightbox
 
-  /* ---- How much of the gallery is on screen ---------------------------
-     Two different questions, and conflating them is the way this goes
-     wrong:
+  /* ---- Filter vs. batch --------------------------------------------------
+     Two separate questions:
+       visible  which photos pass the tree filter — the LIGHTBOX walks all of
+                these, so stepping never stops at a batch edge;
+       shown    how many of those the GRID draws (BATCH at a time).
+     Every card is in the HTML; a hidden card's lazy <img> is never fetched, so
+     "Show more" reveals rather than loads.
 
-       visible   which photos pass the tree filter. The LIGHTBOX walks
-                 this, all of it, so stepping through a progression never
-                 stops at a batch edge.
-       shown     how many of those are drawn in the grid. The GRID walks
-                 this.
-
-     A card is in the page either way — every one of them is in the HTML,
-     and a browser does not fetch a lazy <img> it is not displaying, so a
-     card outside the batch costs nothing but a DOM node. This is
-     revealing, not loading.
-
-     50 is the batch. The gallery is one column on a phone, which is
-     about 27 screens of scroll per batch and roughly six of them for a
-     gallery in the hundreds; the alternative was 164 screens in one go.
-     A filtered tree is almost never this long, so picking one makes the
-     control disappear. */
+     BATCH = 50 keeps phone scrolling manageable (one column there). Keep it
+     large: the CSS masonry re-deals every column when cards are revealed, so
+     smaller batches mean more cards jumping around. A single tree rarely
+     reaches 50, so the button usually disappears when one is picked. */
   var BATCH = 50;
   var shown = BATCH;
 
@@ -61,28 +50,13 @@
     return node;
   }
 
-  // `trees` in the manifest is always an array — one string for most
-  // photos, several for group/exhibition shots. Tolerate a bare string
-  // (a likely hand-editing slip) by wrapping it.
+  // `trees` is an array (several for group shots); tolerate a bare string.
   function treesOf(item) {
     return Array.isArray(item.trees) ? item.trees : item.trees ? [item.trees] : [];
   }
 
-  /* The photo for the lightbox. The build cuts a copy at the widths this
-     actually draws and hangs it off the grid image as data-lb-*; that is
-     what opens. It is a few hundred KB against the original's ~700, and —
-     the part that is felt more on a cold visit — it comes from this site,
-     down the connection the page is already using, rather than opening a
-     new one to the CDN.
-
-     The original is still what the card links to, so "open image in new
-     tab" and a visitor without JavaScript both still get it. If the build
-     could not cut a copy there are no data-lb-* to read and this falls
-     back to that same original, which is what it always used. */
-  /* The lightbox's copies of one card, as the build left them: the srcset on
-     the card's <img>, and the sizes said once for the whole grid. The src a
-     browser without srcset would take is picked here — the middle rung, so
-     that if it is ever the one fetched it is not the heaviest. */
+  /* The lightbox srcset from the card's <img>, the sizes (written once on the
+     grid), and a fallback src: the middle rung, so it is never the heaviest. */
   var LB_SIZES = grid.getAttribute("data-lb-sizes") || "";
 
   function lightboxSource(card) {
@@ -93,19 +67,18 @@
     return { srcset: srcset, sizes: LB_SIZES, src: urls[Math.floor((urls.length - 1) / 2)] };
   }
 
+  /* The lightbox photo: the build-cut copies listed on the card's <img>
+     (data-lb-srcset), ~200KB from this site. Without them (a local build
+     that could not read the photo) it falls back to the card's href. */
   function frame(item, card) {
     var f = el("div", "cdn-frame");
     var gridImg = card.querySelector("img");
     var img = el("img");
     var lb = lightboxSource(card);
 
-    /* The card's own thumbnail, stretched and blurred under the photo
-       until it lands. currentSrc rather than src: that is the candidate
-       the browser actually chose out of the srcset, so it is the file it
-       certainly holds — asking for any other would start a download,
-       which is the opposite of the point. A card whose thumbnail has not
-       loaded gives an empty string and no placeholder, which is where
-       this started. */
+    /* The card's thumbnail, blurred under the photo until it lands (CSS
+       --lqip). currentSrc: the candidate the browser actually downloaded, so no
+       new request. Empty if the thumbnail has not loaded (deep link). */
     var thumb = gridImg && (gridImg.currentSrc || gridImg.getAttribute("src"));
     if (thumb) {
       f.style.setProperty("--lqip", 'url("' + thumb.replace(/"/g, "%22") + '")');
@@ -122,12 +95,10 @@
     }
     img.alt = gridImg ? gridImg.alt : item.species;
     img.decoding = "async";
-    // This is the one thing the reader is waiting for, so it goes ahead of
-    // whatever grid thumbnails are still trickling in behind the overlay.
+    // The photo the reader is waiting for goes ahead of grid thumbnails.
     img.setAttribute("fetchpriority", "high");
 
-    // Revealed on arrival, and on failure too — the frame then shows the
-    // hatched box, and leaving the blur up over it would only muddle it.
+    // Reveal on arrival, and on failure (the hatched box; no blur over it).
     var reveal = function () { f.classList.add("is-loaded"); };
     img.addEventListener("load", reveal, { once: true });
     img.addEventListener("error", function () {
@@ -142,12 +113,8 @@
     return f;
   }
 
-  /* The neighbours, so the next step is instant. This waits for the photo
-     on screen to finish first, which is the whole point of it being a
-     function: fired immediately — as it used to be — it put three
-     downloads in flight at once and the two nobody had asked for competed
-     with the one somebody was waiting for. At ~700KB each that was 2.1MB
-     racing itself on the first click of a cold visit. */
+  /* Preload the neighbours so the next step is instant — only after the
+     current photo has loaded, so they never compete with it. */
   function preloadNeighbours(i) {
     var pos = visible.indexOf(i);
     if (pos === -1 || visible.length < 2) return;
@@ -217,9 +184,8 @@
   box.appendChild(nextBtn);
   document.body.appendChild(box);
 
-  // The photo's shape as width/height: the manifest's ratio ("3/4",
-  // "1592/2000") when it gives one, otherwise the size the build wrote on
-  // the card's <img>, which is the photo's own. `ratio` is optional now.
+  // Width/height of the photo: the manifest's `ratio` ("3/4", "1592/2000")
+  // if given, else the size the build wrote on the card's <img>.
   function ratioOf(i) {
     var parts = String(items[i].ratio || "").split("/");
     var r = parseFloat(parts[0]) / parseFloat(parts[1]);
@@ -229,16 +195,11 @@
     return isFinite(r) && r > 0 ? r : 0.75;
   }
 
-  // Preferred layout: the photo sits on the left, stretched to the full
-  // viewport height minus a margin of 5% of its longest side, which is
-  // also the gap to the browser edges and to the caption block that sits
-  // at the photo's lower right. When the viewport is too narrow for
-  // that arrangement (portrait phones), fall back to a stacked card:
-  // photo above caption, the whole unit fitted to the viewport height.
-  //
-  // The close button sits beside the photo's top-right corner on desktop
-  // and just above it on touch devices (where the photo often spans the
-  // full width and there is no room at the side).
+  // Side-by-side when there is room: photo at full viewport height minus a
+  // margin of 5% of its longest side (also the gap to the caption at its lower
+  // right). Otherwise (portrait phones) a stacked card: photo above caption,
+  // fitted to the viewport height. The close button sits beside the photo's
+  // top-right corner on desktop, just above it on touch devices.
   var touchUI = window.matchMedia("(hover: none) and (pointer: coarse)");
 
   function positionClose() {
@@ -299,9 +260,8 @@
       return;
     }
 
-    // Stacked card, photo-first: the photo always takes its maximum
-    // width-limited size; the caption gets whatever height remains and
-    // scrolls internally when the text is longer.
+    // Stacked: the photo takes its maximum width-limited size; the caption gets
+    // the remaining height and scrolls if longer.
     var maxW = Math.min(vw * 0.94, 1100);
     var totalH = vh * 0.9;
     var minCapH = 90; // always leave room for at least title + subtitle
@@ -335,9 +295,8 @@
     // so stepping through a tree doesn't fill the browser history.
     replaceHash(activeTree, item.file);
 
-    /* Fetch the neighbours only once this photo has arrived, so they are
-       never in the way of it. On error too: a photo that cannot load must
-       not leave stepping ahead unprepared for good. */
+    /* Neighbours once this photo has arrived — or failed, so stepping ahead is
+       still prepared. */
     var shown = body.firstChild.querySelector("img");
     if (shown.complete) {
       preloadNeighbours(i);
@@ -348,9 +307,7 @@
     }
   }
 
-  // Refit only on real viewport changes (rotation, window resize) — mobile
-  // browsers fire small innerHeight jitters when their URL bar animates,
-  // which must not resize the open lightbox.
+  // Refit only on real resizes: mobile URL-bar animations jitter innerHeight.
   window.addEventListener("resize", function () {
     if (box.hidden) return;
     if (window.innerWidth !== lastVW || Math.abs(window.innerHeight - lastVH) > 150) {
@@ -376,16 +333,9 @@
     current = null;
     openedByPush = false; // any close path invalidates the pending Back
 
-    /* Focus goes back to the photo just closed, not to whatever held it
-       when the lightbox opened. After stepping through a progression
-       those are different cards, and the one on screen a moment ago is
-       the one to return to; revealThrough() has already drawn the grid
-       out that far, so it is there to receive it.
-
-       It also covers the case that had no answer before: arriving
-       straight on #photo=..., where nothing was ever focused and
-       document.activeElement is the body. Focusing the body is focusing
-       nothing, which dropped a keyboard reader at the top of the page. */
+    /* Return focus to the card of the photo just closed (after stepping, that
+       is not the one originally clicked; revealThrough() has drawn it). Also
+       covers a deep link, where nothing held focus before. */
     var card = wasOn === null ? null : cards[wasOn];
     if (card && !card.hidden) card.focus();
     else if (lastFocused && lastFocused.focus && document.contains(lastFocused)) {
@@ -393,10 +343,9 @@
     }
   }
 
-  // Close on user intent (X, Esc, backdrop tap, swipe down). If the
-  // lightbox was opened on this page, Back both closes it and removes the
-  // photo hash; on a direct deep link there is no such entry, so the hash
-  // is stripped in place instead.
+  // Close (X, Esc, backdrop tap, swipe down). Opened on this page: Back closes
+  // it and drops the hash. Opened from a deep link: no history entry to go
+  // back to, so the hash is stripped in place.
   function requestClose() {
     if (openedByPush) {
       openedByPush = false;
@@ -407,8 +356,8 @@
     }
   }
 
-  // Arrows move through the filtered set only, so browsing one tree's
-  // progression never jumps to another tree.
+  // Arrows move within the filtered set, so one tree's progression never
+  // jumps to another tree.
   function step(delta) {
     if (current === null || !visible.length) return;
     var pos = visible.indexOf(current);
@@ -441,10 +390,8 @@
   });
 
   /* ---- Touch gestures ------------------------------------------------ */
-  // Swipe left/right steps through the (filtered) photos, swipe down
-  // closes; the photo follows the finger for feedback. CSS hides the
-  // arrow buttons on coarse-pointer devices, and .lightbox has
-  // touch-action: none so the browser leaves these gestures to us.
+  // Swipe left/right steps, swipe down closes; the photo follows the finger.
+  // CSS hides the arrows on touch, and .lightbox has touch-action: none.
 
   var touch = { active: false, x: 0, y: 0, dx: 0, dy: 0 };
 
@@ -498,11 +445,8 @@
   });
 
   /* ---- Per-tree progression filter ------------------------------------ */
-  // Entries listing the same string in their `trees` array are photos of
-  // one tree over the years; photos with several trees in frame
-  // (exhibitions, group shots) list them all and appear under each. The
-  // dropdown shows each unique value; picking one hides every card not
-  // featuring that tree.
+  // Photos sharing a `trees` string are one tree over time; group shots list
+  // several trees and appear under each. One dropdown option per unique tree.
 
   var trees = [];
   var counts = {};
@@ -520,18 +464,11 @@
     return a.replace(/^\+/, "").localeCompare(b.replace(/^\+/, ""));
   });
 
-  /* The control is a button plus a listbox of our own (markup in
-     gallery.njk), not a <select>. A <select>'s popup is drawn by the
-     browser: its highlight is the OS accent — blue in Chrome, grey in
-     Edge — which no stylesheet can reach, and Android opens it as a
-     full-screen dialog. This one is markup, so it takes the theme's
-     accent and stays a menu under the button everywhere.
-
-     What it owes the control it replaces: keyboard operation (arrows,
-     Home/End, Enter, Escape, type-ahead), a screen-reader announcement
-     that still reads the photo count out loud, and picking an option by
-     writing the hash rather than by filtering directly — syncFromHash
-     does the filtering for every route into it. */
+  /* A button + listbox of our own (markup in gallery.njk), not a <select>: the
+     native popup uses the OS accent and opens full-screen on Android. It must
+     keep what the <select> gave: keyboard operation (arrows, Home/End, Enter,
+     Escape, type-ahead), the photo count read aloud, and picking by writing the
+     hash — syncFromHash does the filtering for every route. */
 
   var ALL_TREES = "All trees";
   var filterRoot = document.querySelector(".tree-filter");
@@ -544,11 +481,8 @@
   var typed = "";        // type-ahead buffer
   var typedAt = 0;
 
-  // A row is the tree, then its photo count spelled out the way the old
-  // <option> spelled it. Both the menu rows and the closed button are
-  // built through here, so the two always read the same — and since the
-  // count is real text rather than a decoration, it is also what a screen
-  // reader announces, with no aria-label standing in for it.
+  // A row: the tree, then its photo count as real text (so it is read aloud).
+  // Menu rows and the closed button share this, so they always match.
   function fillRow(node, name, count) {
     node.textContent = "";
     node.appendChild(el("span", "tree-filter-name", name));
@@ -576,10 +510,9 @@
     return -1;
   }
 
-  // Focus really moves to the option, rather than being pointed at with
-  // aria-activedescendant: TalkBack and VoiceOver follow real focus far
-  // more reliably. The class is what the stylesheet draws, since a
-  // programmatic focus doesn't reliably count as :focus-visible.
+  // Real focus moves to the option (not aria-activedescendant — TalkBack and
+  // VoiceOver follow real focus more reliably). The class draws it, since
+  // programmatic focus is not reliably :focus-visible.
   function markActive(i) {
     activeIdx = i;
     options.forEach(function (o, k) {
@@ -605,9 +538,8 @@
   function closeMenu(refocus) {
     if (!menuOpen) return;
     menuOpen = false;
-    // Focus is on an option about to be hidden, and hiding the element
-    // under it drops focus to the top of the page — so park it on the
-    // button first, whether or not the caller asked for the button back.
+    // Park focus on the button before hiding the option that holds it, or it
+    // drops to the top of the page.
     if (refocus || filterList.contains(document.activeElement)) filterBtn.focus();
     filterList.hidden = true;
     filterBtn.setAttribute("aria-expanded", "false");
@@ -627,9 +559,8 @@
     }
   }
 
-  // Jump to the next option starting with what was typed. A second letter
-  // inside the timeout extends the search rather than restarting it, and
-  // the "+" on a lost tree is ignored — nobody types it looking for one.
+  // Type-ahead: a second letter within 700ms extends the search; the "+" of
+  // lost trees is ignored.
   function typeAhead(ch) {
     var now = Date.now();
     typed = (now - typedAt > 700 ? "" : typed) + ch.toLowerCase();
@@ -644,10 +575,8 @@
     }
   }
 
-  /* Who is drawn, decided in one place. Both the filter and the batch
-     window have an opinion about a card, so they are answered together
-     and `hidden` is written once — two owners of one attribute would
-     take turns undoing each other. */
+  /* Which cards are drawn, decided in one place: the filter and the batch both
+     have a say, so `hidden` is written once here rather than by two owners. */
   function render() {
     var want = [];
     var i;
@@ -655,8 +584,7 @@
     var limit = Math.min(shown, visible.length);
     for (var k = 0; k < limit; k++) want[visible[k]] = false;
     for (i = 0; i < cards.length; i++) {
-      // Reading .hidden is a property read, not a layout read, so this
-      // costs nothing and saves writing to cards that already agree.
+      // a property read, not a layout read — cheap
       if (cards[i].hidden !== want[i]) cards[i].hidden = want[i];
     }
     updateMore();
@@ -664,9 +592,8 @@
 
   function applyFilter(tree) {
     var next = trees.indexOf(tree) !== -1 ? tree : "";
-    // A different tree is a different gallery, so it starts at the top.
-    // The same tree is not: this runs on every hash change, and resetting
-    // here would throw away a Show more the moment a photo was opened.
+    // A new tree resets the batch; the same tree must not (this runs on every
+    // hash change, including opening a photo).
     if (next !== activeTree) shown = BATCH;
     activeTree = next;
 
@@ -683,10 +610,8 @@
     });
   }
 
-  /* Draw at least as far as one photo, for the two routes that can land
-     past the batch: a link to #photo=<file> deep in the gallery, and the
-     lightbox stepping beyond the edge, which must leave a real card
-     behind it to hand focus back to on close. Only ever reveals more. */
+  /* Draw the grid out to at least this photo: for a deep link past the batch,
+     and for the lightbox stepping past it (focus returns to a real card). */
   function revealThrough(index) {
     var pos = visible.indexOf(index);
     if (pos === -1 || pos < shown) return;
@@ -721,19 +646,16 @@
       var firstNew = visible[shown]; // the card the next batch starts at
       shown += BATCH;
       render();
-      /* Focus only moves when the button goes away with it. While it is
-         still there, staying put is what a reader expects — the count
-         beside it is a live region and says what happened. When the last
-         batch lands the button hides, and focus would fall to the top of
-         the page, so it is handed to the first card just revealed. */
+      /* Focus stays on the button (the count is a live region) — unless the last
+         batch hid it, then it goes to the first newly revealed card. */
       if (moreBtn.hidden && firstNew !== undefined && cards[firstNew]) {
         cards[firstNew].focus();
       }
     });
   }
 
-  // Single source of truth: the hash. Covers card clicks, tag/tree deep
-  // links, back/forward, and hand-edited URLs.
+  // The hash is the single source of truth: card clicks, deep links,
+  // back/forward, hand-edited URLs.
   function syncFromHash() {
     var h = parseHash();
     applyFilter(h.tree);
@@ -743,8 +665,7 @@
         if (items[k].file === h.photo) { idx = k; break; }
       }
       if (idx !== -1) {
-        // A link straight to a photo past the batch draws the grid out to
-        // it first, so there is a card behind the lightbox to close onto.
+        // a deep link past the batch draws the grid out to it first
         revealThrough(idx);
         if (box.hidden) openLightbox(idx);
         else if (current !== idx) show(idx);

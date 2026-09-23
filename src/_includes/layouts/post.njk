@@ -21,14 +21,10 @@ layout: layouts/base.njk
       {%- endif %}
       {{ content | safe }}
 
-      {# Comments. Held for approval by our own worker — see
-         comments-worker/README.md — and switched on by filling in
-         comments.apiUrl in src/_data/site.js.
-
-         The form is rendered here rather than built in JavaScript so the
-         section looks finished the moment the page paints: no layout shift,
-         and no reserved blank space waiting for a widget to arrive. The
-         existing comments are fetched and inserted above it. #}
+      {# Comments: our own worker (comments-worker/), switched on by
+          comments.apiUrl in src/_data/site.js. The form is in the HTML so the
+          section is complete at first paint; comments.js inserts the thread above
+          it. #}
       {% if site.comments.apiUrl %}
       <section class="comments" aria-label="Comments"
                data-comments

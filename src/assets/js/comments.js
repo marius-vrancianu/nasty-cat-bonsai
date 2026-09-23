@@ -150,9 +150,7 @@
       })
       .then(function (data) { render(data.items || []); })
       .catch(function () {
-        /* Say so, in one line. The widget this replaced answered a dead
-           backend by rendering nothing at all inside an iframe held open at
-           480px, which is how it went unnoticed for months. */
+        /* Say so in one line rather than failing silently. */
         list.hidden = true;
         say("Comments couldn’t be loaded just now. The form below still works.", "error");
       });

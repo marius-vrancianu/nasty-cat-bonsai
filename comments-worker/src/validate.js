@@ -61,8 +61,8 @@ export function checkShape(body) {
   if (email && (email.length > 160 || !EMAIL_RE.test(email))) return "bad-email";
   if (countLinks(text) > LIMITS.links) return "too-many-links";
 
-  // Time on form, sent by the widget as the timestamp it rendered at. A bot
-  // posting straight to the endpoint either omits it or fakes something absurd.
+  // Time on form: comments.js sends when the form rendered. A bot posting
+  // straight to the endpoint omits it or sends something absurd.
   const elapsed = (Date.now() - Number(body.rendered || 0)) / 1000;
   if (!Number.isFinite(elapsed) || elapsed < LIMITS.minSeconds) return "too-fast";
 

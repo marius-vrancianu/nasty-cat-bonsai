@@ -3,20 +3,16 @@ layout: layouts/base.njk
 bodyClass: home-body
 ---
 <div class="home">
-  {#- The visible title lives inside the hero artwork; this gives screen
-      readers and search engines a real page heading. #}
+  {#- The visible title is inside the hero artwork; this is the real heading
+      for screen readers and search engines. #}
   <h1 class="visually-hidden">Nasty Cat Bonsai</h1>
-  {#- No icon toggle on this page: the celestial body IS the theme switch
-      here, and two controls for one setting is one too many. The icon stays
-      on every other page, where there is no sky to put a sun in. Setting
-      this before the include is what turns the orb from decoration into a
-      control — see partials/hills.njk. #}
+  {#- No icon toggle here: the orb in the backdrop is the theme switch.
+      Setting orbToggles before the include enables it (partials/hills.njk). #}
   {% set orbToggles = true %}
   {% include "partials/hills.njk" %}
-  {# AVIF → WebP → JPEG, largest-first per format; phones (which display
-     the hero at ~100vw ≈ 390–430 CSS px) get the 800px encodes. The
-     desktop `sizes` value is the image's rendered width: 91.9dvh tall
-     (see .hero-frame) × the 1134/1286 aspect ratio ≈ 81vh. #}
+  {# AVIF → WebP → JPEG. Phones (hero at ~100vw ≈ 390-430 CSS px) get the
+      800px files. Desktop `sizes`: the image is 91.9dvh tall (.hero-frame) ×
+      1134/1286 wide ≈ 81vh. #}
   <div class="hero-frame">
     <picture>
       <source type="image/avif"
@@ -31,13 +27,10 @@ bodyClass: home-body
     </picture>
   </div>
   <nav class="home-nav" aria-label="Main">
-    {#- Wrapped so the three links stack on their own, clear of the social
-        row below: the nav's width is set by that row, which is twice as
-        wide, and the rules below are measured against each word. #}
-    {#- The spans carry the narrow layout's underlines, which run under part
-        of a word rather than all of it — see .home-links .stroke. They mark
-        no meaning and do nothing in the wide layout; the text reads
-        unbroken either way. #}
+    {#- The links stack in their own wrapper, clear of the wider social row
+        below (which sets the nav's width). #}
+    {#- The .stroke spans carry the partial brush underlines (both layouts; see
+        .home-links .stroke). Presentational only. #}
     <div class="home-links">
       <a href="/about/"><span class="stroke">about</span></a>
       <a href="/blog/"><span class="stroke">blo</span>g</a>

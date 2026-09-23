@@ -21,7 +21,9 @@ WORKER_URL = "https://nasty-cat-comments.marius-v-vrancianu.workers.dev"
 binding = "COMMENTS"
 id = "de7e16abcb10441bb5bb53807b743fba"
 
-# Secrets are NOT set here — they go in with `wrangler secret put`:
+# Secrets are NOT set here. The "Deploy comments worker" workflow pushes
+# them from the repo's Actions secrets on every run (or, from a terminal,
+# `wrangler secret put`):
 #   SIGNING_KEY  RESEND_API_KEY
 #   EMAIL_KEY    ADMIN_EMAIL
 #   HASH_KEY

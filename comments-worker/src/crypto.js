@@ -78,13 +78,12 @@ export async function verifyToken(secret, token) {
   return { action, id };
 }
 
-/* AES-GCM at rest for email addresses. This has to be reversible — a hash
-   would be safer but we need the address back to send a reply notification.
-   It is worth being clear about what this does and doesn't buy: the Worker
-   holds the key, so it protects against the store being read without the
-   code (a stray export, a bug that returns too much), not against the code
-   itself. The real protection is that no response path ever emits an
-   address; this is the second lock, not the first. */
+/* AES-GCM at rest for email addresses. Reversible because the address is
+   shown in the moderation email so Marius can reply personally (the site
+   sends no automated mail to readers). The Worker holds the key, so this
+   guards against the store being read without the code (a stray export, a
+   bug returning too much), not against the code itself. The first lock is
+   that no response path ever emits an address; this is the second. */
 async function aesKey(secret) {
   const material = await crypto.subtle.digest("SHA-256", enc.encode(secret));
   return crypto.subtle.importKey("raw", material, { name: "AES-GCM" }, false,

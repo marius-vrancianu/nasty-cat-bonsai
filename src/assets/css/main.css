@@ -2,10 +2,9 @@
    Nasty Cat Bonsai — design tokens
    ========================================================================== */
 :root {
-  /* Light is the one and only default, regardless of the device's dark
-     mode ("only" also stops browsers force-inverting the palette).
-     Dark is strictly opt-in via the on-site toggle (theme.js), which
-     sets data-theme="dark" on <html>. */
+  /* Light is the default everywhere, whatever the device prefers ("only"
+     also stops browsers force-inverting it). Dark is opt-in via the toggle
+     (theme.js sets data-theme="dark" on <html>). */
   color-scheme: only light;
 
   --washi: #e3dbca;          /* warm paper background */
@@ -15,100 +14,47 @@
   --olive: #545c2f;          /* secondary accent, 5.17:1 on the paper */
   --hairline: rgba(28, 26, 23, 0.12);
   --hairline-strong: rgba(28, 26, 23, 0.2);
-  /* The accent, thinned to a wash: the hover/keyboard highlight inside our
-     own menus, where a full-strength --rust would be a second selection.
-     Written out as --rust at 12% rather than as a mix so it is one value
-     to retune, the way the hairlines above are. */
+  /* --rust at 12%: hover/keyboard highlight inside our own menus. */
   --accent-soft: rgba(154, 33, 4, 0.12);
-  /* Elevation. A shadow is ink spilled on paper, which is exactly why the
-     dark theme cannot borrow these two: near-black against a #222222 page
-     is nothing at all, and a gallery card lifted under the pointer with no
-     sign that it had. Dark draws the same two gestures in light instead —
-     same offsets, same blur, the paper colour where the ink was — so a card
-     still rises and a panel still floats, in the one medium that shows
-     against that ground.
-
-     --lift-card is the tighter of the two: a card leaving the page under
-     the pointer, the shadow pulled in to hug its lower edge.
-     --lift-panel is the softer halo of something already floating over the
-     page — the tree menu, the consent banner. */
+  /* Elevation. --lift-card: a gallery card rising under the pointer (tight,
+     hugging its lower edge). --lift-panel: something floating over the page
+     (tree menu, consent banner). Dark theme redraws both in light — see there. */
   --lift-card: 0 14px 28px -18px rgba(28, 26, 23, 0.4);
   --lift-panel: 0 6px 24px rgba(28, 26, 23, 0.18);
-  /* The home page's hill backdrop: one ink at three strengths, but written
-     out as three OPAQUE tones rather than three alphas. That is not an
-     optimisation, it is the only way a nearer hill can hide a further one.
-     Painted as alpha, two hills crossing made a fourth tone along their
-     overlap — the far ridge showing through the near one, which reads as
-     cellophane rather than as distance.
-
-     Each value is that strength of --ink mixed into --washi, channel by
-     channel in sRGB, which is exactly what the browser's own compositing
-     produced before — these are the same colours, minus the stacking.
-     Recompute as ink*s + paper*(1-s) if either end of the palette moves:
-
-       --hill-1  1.00  #222222
-       --hill-2  0.67  #62605a
-       --hill-3  0.45  #8c887e
-
-     0.45 rather than the 0.67 hill 2 carries: opaque, two hills at the same
-     strength have no edge where they cross at all, and hill 3 is a whole
-     distance further back than hill 2. */
+  /* Home-page hills: --ink mixed into --washi at 1.00 / 0.67 / 0.45, written
+     as OPAQUE tones rather than alphas so a nearer hill hides a further one
+     (alphas made a fourth tone where two hills overlap). Recompute as
+     ink*s + paper*(1-s) if either end of the palette moves. */
   --hill-1: #222222;
   --hill-2: #62605a;
   --hill-3: #8c887e;
-  /* The home page's footer row sits ON the near hill, so its icons are
-     paper rather than accent — the only place on the site where they are.
-     Their hover still swaps to --olive, as everywhere else. */
+  /* The home footer row sits on the near hill, so its icons are paper, not
+     accent (the only place). Hover still goes --olive. */
   --home-social: #e2dbcb;
-  /* The celestial body. Its own name rather than --rust because the two
-     themes do not agree about what it is: by day it IS the accent, by night
-     it is paper, and a moon that followed the link colour would have to
-     change every time that did. See .orb. */
+  /* The sun/moon (.orb). Its own token because the themes disagree: rust
+     accent by day, paper by night. */
   --orb: var(--rust);
   --orb-hover: var(--rust-hover);
-  /* One physical pixel, expressed in CSS pixels. The rules drawn with it
-     are a single device pixel at any zoom; the inline script in base.njk
-     keeps it true, and this 1px is what a browser without it falls back
-     to — today's behaviour. See that script for why it is needed. */
+  /* One device pixel in CSS px (set by an inline script in base.njk), so the
+     narrow layout's underline stays a whole number of device pixels at any
+     zoom. 1px is the fallback. */
   --device-px: 1px;
   --font: "Proza Libre", Georgia, serif;
   --measure: 680px;          /* comfortable reading width */
   --pad-x: clamp(20px, 5vw, 56px);
 }
 
-/* Dark scheme: paper and ink swap — paper takes the light theme's ink
-   color, ink lightens to a washi tone, and the rust accent becomes a
-   soft military olive (the light theme keeps its rust). Both olives are
-   tuned to sit just past WCAG AA (≥ 4.5:1) against the #222222 paper —
-   don't darken them without rechecking contrast.
+/* Dark theme: paper and ink swap, and the accent becomes olive. All olives
+   (these three and the light theme's one) are one hue, H=70 S=32, differing
+   only in lightness, each solved to its own contrast on #222222:
 
-   Every olive in the palette — this theme's three and the light theme's
-   one — is the same green, H=70 S=32. That sits deliberately between the
-   sage it started at (S=20) and army green's own S=44, which read as too
-   vivid against the washi once it was on the page. They differ
-   only in lightness, and each is solved to the contrast it wants against
-   its own ground rather than to a shared hex: one colour cannot clear AA
-   on both #e3dbca paper and #222222 ink, since the best any single shade
-   manages against both at once is 3.40:1.
+     --rust        4.67:1  headings and links
+     --rust-hover  6.22:1  hover, a clear step up
+     --olive       7.50:1  13-15px captions, quotes, status lines
 
-   The three dark shades are ordered by how much contrast their job needs,
-   which is why the secondary accent is the brightest of them and not the
-   dimmest:
-
-     --rust        4.67:1  headings and links, large or inline
-     --rust-hover  6.22:1  a clear step up from --rust on hover
-     --olive       7.50:1  13-15px captions, quotes and status lines
-
-   Small text needs more contrast than large text to read as easily — the
-   same reason AA asks 4.5:1 of body copy and only 3:1 of headings — so
-   the captions sit above the headings here by design.
-
-   That ordering also buys back the focus states. They work by swapping
-   --rust for --olive, so the two must not land on the same luminance:
-   they are 1.60:1 apart now, against the 1.05:1 they sat at while both
-   were mid-tone, and the swap reads as a real change. Keep a gap there if
-   you retune either. In the light theme the same swap crosses from rust
-   red to olive, so hue carries it. */
+   Small text needs more contrast than large, hence captions above headings.
+   Focus states swap --rust for --olive, so keep a real luminance gap between
+   them (1.60:1 now). Re-check contrast before darkening any of these. */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
@@ -119,62 +65,36 @@
   --olive: #adb876;      /* 7.50:1 */
   --hairline: rgba(215, 202, 176, 0.16);
   --hairline-strong: rgba(215, 202, 176, 0.28);
-  /* --rust at 18%, not 12%: a wash of a mid-tone olive on the dark paper
-     lifts it less than the same wash of red lifts the light one. */
+  /* 18% rather than 12%: an olive wash on dark lifts less than red on paper. */
   --accent-soft: rgba(134, 145, 75, 0.18);
-  /* Light where the day theme spends ink — see the note there. The card
-     asks 0.75 against the light theme's 0.4 because a glow spreads into a
-     dark ground far less readily than a shadow pools on a pale one; the
-     panel asks less, 0.13, because it is a wide soft wash rather than a
-     tight one and the same strength would read as a lit border. */
+  /* Glows instead of shadows (a dark shadow is invisible on #222222). The
+     card needs more strength than in light; the wide panel wash less, or it
+     reads as a border. */
   --lift-card: 0 14px 28px -18px rgba(215, 202, 176, 0.75);
   --lift-panel: 0 6px 24px rgba(215, 202, 176, 0.13);
-  /* DARK'S HILLS ARE OLIVE, not paper. They were #e2dbcb and its greys —
-     the light theme's ramp turned upside down — and the backdrop read as a
-     photographic negative of the day one. Olive makes it a night landscape
-     instead, and the moon becomes the one bright thing in it rather than one
-     pale shape among several.
-
-     The two behind still follow the near one by the rule at the top of this
-     file, ink*s + paper*(1-s) at 0.67 and 0.45, so the depth grading is
-     unchanged — only what is being graded. Against the #222222 sky they come
-     to 2.23:1, 1.69:1 and 1.40:1: a quiet backdrop by design, and they carry
-     no text, so the only ratio that has to hold is the footer row's below. */
+  /* Dark hills are olive, graded by the same ink*s + paper*(1-s) rule
+     (0.67, 0.45), so the moon is the one bright thing on the night page.
+     2.23 / 1.69 / 1.40 : 1 against the sky — quiet by design; they carry no
+     text except the footer row below. */
   --hill-1: #545c2f;
   --hill-2: #44492b;
   --hill-3: #393c28;
-  /* Paper here, where it used to be olive, because the hill it sits on has
-     swapped ends: it was the pale one and is now the dark one. 5.16:1 on it,
-     against the 5.18:1 the olive had on the old hill — the same legibility,
-     the other way round. (The old note here said 5.13; recomputed, it is
-     5.18. Every ratio in this block was worked out rather than remembered.) The hover to --olive comes out at 3.36:1 on this
-     hill, which is a good deal better than the 1.54:1 it managed on the pale
-     one, where the hover all but vanished. */
+  /* Footer icons on the dark near hill: 5.16:1; their --olive hover 3.36:1. */
   --home-social: #e2dbcb;
-  /* Paper, and the brightest thing on the night page at 11.5:1 against the
-     sky. By day this is the rust accent; see the light theme above. */
+  /* The moon: paper, 11.5:1 against the sky. */
   --orb: #e2dbcb;
-  /* The moon answers a press by going olive, the way every other control on
-     the site does. 7.50:1 on the sky, so it is no quieter than the paper it
-     was. */
+  /* Pressed/hovered moon goes olive like every other control (7.50:1). */
   --orb-hover: var(--olive);
 }
 
-/* The hills' own geometry, in units of each hill's drawn height. These are
-   not design knobs: they describe the three SVG files, and the only way to
-   change them is to change tools/gen-hills.py and re-run it, which rewrites
-   everything between the two markers below. Hand-editing them makes the
-   stylesheet disagree with the drawings, which shows up as a seam rather
-   than as anything obviously wrong — which is exactly why they are generated.
-   `python3 tools/gen-hills.py --check` says whether they are still in step.
+/* Hill geometry, in units of each hill's drawn height. Not design knobs:
+   they describe the three SVGs and are written by tools/gen-hills.py between
+   the markers below — edit the script and re-run it, never these by hand
+   (a mismatch shows as a seam). `python3 tools/gen-hills.py --check` verifies.
 
-   What the rules below do with them: a hill is drawn at some height --h, and
-   every figure here is a multiple of that height, so putting one of its
-   features somewhere on the page is
+   Placing a feature of a hill drawn at height --h at some point on the page:
 
-       --x: calc(<the place> - var(--h) * var(--hN-<the feature>))
-
-   and nothing else needs to know what the drawing looks like. */
+       --x: calc(<the place> - var(--h) * var(--hN-<feature>)) */
 /* >>> figures written by tools/gen-hills.py — do not edit by hand */
 :root {
   /* The frame every hill file shares, in units of its own height. */
@@ -253,12 +173,9 @@ html, body {
   padding: 0;
 }
 
-/* No grey-blue flash on tap. Phone browsers paint their own translucent
-   box over whatever link or button is touched, sized to its whole box —
-   on a gallery card, a slab over the photo that then shows through the
-   lightbox opening on top of it. Every control here already answers a
-   touch in its own way (the lightbox opens, a menu drops, a page loads),
-   so the browser's extra one is only noise. */
+/* No tap highlight: mobile browsers paint a translucent box over the whole
+   tapped link, which on a gallery card flashed through the opening lightbox.
+   Every control has its own feedback. */
 html { -webkit-tap-highlight-color: transparent; }
 
 body {
@@ -269,11 +186,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* The page settles in rather than snapping on. 0.15s, not the 0.45s it
-   was: the whole page starts at opacity 0, so every millisecond of the
-   fade is a millisecond nothing can be read — and it is what speed tools
-   count as the page appearing. At 0.15s the softness is still felt; the
-   wait is not. */
+/* Short fade-in. The page is invisible until it ends, so keep it short. */
 @media (prefers-reduced-motion: no-preference) {
   body { animation: page-fade 0.15s ease both; }
   @keyframes page-fade {
@@ -290,158 +203,86 @@ a { color: inherit; }
 .home-body { overflow: hidden; }
 
 .home {
-  /* THE MENU IS A THIRD OF THE PICTURE, and everything else about the words
-     follows from that.
+  /* The menu is the top third of the picture. The framed picture is 91.896dvh
+     tall (window minus a 4.052dvh stroke top and bottom), so the three links
+     together are --links-h = 30.632dvh. A link box is 1.58em (line-height 1.2
+     + 2 x 0.19em padding, on .home-links > a), three fill the block, so the
+     type is --links-h / 4.74. The narrow layout reuses both formulas with its
+     own --links-h. No clamp: the proportion is the design.
 
-     --links-h is the height of the three links together, and it is the top
-     third of the photograph: the frame is the window less a stroke top and
-     bottom, so the picture is 91.896dvh and a third of it is 30.632dvh. The
-     nav already starts at the picture's top edge, so the block spans the
-     picture's top third rather than merely matching its height.
-
-     --link-font falls out of it. A link's box is its line-height plus twice
-     its padding — 1.2 + 0.38 = 1.58 ems — and three of those fill the block,
-     so the type is the block over 4.74. THE NARROW LAYOUT USES THE SAME TWO
-     LINES with its own --links-h, which is what makes the two layouts the
-     same design at two sizes rather than two designs: change the ratio here
-     and both move together.
-
-     --ul-w is the brushwork's weight, and it is 0.222em because that is what
-     7px is against the narrow layout's type. The narrow layout keeps the
-     7 device pixels it was tuned at; this is that same mark, in proportion.
-
-     NO CLAMP on any of it. A third of the picture is a third of the picture:
-     on a 1440-tall window the words are 93px and on a 300-tall one they are
-     19px, and both are the proportion that was asked for. */
+     --ul-w: underline weight, 0.222em (= 7px at the narrow layout's type). */
   --links-h: calc(100vh * 0.30632);
   --link-font: calc(var(--links-h) / 4.74);
   --ul-w: calc(var(--link-font) * 0.222);
-  /* The width of the longest of the three words. CSS cannot measure text, so
-     it is a multiple of the type size: "gallery" measures 3.306em, and this
-     says 3.34.
-     THE DIFFERENCE IS DELIBERATE. A different browser build lays the same
-     word out about a pixel wider, and both the gate and the orb are held
-     clear of these words by a distance that would otherwise be exact — so a
-     pixel of disagreement came straight out of the clearance. It did: the
-     gate passed here with 43.8px of paper against a 43.8px stroke and failed
-     CI with 42.8. Over-stating the word by 1% puts 2 to 3px of slack under
-     the estimate at the sizes this type reaches, which is the shape of fix
-     the orb's clamps already got.
-     Measured here at eleven window sizes from 291 to 1600 tall: 3.3055 to
-     3.3068, so the ratio itself is solid — it is the rasteriser that is not
-     worth trusting to the pixel. */
+  /* Width of "gallery", the longest word: CSS cannot measure text, so it is a
+     multiple of the type size. Measured 3.306em; 3.34 on purpose — other
+     browser builds lay it out ~1px wider, and the gate and orb clearances
+     built on this failed in CI when it was exact. */
   --gallery-w: calc(var(--link-font) * 3.34);
   position: relative;
   height: 100vh;
   height: 100dvh;
   width: 100%;
   user-select: none;
-  /* Nothing here is meant to be swipeable sideways. `clip` rather than
-     `hidden` because hidden still makes a scroll container, which would let
-     any stray overflow be swiped onto bare washi; clip makes none at all. It
-     is set on the x axis alone, which only `clip` allows: `hidden` on one
-     axis forces the other out of `visible`, and the narrow layout scrolls
-     down the page. */
+  /* No sideways swiping. `clip`, not `hidden`: hidden creates a scroll
+     container, and on one axis forces the other off `visible` (the narrow
+     layout scrolls vertically). */
   overflow-x: clip;
 }
 
-/* Hill backdrop — three silhouettes cut from one drawing: hill-1.svg (near,
-   left of centre), hill-2.svg (middle distance, right of centre) and
-   hill-3.svg (far, centred and tallest). tools/gen-hills.py writes all three
-   and prints the figures this block has to agree with; re-run it rather than
-   editing an SVG by hand.
+/* HILL BACKDROP. Three silhouettes from one drawing: hill-1.svg (near, left
+   of centre), hill-2.svg (middle, right), hill-3.svg (far, centred, tallest),
+   all written by tools/gen-hills.py.
 
-   ONE FRAME, THREE FILES. Every file carries the same viewBox — the group's
-   whole bounding box, 8.4 : 1, symmetric about the tallest hill's tip — with
-   its own hill drawn in place inside it. So all three layers are the same
-   box at the same position and differ only in which file they mask and which
-   tone they paint. Nothing here measures or offsets a hill individually, and
-   a footer that wants only the near hill is one file and one span.
+   All three files share one viewBox — the group's bounding box, 10.4 : 1,
+   symmetric about the tallest tip — so every layer is the same box at the
+   same position and differs only in its mask file and tone.
 
-   They are masks over a flat fill, not coloured images, so one set of files
-   serves both themes: each layer paints one flat tone and the file decides
-   where it survives. The tones are opaque and painted back to front, so a
-   nearer hill HIDES the ones behind it rather than tinting them — see
-   --hill-1/2/3 for why that is not the same as three alphas. Three <span>s,
-   three little paths, no script, nothing measured at runtime — the whole
-   backdrop is four static declarations and a repaint.
+   Each is a mask over a flat opaque fill (one set of files for both themes),
+   painted back to front so nearer hills hide further ones.
 
-   THE GROUND RUNS ON FOREVER. Each outline leaves its frame horizontally, at
-   that hill's own ground level, and the second mask layer — a hard-edged
-   gradient across the full width of the box — continues it at exactly that
-   level to both window edges. The two layers are unioned (the default
-   mask-composite is `add`), so it is one silhouette with no seam to catch
-   the light. That is what lets the drawing sit in a window of ANY width at
-   its own proportion: it is never stretched, only continued. The three
-   percentages below are the three ground levels the generator prints,
-   measured DOWN from the box's top, so 78% is a ground at 0.22 of the
-   height. They are the only numbers shared between the SVGs and the CSS.
+   The ground runs on forever: each outline leaves its frame at its own
+   ground level, and a second mask layer (hard-edged gradient, full width)
+   continues it to both window edges at that level (--hN-sky, from the
+   generated block). The drawing is never stretched, only continued. The
+   near hill's ground is highest, so only its horizon reaches the edges.
 
-   Because the near hill's ground is the highest of the three, it is always
-   that hill's horizon that reaches the edges; the other two never show
-   theirs. One horizon line on the page, whatever the window.
-
-   z-index 0 puts the whole thing behind the picture (1) and the nav (2). */
+   z-index 0: behind the picture (1) and the nav (2). */
 .hills {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  /* The lower half of the window — so the tallest hill's tip lands on the
-     window's own half-height line — and on a SHORT, WIDE one as much more as
-     the footer icons need. See THE NEAR HILL CARRIES THE FOOTER ICONS below
-     for the whole of that; the short of it is that this is 50dvh at every
-     window anyone actually has, and the floor only bites past about 5 : 1. */
+  /* Lower half of the window, so the tallest tip lands on the window's
+     half-height line; taller on a very short, wide window — see THE NEAR HILL
+     CARRIES THE FOOTER ICONS. */
   --band-h: max(var(--band-base), var(--band-icons));
   height: var(--band-h);
-  /* The torii's proportion, 197.57 / 162.228, and the width it gives — see
-     .torii below. Both live here rather than on .torii because both layouts
-     spend them: one divides a width limit by the ratio, and both place the
-     gate's left edge against its own width. A custom property is resolved
-     against the element it is DECLARED on, so one declared on the child is
-     simply missing up here, and a --t-x that quietly fails takes `left` with
-     it and drops the gate at its static position. Which is what happened. */
+  /* The torii's proportion (197.57 / 162.228) and resulting width. Declared
+     here, not on .torii, because both layouts use them on this element: a
+     custom property resolves where it is DECLARED, so one declared on the
+     child is missing here and silently breaks --t-x. */
   --t-ratio: 1.21787;
   --t-w: calc(var(--t-h) * var(--t-ratio));
-  /* The orb's diameter, up here for the same reason --t-w is: both layouts
-     place it from its own size, and a custom property is resolved against
-     the element it is DECLARED on. Declared on .orb it would be missing in
-     the rules below, and a --s-x that quietly fails takes `left` with it. */
+  /* The orb's diameter, here for the same reason as --t-w. */
   --s-d: calc(var(--t-w) * var(--s-size));
-  /* Where the frame's centre line — the tallest tip — is put. The narrow
-     layout does not use this: there the three are placed one by one. */
+  /* Where the frame's centre line (the tallest tip) goes. Wide layout only;
+     the narrow layout places each hill separately. */
   --hills-x: center;
   z-index: 0;
   pointer-events: none;
 }
 
-/* Every hill is placed by exactly two properties, and this is the whole of
-   the mechanism — the narrow layout differs from the wide one only in what it
-   sets them to, and anything added to this backdrop later should join it.
+/* Every hill is placed by two properties; layouts differ only in what they
+   set them to:
 
      --h  the height the drawing is drawn at
-     --x  where the image's LEFT EDGE goes
+     --x  where the image's LEFT EDGE goes (what mask-position takes)
 
-   --x is a left edge rather than a feature because that is what mask-position
-   takes. To put a feature somewhere instead, subtract: the generated figures
-   give every feature as a multiple of the drawing's own height, so
-
-     --x: calc(<the place> - var(--h) * var(--h3-peak))
-
-   reads "hill 3's summit, there". See the generated block near the top.
-
-   The defaults here are the wide layout: every hill at the band's full height
-   with the frame centred, which is what makes the tallest tip land on the
-   window's centre line.
-
-   `mask-size: auto 100%` fills --h and takes the width from the file's own
-   ratio, so the drawing scales and is cropped but never squashed. The ground
-   layer is 100% 100% because it has to reach both window edges whatever that
-   width comes to.
-
-   `.hill` rather than `span`: the torii gate is a span in this box too, and
-   it is not placed this way at all — it is a bounded object with its own box
-   rather than a horizon that leaves the frame at both edges. See .torii. */
+   Defaults are the wide layout: full band height, frame centred.
+   mask-size `auto 100%` scales without squashing; the ground layer is
+   100% 100% to reach both edges. `.hill`, not `span`: the torii is also a
+   span here and is placed differently (see .torii). */
 .hills > .hill {
   --h: 100%;
   --x: center;
@@ -488,65 +329,29 @@ a { color: inherit; }
                                          #000 var(--h3-sky));
 }
 
-/* THE NEAR HILL CARRIES THE FOOTER ICONS, at every shape of window, and on a
-   SHORT and WIDE one the lower half of the window is not enough to do it
-   with. A 2013x291 window is where this showed: the icons sat half off the
-   hill, hanging in the paper.
+/* THE NEAR HILL CARRIES THE FOOTER ICONS at every window shape. On a short,
+   wide window (seen at 2013x291) half the window is not tall enough, so the
+   band grows.
 
-   WHERE THE ICONS ARE relative to that hill decides everything, and it is not
-   where you would guess. The nav — and so the footer row — starts at 89.14dvh
-   from the left, a share of the HEIGHT; the near hill's summit is half a band
-   in from the window's centre, mostly a share of the WIDTH. On an ordinary
-   window the row is well to the RIGHT of that summit, on the long descending
-   flank, hundreds of pixels above the horizon and in no danger. It is only
-   once the window is more than about 2.4 times as wide as it is tall that the
-   summit overtakes the row and the icons end up out on the LEFT flank, where
-   the hill is at its lowest.
+   The footer row starts 89.14dvh from the left (a share of the HEIGHT); the
+   near hill's summit sits near the centre (a share of the WIDTH). Normally
+   the row is right of the summit, high on the long flank. Only past about
+   2.4 : 1 does the summit pass the row, leaving the icons on the low LEFT
+   flank. --reach is that overshoot (0 otherwise), measured against
+   --band-base (not the grown band — that would be circular; this errs safe).
 
-   --reach is that distance, and 0 whenever the row is on the safe side of the
-   summit, which is what keeps all of this out of the way at 1920x1080. It is
-   measured against --band-base rather than against the band the floor
-   produces, which would be circular. That is the conservative direction: a
-   taller band pulls the summit LEFT, so the true reach is always shorter than
-   the one measured here and the hill always a little higher than asked.
+   --band-icons is the band that keeps the icons on the hill:
+     - the flank must REACH them: its run is (--h1-peak - --h1-heel) heights;
+     - and be HIGH enough there: on its outermost (gentlest) segment the hill
+       rises --h1-approach per unit back from its foot.
+   The 8px in --row-top is clearance above the icons.
 
-   THE FLOOR is two conditions on the band, both written as terms of the same
-   max():
-
-     the flank has to REACH the icons at all — its whole run is
-     (--h1-peak - --h1-heel) heights, so the band cannot be less than --reach
-     divided by that, or the row stands out on the flat ground past the hill's
-     foot;
-
-     and the flank has to be HIGH ENOUGH there. On its outermost segment the
-     hill stands at its ground plus --h1-approach for every pixel back from
-     the foot, which rearranges into the second term. Every segment further in
-     is steeper, so using the gentlest is a floor and never an over-estimate —
-     that is what --h1-approach is for.
-
-   THE WHOLE BAND AND NOT JUST THE ONE HILL. Growing the near hill alone is
-   the obvious move and it is wrong: the drawing's ground and its summit are
-   both fractions of its height, so a hill grown enough to lift its ground
-   over the icons also grows a summit that swallows the two hills behind it —
-   at 2013x291 they came out as a pair of three-pixel slivers on its ridge,
-   which reads as damage rather than as distance. Scaled together the group
-   keeps its composition exactly and simply sits larger in a window too short
-   to hold it at half height. Nothing else in this file has to know: every
-   hill is placed against the band, so they all follow it.
-
-   The 8px is clearance: the row's top is where the icons start, and sitting
-   them exactly on the horizon reads as sitting them off it.
-
-   WHEN THIS BITES, and it is rarer than it sounds: the floor passes 50dvh
-   only below about 394px tall at 1920 wide, 406 at 2013, 438 at 2560. What
-   bought that margin is the left flank being twice the run it used to be (see
-   gen-hills.py, THE LEFT FLANK IS THE WIDE LAYOUT'S HORIZON) — against the
-   old short flank the icons stood on flat ground, and the band had to grow by
-   half to hold them at a window as ordinary as 1920x420. */
+   The whole band grows, not just the near hill: growing one hill alone
+   would swallow the other two behind its bigger summit. The floor only
+   exceeds 50dvh below ~394px tall at 1920 wide (406 at 2013, 438 at 2560). */
 :root {
-  /* Declared here and not on .hills: --reach below is substituted against
-     whatever THIS element's --band-base is, so the two have to sit together.
-     .hills inherits both. */
+  /* Declared on :root, not .hills: --reach must resolve against the same
+     element's --band-base. .hills inherits both. */
   --band-base: 50vh;
   --row-top: calc(100vh * 0.04052 + clamp(32px, 100vh * 0.038, 34px) + 8px);
   --reach: max(0px, calc(50vw - var(--band-base)
@@ -571,37 +376,18 @@ a { color: inherit; }
   }
 }
 
-/* THE CELESTIAL BODY — the sun by day, the moon by night, and the same box
-   either way. It is the furthest-back thing on the page: first in hills.njk,
-   so everything else paints over it.
+/* THE ORB: sun by day, moon by night, one box. First in hills.njk, so
+   everything else paints over it.
 
-   NO FILE FOR THIS ONE. The hills and the gate are drawings and need to be;
-   a disc is `border-radius: 50%` and a crescent is that disc with an inset
-   shadow, which is the neatest shape in CSS and costs no request. The
-   crescent works because an inset shadow is clipped to the padding box —
-   the circle — and leaves a hole the shape of that same box, offset. Circle
-   minus circle at the same radius is a true lune: horns at either end and
-   its belly on the side away from the offset, which is the lower right. Its
-   thickness is the offset's own length, so --s-crescent IS how fat the moon
-   is, measured across its middle, and nothing else has to change with it.
+   No file: the sun is border-radius 50%; the moon is the same disc with an
+   inset shadow (clipped to the circle, so circle minus offset circle = a
+   true crescent, belly to the lower right). --s-crescent is its thickness.
 
-   --orb is what it is painted in, and it is a palette token of its own
-   because the two themes disagree about what this thing is: by day it is the
-   rust accent, by night it is paper — the one bright shape in an olive
-   landscape.
-
-   WHERE IT GOES is stated against the gate, not the window: it rises behind
-   the roof's right end, a little above and a little right of it, so the two
-   read as one composition wherever the gate happens to be. --s-over is how
-   much of the disc hides behind the gate horizontally and --s-rise how far
-   it clears the roof.
-
-   Then two clamps hold it off the window's edges by a stroke, which is the
-   whole of what the wide layout needs, and the narrow one swaps the top
-   clamp for the picture's foot: the photograph is opaque and paints over
-   this, so an orb that drifted up into it would come out sliced rather than
-   round. Both are minimums — where there is room, the gate's own position is
-   what places it. */
+   Placed against the gate, not the window: it rises behind the roof's right
+   end. --s-over is how much hides behind the gate, --s-rise how far it
+   clears the roof. Two clamps keep it a stroke inside the window; the narrow
+   layout swaps the top clamp for the picture's foot (the photo is opaque
+   and would slice it). */
 .orb {
   position: absolute;
   left: var(--s-x);
@@ -610,9 +396,7 @@ a { color: inherit; }
   height: var(--s-d);
   border-radius: 50%;
   background: var(--orb);
-  /* It is a <button> on the home page and a <span> everywhere else, so the
-     button's own chrome is cleared here rather than in a rule that only one
-     of the two would match. */
+  /* <button> on the home page, <span> elsewhere: clear button chrome here. */
   border: 0;
   padding: 0;
   -webkit-appearance: none;
@@ -620,18 +404,12 @@ a { color: inherit; }
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* AND IT IS THE THEME SWITCH. .hills sets pointer-events: none so the
-   backdrop never swallows a click meant for something else; this is the one
-   piece that wants them back. Everything painted over the orb — two hills and
-   the gate — keeps pointer-events: none, so the whole disc answers wherever
-   you press it, including the half of the moon that is drawn dark and the
-   part hidden behind the roof. The button's box is the circle either way.
-
-   Colour carries the states rather than an outline alone: the orb sits partly
-   over the near hill, and an outline drawn in any one colour would be
-   invisible against one half of what is behind it. The outline is still there
-   for the ring it draws around the hit area, which is worth seeing on a shape
-   that is half hidden. */
+/* On the home page the orb is the theme switch. .hills has
+   pointer-events: none so the backdrop never eats clicks; the orb takes them
+   back. Hills and gate above it stay none, so the whole disc answers,
+   including parts drawn over. States are carried by colour (an outline alone
+   would vanish against half of what is behind); the outline marks the hit
+   area. */
 .orb[data-theme-toggle] {
   pointer-events: auto;
 }
@@ -644,11 +422,8 @@ a { color: inherit; }
 }
 
 .orb[data-theme-toggle]:focus-visible {
-  /* --ink and not --orb-hover: the ring has to be seen against the paper,
-     the hills and the gate all at once, and --ink is the one colour in the
-     palette that is defined as the opposite of the background in both
-     themes. Sized in CSS pixels rather than device ones — this is a ring to
-     be noticed, not a hairline to be exact. */
+  /* --ink: the one colour defined as the opposite of the background in both
+     themes, so the ring shows against paper, hills and gate alike. */
   outline: 3px solid var(--ink);
   outline-offset: 6px;
 }
@@ -660,8 +435,7 @@ a { color: inherit; }
                     0 0 var(--orb);
 }
 
-/* The moon's colour lives in a shadow rather than a background, so its hover
-   has to be restated here — the background swap above has nothing to paint. */
+/* The moon is painted by its shadow, so its hover must restate that. */
 :root[data-theme="dark"] .orb[data-theme-toggle]:hover,
 :root[data-theme="dark"] .orb[data-theme-toggle]:focus-visible {
   background: transparent;
@@ -672,36 +446,17 @@ a { color: inherit; }
 
 /* THE TORII GATE, standing on the near hill.
 
-   It is drawn in torii.svg, which is the supplied artwork cropped to the
-   gate's own bounding box and stripped of colour — so the file's edges ARE
-   the gate's edges and its box can be placed directly, with no offsets to
-   keep in step. Three figures come out of that crop and are written here
-   because nothing else can know them:
+   torii.svg is the artwork cropped to the gate's bounding box and stripped
+   of colour, so its box can be placed directly. Its ratio is --t-ratio; the
+   pole centres (27.1% / 72.9% of the width) matter only to
+   tools/check-hills.mjs, which checks the feet are buried. Re-cropping means
+   re-measuring all three.
 
-     --t-ratio   197.57 / 162.228, the drawing's own proportion
-     the poles   their centres at 27.1% and 72.9% of the width
+   Masked and filled in --hill-1 like the near hill, so the two merge where
+   they meet. It sits inside .hills so document order (hills.njk) puts it in
+   front of hills 3 and 2 and behind hill 1, which paints over its feet.
 
-   The poles are not needed by the stylesheet — only by the check that they
-   are buried — so they live in tools/check-hills.mjs, next to the rule that
-   uses them. Re-cropping the file means re-measuring all three.
-
-   It is masked and coloured exactly like a hill, in --hill-1: the near hill
-   is what it stands on, and the same tone is what lets the two merge where
-   they meet instead of showing a join. Being a mask, the file carries no
-   colour of its own and the theme is the stylesheet's business, as with
-   everything else on this backdrop.
-
-   HOW IT IS SIZED, in one place for both layouts: --t-h is a share of the
-   hills band, capped by the two things that must not be crossed — see each
-   layout below for what those are. The width follows the ratio, so it is
-   never squashed. Every window gets the same gate at a different scale.
-
-   WHY IT SITS IN .hills AT ALL rather than beside it: the order of the spans
-   in hills.njk is what puts it in front of hills 3 and 2 and behind hill 1,
-   and that last part is the whole illusion — the near hill paints over the
-   feet, so the gate reads as standing on the slope rather than in front of
-   it. A z-index would do the same thing and be one more number to keep;
-   document order is free. */
+   --t-h is a share of the band, capped per layout (see each). */
 .torii {
   position: absolute;
   left: var(--t-x);
@@ -717,64 +472,28 @@ a { color: inherit; }
   mask-repeat: no-repeat;
 }
 
-/* THE GATE, WIDE. Placed in the empty right-hand half of the window: its
-   middle goes on the middle of the gap between the last word of the menu and
-   the window's edge.
+/* THE GATE, WIDE: centred in the gap between the menu's last word and the
+   window's right edge.
 
-   --t-menu is where that gap starts — the right edge of "gallery", the
-   longest of the three words. CSS cannot measure text, so it is worked out
-   the way the pines' anchor was: every word here is a fixed multiple of its
-   own type size, and --gallery-w on .home carries that figure — deliberately
-   a shade over the measured one, so a clearance of exactly one stroke is not
-   left at the mercy of a rasteriser. Add the nav's own left offset (89.14dvh,
-   the framed picture's width — see .hero-frame) and that is the edge.
+     --t-menu   right edge of "gallery": the nav's left (89.14dvh) + --gallery-w
+     --t-start  one stroke (4.052dvh) past that — the gap starts here, so
+                there is always a stroke of paper between word and gate
+     --t-cap    top of the "gallery" link: nav top (4.052dvh) + two of the
+                three link boxes (2/3 of --links-h). The gate's top may not
+                rise above it. tools/check-hills.mjs compares this with the
+                rendered link.
+     --t-share  gate height as a share of the band — THE knob to resize it;
+                the footing follows, so a bigger gate stands deeper
+     --t-ridge  hill 1's ridge height where the gate stands, as a share of
+                the band: MEASURED, 0.348-0.356 (low end taken). --t-sink puts
+                the feet that share of the gate's height below it. The check
+                scans the pixels to confirm the feet are buried.
 
-   --t-cap is the top of the "gallery" link's box, which the gate's own top
-   may sit below but never above. It too is arithmetic rather than
-   measurement, and it mirrors declarations elsewhere in this file: the nav
-   starts 4.052dvh down, and two link boxes plus two gaps fall above the
-   third word. A link's box is 2.046em — line-height 1.16 plus twice the
-   0.443em padding, both set on .home-links > a — and the gap is the clamp on
-   .home-links. Checked against the rendered link at 291, 800, 1080 and 1440
-   tall: exact at all four. Change either declaration and this has to follow;
-   tools/check-hills.mjs compares the two and says so.
-
-   --t-share is how big the gate is: its height as a share of the band. It is
-   the one number to change to resize the gate, and everything else here
-   follows it — including the footing, so a bigger gate stands deeper rather
-   than perching at the same line.
-
-   --t-ridge is the one figure here that is MEASURED rather than derived:
-   hill 1's ridge where the gate stands is a remarkably steady 0.348 to 0.356
-   of the band — 0.383 on the shortest window tested — because the gate's
-   distance from that hill's summit and the hill's own flank both scale with
-   the window's height. The low end is taken. --t-sink then puts the feet
-   that share of the gate's height below it, which is where --t-b comes from.
-   That the feet are actually buried is not left to this arithmetic: the
-   check scans the pixels at both poles.
-
-   --t-start is where the gap actually begins: one stroke — the picture's own
-   mat, 4.052dvh — past the menu's edge, so there is always that much paper
-   between the last word and the gate. Without it the two touch on any window
-   where the gate fills the gap, and at 1512x982 the old spacing came to nine
-   pixels. Everything below is measured from --t-start rather than --t-menu,
-   so the clearance holds whether the gate is centred or at its largest.
-
-   THE GAP IS ALSO A SIZE LIMIT, which is the second term of --t-h. The gate
-   is asked for at --t-share of the band and that is more than the gap can
-   hold on anything squarer than about 21 : 9, so without this the gate runs
-   off the right of the window — at 1280x800 two thirds of it was off, and
-   what was left read as a fragment rather than as a gate. Held to the gap it
-   stays whole, and the size it was asked for is what it gets wherever there
-   is room for it.
-
-   That limit is exactly where the left edge would otherwise have to be
-   clamped: a gate no wider than the gap, centred in it, never reaches back to
-   --t-start. The max() on --t-x is what says so, and it is kept because it is
-   the rule — "the box stops when its corner meets the menu" — rather than
-   because it still fires. The 0px floor is for a window narrower than the
-   nav's own left offset, where there is no gap at all and so no gate: at
-   768x1024 the whole nav is off the right of the window already. */
+   --t-h's second term holds the gate to the gap's width (otherwise it runs
+   off the right edge on anything squarer than ~21:9). Held that way it never
+   reaches back past --t-start, so the max() on --t-x states the rule rather
+   than firing. The 0px floor covers windows narrower than the nav's offset,
+   where there is no gap and so no gate. */
 .hills {
   --t-menu: calc(100vh * 0.8914 + var(--gallery-w));
   --t-cap: calc(100vh * 0.04052 + var(--links-h) * 0.66667);
@@ -816,20 +535,11 @@ a { color: inherit; }
   }
 }
 
-/* The mat around the hero. Stroke width = 5% of the displayed image width;
-   with the 1134x1286 image (ratio r=0.8818) and the frame filling the full
-   viewport height, solving
-     stroke = 0.05 · r · (100dvh − 2·stroke)
-   gives stroke ≈ 4.052dvh. The stroke is the same on all four sides, so the
-   frame is 4.052 + 81.034 + 4.052 ≈ 89.14dvh wide (the image itself being
-   0.8818 × 91.896dvh), and .home-nav's left offset is that same 89.14dvh —
-   the two must move together or the links overlap the picture.
-
-   The mat itself paints nothing: it is transparent, so what shows in it is
-   the page — washi in light, ink in dark. All it contributes is distance,
-   holding the picture off the window's edges and off the nav beside it by
-   one stroke on every side.
-*/
+/* The mat around the hero: stroke = 5% of the displayed image width. With
+   the 1134x1286 image (r = 0.8818) filling the window height,
+     stroke = 0.05 * r * (100dvh - 2 * stroke)  ->  4.052dvh,
+   so the frame is 89.14dvh wide. .home-nav's left offset is that same
+   89.14dvh — move them together. The mat is transparent (shows the page). */
 .hero-frame {
   position: absolute;
   top: 0;
@@ -841,8 +551,8 @@ a { color: inherit; }
   z-index: 1;
 }
 
-/* The <picture> wrapper must not create its own box, so .home-hero keeps
-   resolving its percentage height against .hero-frame. */
+/* The <picture> must not make a box of its own, so .home-hero's percentage
+   height resolves against .hero-frame. */
 .hero-frame picture { display: contents; }
 
 .home-hero {
@@ -852,23 +562,12 @@ a { color: inherit; }
   display: block;
 }
 
-/* The nav starts at the framed hero's right edge (≈ 89.14dvh, see
-   .hero-frame), i.e. one stroke-width past the picture — the same distance
-   the mat holds on every other side. The three links sit in .home-links
-   inside it; the social row is the nav's own child, and the two share this
-   left edge — which is what the links are aligned to.
-   Vertically it spans the hero's content edges (inside the stroke):
-   links start at the image's top edge, the social row is pushed to its
-   bottom edge. */
-/* THE NAV IS A BOX AROUND SOME WORDS, not a surface. It is full-width in the
-   narrow layout and a tall column in the wide one, and in both it has a lot
-   of empty space — all of which used to swallow presses meant for what is
-   behind it. On a phone that is the whole of the orb: every point of the sun
-   answered `div.home-links`, so nothing happened when you touched it, while
-   the desktop worked only because the orb happens to sit clear of the column.
-
-   pointer-events go back on for the things that are actually pressable. The
-   underline pseudo-elements set their own `none` and are unaffected. */
+/* The nav starts at the framed hero's right edge (89.14dvh, one stroke past
+   the picture). The links (.home-links) and the social row share that left
+   edge; the links start at the image's top, the row sits at its bottom. */
+/* The nav's empty area must not swallow presses meant for what is behind it
+   (on a phone, that was the whole orb). Only its links and buttons take
+   pointer events; the underline pseudo-elements set their own none. */
 .home-nav { pointer-events: none; }
 
 .home-nav a,
@@ -889,29 +588,23 @@ a { color: inherit; }
   gap: clamp(8px, 2.25vh, 28px);
 }
 
-/* The three links, stacked on their own rather than as direct children of
-   .home-nav, so they keep their own width: the nav's is set by the social
-   row, which is about twice as wide as the longest word. */
+/* The three links in their own column, so they keep their own width (the
+   nav's is set by the social row, about twice as wide). Given --links-h and
+   space-between with no gap, so line-box rounding is spread between the words
+   and the block still measures --links-h. */
 .home-links {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   width: max-content;
-  /* Given a height and the three boxes laid into it, exactly as in the narrow
-     layout: space-between with no gap, so any rounding in the line boxes is
-     spread between the words and the block still measures --links-h. */
   height: var(--links-h);
   justify-content: space-between;
   gap: 0;
 }
 
-/* No inline padding, so each word starts on .home-nav's own left edge —
-   level with the first social icon underneath, and the mirror of the narrow
-   layout ranging them against the picture's other side.
-
-   line-height 1.2 and 0.19em of padding either side make the box 1.58em,
-   which is the figure --link-font is solved from. The two have to move
-   together or the block stops measuring --links-h. */
+/* No inline padding: each word starts on the nav's left edge. line-height
+   1.2 + 0.19em padding each side = the 1.58em box --link-font is solved
+   from; change them together. */
 .home-links > a {
   position: relative;
   text-decoration: none;
@@ -926,41 +619,15 @@ a { color: inherit; }
 .home-links > a:hover,
 .home-links > a:focus-visible { color: var(--rust-hover); }
 
-/* The words are underlined — and only partly, so that the mark reads as
-   one made over the word rather than as a border under it: all of
-   "about", "blo" of "blog", "alle" of "gallery". The spans in index.njk
-   set those spans of letters; a span is inline, so its box is exactly the
-   letters it holds.
+/* Partial underlines — "about", "blo", "alle" — set by the .stroke spans in
+   index.njk, in both layouts (only --ul-w differs).
 
-   BOTH LAYOUTS CARRY THEM. They were the narrow layout's alone while the
-   wide one had a vertical rule to hang its marks off; that rule is gone and
-   the two menus are now the same design at two sizes, so the marks belong
-   to both. Only --ul-w differs, and only because the narrow layout was
-   tuned at 7 device pixels and is left at them.
-
-   THE THREE MARKS ARE THREE REAL BRUSH STROKES, cropped each to its own
-   ink and flattened to a silhouette — they are masks, so they carry alpha
-   and nothing else and the colour stays here. They came off a 1.8MB sheet
-   of three strokes drawn as a shade-by-shade trace, 5,259 filled paths of
-   grey; what a mask needs from that is one outline, so the sheet was
-   rendered, thresholded and its boundary traced by marching squares, then
-   simplified to about a tenth of a pixel at the size these are finally
-   drawn. 1.1 to 1.6KB each, and the dry-brush gaps survive as holes in the
-   path rather than as separate shapes — hence fill-rule="evenodd".
-
-   WHICH STROKE GOES WHERE is a matter of how much each is stretched, since
-   mask-size: 100% 100% and preserveAspectRatio="none" fit the drawing to
-   the word whatever its own proportion. At 7px of ink the three words want
-   ratios of about 13.2, 7.0 and 9.6; the strokes are 10.6, 6.9 and 7.5, so
-   they are paired longest-to-longest and "blo" gets a stroke it barely has
-   to stretch at all.
-
-   These strokes carry no fade of their own, so they end where the brush
-   thinned out. Sitting a touch above the line box's foot puts them where
-   an underline goes, just clear of the baseline, rather than below the
-   descenders. They wander little: a word is a straight edge to measure
-   against, so a bend that would read as brushwork across open paper reads
-   here as an underline that has slipped. */
+   The marks are three real brush strokes, traced to single-outline mask SVGs
+   (1.1-1.6KB; dry-brush gaps are holes, hence fill-rule="evenodd"). They are
+   stretched to the word (mask-size 100% 100%, preserveAspectRatio="none"), so
+   each is paired with the word whose ratio it needs stretching least. Set a
+   touch above the line box's foot: where an underline goes, clear of the
+   baseline. */
 .home-links .stroke { position: relative; }
 
 .home-links .stroke::after {
@@ -1000,9 +667,8 @@ a { color: inherit; }
   margin-top: auto; /* pin to the hero's bottom edge */
 }
 
-/* Paper on the near hill in light, olive on it in dark — see --home-social.
-   The privacy link and the cookie-settings button inherit this, so the whole
-   row reads as one. */
+/* On the near hill: see --home-social. The privacy link and cookie button
+   take the same colour so the row reads as one. */
 .home-social a,
 .home-social .cookie-settings {
   color: var(--home-social);
@@ -1022,31 +688,18 @@ a { color: inherit; }
 @media (max-width: 767px) {
   .home-body { overflow: auto; }
 
-  /* The figures the narrow layout is composed on. They live on .home rather
-     than on .hills because the LAYOUT and the BACKDROP both spend them: the
-     nav gives up --links-h to the links and --band-gap to the gap below
-     them, and the band is sized from those same two. That is the whole
-     point of their being here — the gap the hills stand in and the gap the
-     nav leaves them cannot drift apart, because there is only one of each.
+  /* The figures the narrow layout is built on. On .home, not .hills, because
+     the layout and the backdrop both use them — the gap the nav leaves and the
+     gap the hills stand in cannot drift apart.
 
-     --links-h is a height that is GIVEN, not one that is measured. The three
-     links are laid out into it and the type is sized from it (see
-     .home-links below), rather than the type being chosen and the height
-     read off the result. It used to be 208px, copied off the live page, and
-     a number copied off a live page is wrong the moment the type moves.
-
-     --band-gap is the clear sky over the near hill's ground: the room the
-     two far hills have to stand in. It is reserved in the FLOW as the
-     links' bottom margin, so the page is tall enough to hold it at every
-     width; see HOW TALL THE BAND IS below for why that is the fix.
-
-     --foot is the only figure here still measured off the live page: how far
-     the footer row's top sits above the page's own foot, which is the row
-     plus the nav's bottom padding. It steps by 18px at 439px, the width
-     where "cookie settings" stops wrapping to two lines and the row loses a
-     line. (438 and 439 were bisected, not guessed — this breakpoint read 430
-     for two rounds and was nine pixels wrong.) Re-measure it if the row's
-     contents change; tools/check-hills.mjs is what will tell you. */
+       --links-h   GIVEN height of the three links; the type is sized into it
+       --band-gap  clear sky over the near hill's ground, reserved in the flow
+                   as the links' bottom margin (see HOW TALL THE BAND IS)
+       --foot      how far the footer row's top sits above the page's foot —
+                   the one figure measured off the page. 84px, or 66px from
+                   439px up where "cookie settings" stops wrapping (bisected:
+                   438 wraps). Re-measure if the row's contents change;
+                   tools/check-hills.mjs will flag it. */
   .home {
     height: auto;
     min-height: 100vh;
@@ -1058,16 +711,8 @@ a { color: inherit; }
     --sixth: calc(100vw / 6);
     --links-h: clamp(144px, 38vw, 154px);
     --link-h: calc(var(--links-h) / 3);   /* one link's box, exactly */
-    /* The type is solved from --links-h by the rule on .home — one formula
-       for both layouts now, so the two menus cannot drift apart. It used to
-       be (--links-h - 36px) / 3.6, a 12px padding rather than an em one,
-       which came to within a third of a pixel of this at every width from
-       320 to 767.
-
-       --gallery-w is on .home now, one copy for both layouts. */
-    /* The brushwork's weight, in whole physical pixels at any zoom, which is
-       where this layout was tuned. The wide layout takes the same mark as a
-       proportion of its own type instead — see --ul-w on .home. */
+    /* Underline weight in whole device pixels (tuned at 7); the wide layout
+       uses a proportion of its type instead. */
     --ul-w: calc(var(--device-px) * 7);
     --band-gap: clamp(84px, 24vw, 104px);
     --foot: 84px;
@@ -1075,122 +720,50 @@ a { color: inherit; }
                 var(--band-gap) + var(--foot));
   }
 
-  /* The hills, narrow. The three no longer share one placement here: each is
-     given its own height and its own horizontal anchor, all of them hung off
-     a SIXTH of the window's width, which is the grid this layout is composed
-     on. The files do not change, and neither do the tones — what changes is
-     which part of each frame the window is looking at.
+  /* THE HILLS, NARROW. Each hill gets its own height and anchor, hung off a
+     SIXTH of the window's width (this layout's grid). Features are placed with
+     the generated multiples (--hN-*); see the top of the file.
 
-     Per-hill placement is possible at all because the frames are identical:
-     every feature of a hill sits at a known multiple of that hill's own
-     drawn height from its own left edge, so --x is where the feature should
-     land minus that multiple. Those multiples are not written here — they
-     are in the generated block near the top of this file, put there by
-     gen-hills.py, which is the only thing that knows the drawings.
+     Positions use 100vw, not percentages: a percentage in mask-position aligns
+     that fraction of the image with that fraction of the box, which is not an
+     offset. (100vw counts a classic scrollbar, so a narrowed desktop window can
+     be off by a few px; phones overlay scrollbars and agree exactly.)
 
-     They are written against 100vw rather than a percentage because a
-     percentage in mask-position does not offset — it aligns that percentage
-     of the image with the same percentage of the box, which is a different
-     thing entirely and is not what any of these want. 100vw counts a
-     classic scrollbar that the box does not have, so on a desktop browser
-     narrowed below 768px the group can sit a few pixels right of true; on a
-     phone, where scrollbars are overlaid, the two agree exactly.
+     HOW TALL THE BAND IS. The band sits between the last link and the page's
+     foot ("no hill behind the buttons"). A band sized from the window alone got
+     whatever the content left over — 4px on common phones — so the room is now
+     RESERVED: --band-gap is the links' bottom margin, paid for by dropping the
+     nav's top padding and sizing the type from --links-h.
 
-     HOW TALL THE BAND IS — and why the layout now RESERVES it. The band has
-     to fit between the last link and the foot of the page: "no hill behind
-     the buttons" is the whole brief for this layout. On a phone the page is
-     as tall as its content, so a band sized from the window's height alone
-     is whatever the content happens to leave over — and on the common phone
-     that is nothing at all. Measured, before this was fixed:
+       links' foot = 112.19vw (framed hero height) + --links-h
+       page foot   = that + --band-gap + --foot
 
-       393x750   4px of band       360x640   4px      320x520   4px
-       393x852 101px               430x932 140px
-
-     Four pixels is a band with the near hill's ground in it and nowhere for
-     the other two to stand, which is why a real phone showed one hill and a
-     tall desktop window showed three. The band was not wrong on those
-     screens; it was empty, because the page above it had already spent the
-     room.
-
-     So the gap is no longer leftovers. --band-gap is reserved in the flow as
-     the links' bottom margin (see .home-links), which makes the page itself
-     tall enough to hold a band at every width, and the room that buys is
-     paid for by the two things the layout could give up: the nav's 20px top
-     padding, so the links now start ON the hero's mat rather than below it,
-     and the type, which is sized from --links-h instead of fixed at 34px.
-     The page comes out within a dozen pixels of the height it had.
-
-       links' foot = 112.19vw (the framed hero, see .hero-frame) + --links-h
-       page foot   = that, plus --band-gap + --foot
-
-     --room is the distance between those two, and the window's own height
-     only ever makes it BIGGER: on a window taller than the content the nav
-     grows and the footer row is pushed down with it, which is the first
-     branch of the max(). The floor is the second, and the floor is what
-     guarantees --band-gap of clear sky over the near hill's ground at every
-     screen size there is.
-
-     The band takes --room WHOLE, with no clamp over it. It used to be capped
-     at 230px, and the cap is what a cap always is here: the far hill's
-     summit is defined as the band's top edge, so a band that stops short of
-     the links stops the summit short of them too. Whatever the band is
-     allowed, the summit follows it. */
+     --room is the distance between them. A taller window only makes it bigger
+     (first branch of the max); the second branch guarantees --band-gap of sky
+     at any size. The band takes --room whole — the far hill's summit is the
+     band's top, so any cap would stop the summit short of the links. */
   .hills {
     --hills-h: var(--room);
     height: var(--hills-h);
 
-    /* THE GATE, NARROW. Hung off the LEFT edge at one stroke in, the same
-       inset the picture's mat holds above it, so the gate and the photograph
-       share a left margin and the three words keep the right.
+    /* THE GATE, NARROW: one stroke in from the LEFT edge (the picture's mat), so
+       the gate and photo share a left margin and the words keep the right.
 
-       --t-b is the footing, and here it can be exact rather than measured:
-       the near hill's ground IS the footer row's top in this layout, so
-       standing the gate's feet on --foot puts them at that ground — and the
-       hill's ridge is above its ground at every column, so the feet are
-       under the hill wherever the gate ends up. How far under follows the
-       flank: about a tenth of the gate on a 320px screen and a sixth on a
-       412px one, since the hill rises leftward across the window. The check
-       scans the pixels either way.
+       --t-b: the feet stand on --foot, which here IS the near hill's ground, and
+       the ridge is above its ground everywhere, so the feet are always buried.
 
-       Two caps on the size, and the second does the real work:
-
-         the top of the "blog" link, which the gate may sit below but never
-         above. The band starts at the links' foot, so that line is two
-         thirds of --links-h above the band's top — which keeps this in the
-         band's terms and out of the page's, and the page's height is the one
-         thing this layout cannot put in a formula;
-
-         and the words themselves. The gate must not pass behind them, so its
-         width stops one stroke short of where "gallery" begins. On a tall
-         phone, where the band is generous, this is what holds the gate to a
-         size the window can hold.
-
-       The floor under the band's share is for the other end of this layout —
-       a small tablet in portrait, 600 to 767px wide. There the page is its
-       content's height, so the band is the same 170px it is on a phone, but
-       the near hill is a whole window wider and its flank stands far higher
-       at the left edge where the gate is. A gate sized only from the band
-       came out barely taller than the hill it stood on and all but vanished
-       into it: at 767 only its roof was left. Sized from the window instead,
-       once that is the larger of the two, it comes back out. No phone reaches
-       this floor — at 430 the band's share is twice it. */
-    /* The orb, narrow. Same relationship to the gate; the clamps change.
-       Sideways it stops short of the words, so nothing of it is ever behind
-       them. Upward it stops below the picture's foot rather than at the
-       window's top: the photograph paints over this and would cut a slice
-       out of it. That foot is --links-h above the band's top, which is how it
-       can be said here at all — the page's own height, on a layout whose page
-       is as tall as its content, is the one thing these rules cannot put in a
-       formula.
-
-       BOTH CLAMPS KEEP A STROKE IN HAND, and that stroke is not decoration.
-       --gallery-w is the width of a WORD worked out as a multiple of its type
-       size, and --gallery-w is only true to about two pixels: a different
-       browser build lays the same word out a shade wider or narrower. Clamped exactly
-       to the words, the orb overran them by 2px on a 430px screen in CI while
-       passing locally, on the same commit. A clamp with no slack is a clamp
-       that depends on the font's rasteriser. The gate has had its stroke of
-       clearance from the words all along, which is why it never drifted. */
+       Size caps on --t-h:
+         - the top of the "blog" link: 2/3 of --links-h above the band's top;
+         - the words: the gate stops a stroke short of where "gallery" begins
+           (this is the cap that bites on tall phones).
+       The floor (35.1vw) is for 600-767px tablets, where the band is phone-sized
+       but the near hill much taller at the left edge — without it the gate sank
+       into the hill. No phone reaches it. */
+    /* The orb, narrow: same relation to the gate, different clamps — sideways
+       it stops short of the words; upward it stops a stroke below the picture's
+       foot (--links-h above the band's top). Both keep a stroke of slack because
+       --gallery-w is only true to ~2px across browser builds; exact clamps
+       overran the words by 2px in CI. */
     --s-x: min(calc(var(--t-x) + var(--t-w)
                     - (0.5 + var(--s-over)) * var(--s-d)),
                calc(100vw - 2 * var(--stroke) - var(--gallery-w) - var(--s-d)));
@@ -1207,69 +780,36 @@ a { color: inherit; }
                     / var(--t-ratio)));
   }
 
-  /* FAR: summit on the MIDDLE of the "gallery" link, a sixth of the window in
-     from the left. The band starts at that link's foot, so the summit stands
-     half a link's box above the band — which is what the extra --link-h/2 in
-     the height buys, since this hill's summit is its whole frame
-     (--h3-summit = 1) and therefore always the top of its layer.
-
-     It is the one thing on this backdrop that rises past the band and behind
-     the links, and it is allowed to: the links are ranged right and this
-     summit is a sixth of the way in from the left, so the two never meet.
-     Nothing is clipped — .hills sets no overflow — and the ink above the band
-     is a single peak, not a band of tone.
-
-     Its left flank is the steep one and runs off the window within about
-     75px; what the screen gets is the head and the long right flank. */
+  /* FAR: summit a sixth in from the left, level with the middle of the
+     "gallery" link — half a link box above the band (hence + --link-h / 2; its
+     summit is the top of its layer, --h3-summit = 1). The one hill that rises
+     behind the links, which is fine: they are ranged right. Nothing clips it. */
   .hills > .hill-3 {
     --h: calc(var(--hills-h) + var(--link-h) / 2);
     --x: calc(var(--sixth) - var(--h) * var(--h3-peak));
   }
 
-  /* MIDDLE: summit one stroke below the band's top, a sixth in from the
-     right. Dividing by --h2-summit is what turns "put the summit there" into
-     a height — and it comes to rather more than the band itself, which is
-     fine: the excess is empty sky above the summit, and nothing of the hill
-     is drawn up there. */
+  /* MIDDLE: summit one stroke below the band's top, a sixth in from the right.
+     Dividing by --h2-summit turns "summit there" into a height; the excess
+     above the summit is empty sky. */
   .hills > .hill-2 {
     --h: calc((var(--hills-h) - var(--stroke)) / var(--h2-summit));
     --x: calc(100vw - var(--sixth) - var(--h) * var(--h2-peak));
   }
 
-  /* NEAR: its toe — the last corner in the drawing, where the flank finally
-     settles onto its ground — goes on the window's RIGHT edge, and that
-     ground sits ON the footer row's top rather than a stroke above it, so the
-     icons hang just under the horizon rather than clear of it. Both together
-     fix the height, which is what dividing by --h1-ground says: 567px on a
-     393px phone, against the band's 203.
-
-     That 567 is also what the drawing's tail is cut to — see gen-hills.py,
-     THE TAIL IS CUT — so the flank holds 0.055 from this edge to the middle
-     of the window and FOUR times that from there to the left edge. The
-     fraction it divides by is 0.18 rather than the 0.22 it was, and for the
-     same reason; the generator's comment has the whole of it.
-
-     There used to be a min() over --foot here, holding the ground at the
-     band's top on screens where the band was smaller than the footer row —
-     without it the hill climbed over the links and buried the other two.
-     It is gone because it cannot happen any more: the band is now at least
-     --band-gap + --foot, so --foot is always the smaller of the two, and a
-     min() that never picks its second argument is a comment pretending to be
-     code.
-
-     Pinned this way the hill is flat here by arithmetic rather than by
-     choice: the window covers the last 720-odd units of a 1200-unit closing
-     segment pitched at 0.055, so it rises about 22px right to left and no
-     amount of moving it sideways changes that. Steepening it means
-     re-pitching that segment in gen-hills.py, which the wide layout also
-     draws — so it is not a narrow-layout tweak. */
+  /* NEAR: its toe (last corner before the flat ground) on the window's right
+     edge, its ground on the footer row's top, so the icons sit just under the
+     horizon. That fixes the height: --foot / --h1-ground, about 500px on a
+     393px phone. gen-hills.py cuts this hill's tail to the phone window (see
+     THE TAIL IS CUT there), which is also why the flank is nearly flat here —
+     change it in the generator, not here; the wide layout draws the same
+     file. */
   .hills > .hill-1 {
     --h: calc(var(--foot) / var(--h1-ground));
     --x: calc(100vw - var(--h) * var(--h1-toe));
   }
 
-  /* Full-width frame: stroke = 5% of image width with the frame spanning
-     100vw → stroke = 0.05 · (100vw − 2·stroke) ≈ 4.545vw. */
+  /* Full-width frame: stroke = 0.05 * (100vw - 2 * stroke) = 4.545vw. */
   .hero-frame {
     position: static;
     height: auto;
@@ -1291,49 +831,22 @@ a { color: inherit; }
     transform: none;
     align-items: center;
     text-align: center;
-    /* No gap: the two children hold their own distances — the links their
-       --band-gap below, the row its 36px of padding under it — and anything
-       here would be a third distance nothing has accounted for. */
+    /* No gap: the links' margin and the row's padding are the only spacing. */
     gap: 0;
-    /* The side padding is the hero's own stroke (see .hero-frame above), so
-       the links ranged right below line up with the picture's right edge
-       rather than with an inset of their own.
-
-       NO TOP PADDING. The links start on the mat's lower edge, which is as
-       high as they can go without touching the picture — the 20px that used
-       to be here is 20px of band. */
+    /* Side padding = the hero's stroke, so the right-ranged links line up with
+       the picture's edge. No top padding: the links start on the mat's lower
+       edge (that room went to the band). */
     padding: 0 calc(100vw * 0.04545) 36px;
-    /* Grow into whatever the hero and the links leave of the viewport, so
-       the social row below has room to centre itself in it (see
-       .home-social). flex-grow alone, not the flex shorthand: a 0 basis
-       would let the nav be sized from nothing and squeeze the links on a
-       short window. On a window shorter than the content there is nothing
-       to grow into and this does nothing at all, which is the common case
-       on a phone once the browser's own chrome is counted. */
+    /* Grow into any spare window height (flex-grow only — a 0 basis could
+       squeeze the links on a short window). On a phone there is usually none. */
     flex-grow: 1;
   }
 
-  /* Stretched across the nav rather than the desktop max-content, so the
-     three words can be ranged against one of its edges. They are ranged
-     RIGHT: the picture above ends a stroke in from the window, and so do
-     they, which is the line the two share. The underlines travel with the
-     words, being drawn on the spans inside them. */
-  /* THE THREE LINKS ARE GIVEN A HEIGHT AND THE TYPE IS SIZED INTO IT, which
-     is the opposite of the usual way round and is deliberate: the band below
-     is measured from the links' foot, so where that foot falls is the one
-     thing this block must not leave to the font. Given --links-h and three
-     boxes of `1.2 x font + 12` that fill it exactly, the type comes out at
-     30px on a 320px screen and 33px on a 430px one — near enough the 34px it
-     was fixed at, and now it moves with the screen instead of pushing the
-     footer off the bottom of a small one.
-
-     space-between rather than a gap, so any rounding in the line boxes is
-     spread between the words and the block still measures --links-h to the
-     pixel. Each box is 1.2 x 30 + 12 = 48px at its smallest, so they stay
-     comfortable tap targets.
-
-     margin-bottom is the band: reserved here, in the flow, rather than left
-     over at the end of it. See HOW TALL THE BAND IS above. */
+  /* Stretched across the nav and ranged RIGHT, a stroke in from the window,
+     like the picture above. The links get a height (--links-h) and the type
+     is sized into it, because the band is measured from the links' foot. 30-32px type, 48px+ boxes
+     (still good tap targets). space-between spreads rounding between the words.
+     margin-bottom is the band's reserved room (HOW TALL THE BAND IS). */
   .home-links {
     align-self: stretch;
     width: auto;
@@ -1345,29 +858,9 @@ a { color: inherit; }
     margin-bottom: var(--band-gap);
   }
 
-  /* No inline padding, so each word's own right edge is what lands on the
-     nav's — anything here would push it off by that much. */
-  /* Nothing to restate: .home-links > a already has the type, the
-     line-height and the em padding that make the box 1.58em. */
-
-
-  /* 26px between six items overflows a 320px screen by ~17px, which puts
-     a horizontal scrollbar on the page and cuts the first icon and the
-     last link; the gap closes up on narrow phones instead.
-
-     The single auto margin above pushes the row to the FOOT of the nav.
-     It used to have one below as well, which centred it in whatever height
-     the nav had spare; the hills ended that. The row now sits on the near
-     hill, and the hill's ground has to reach up past it — so the row has to
-     sit at a distance from the page's foot that does not move with the
-     window, or the band under it would have to be sized for the worst case
-     at every window. Pinned, it is the nav's own 36px bottom padding and
-     nothing else, at every width.
-
-     Nothing holds it off the links any more: the 18px that used to is now
-     part of --band-gap, which the links carry as a margin below themselves.
-     One distance, in one place, spent by the band and by the layout at
-     once. */
+  /* The row is pinned to the nav's foot (margin-top: auto), so its distance
+     from the page's foot is fixed and the near hill's ground can be sized to
+     it. The gap shrinks on narrow phones: 26px overflows a 320px screen. */
   .home-social {
     margin-top: auto;
     padding-top: 0;
@@ -1377,28 +870,18 @@ a { color: inherit; }
   .home-social svg { width: 26px; height: 26px; }
 }
 
-/* From 439px up the social row's "cookie settings" stops wrapping to two
-   lines. The row loses 18px, so the nav's natural height does too — which
-   matters on the windows where the content, not the viewport, sets the
-   page's height — and the row's top comes 18px nearer the page's foot, which
-   is what the near hill's ground is measured from. Bisected on the live
-   page: 438 wraps, 439 does not. (A separate rule rather than one nested in
-   the block above: plain CSS cannot put @media inside @media.) */
+/* From 439px, "cookie settings" fits on one line: the row is 18px shorter,
+   so --foot drops to match (bisected: 438 wraps, 439 does not). */
 @media (min-width: 439px) and (max-width: 767px) {
   .home {
     --foot: 66px;
   }
 }
 
-/* The dvh half of the fallback for --room. It cannot be written as a second
-   declaration beside the vh one the way a real property can: a custom
-   property swallows any unit at parse time and only fails when it is USED,
-   and a var() that fails there does not fall back to the declaration above
-   it — it leaves the property unset and takes the whole band with it. So the
-   dvh form is gated on support instead, and browsers without dvh keep the vh
-   form. It matters more here than most places: on a phone with a retracting
-   toolbar, vh is the TALL viewport, so the vh form alone would size the band
-   for room the page does not have while the toolbar is up. */
+/* dvh form of --room, gated on support rather than declared after the vh
+   one: a custom property accepts any value at parse time and only fails when
+   used, and a failing var() does not fall back to an earlier declaration.
+   Matters on phones, where vh is the TALL viewport (toolbar hidden). */
 @supports (height: 1dvh) {
   @media (max-width: 767px) {
     .home {
@@ -1425,8 +908,8 @@ a { color: inherit; }
   padding: 20px var(--pad-x);
 }
 
-/* Sun/moon theme toggle: moon shown in light mode (click for dark),
-   sun shown in dark mode. Hidden entirely without JS. */
+/* Inner pages' theme toggle: moon in light mode, sun in dark. Hidden
+   without JS (theme.js reveals it). */
 .theme-toggle {
   background: none;
   border: none;
@@ -1445,8 +928,6 @@ a { color: inherit; }
 [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
 [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
-/* The home page had one of these in the top right corner. It has the sky
-   instead now — see .orb — and this rule went with the markup. */
 
 .back-link {
   text-decoration: none;
@@ -1464,10 +945,9 @@ a { color: inherit; }
   width: 100%;
 }
 
-/* <main tabindex="-1"> (the skip-link target) is click-focusable, and
-   Chrome renders a blinking text caret wherever you click inside it.
-   Hide that; real text fields get their caret back — which covers the
-   comment form, since the thread lives in this page's own DOM. */
+/* <main tabindex="-1"> (the skip-link target) is click-focusable, and Chrome
+   then shows a text caret wherever you click. Hide it; form fields keep
+   theirs. */
 #main { caret-color: transparent; }
 #main input,
 #main textarea { caret-color: var(--ink); }
@@ -1478,8 +958,8 @@ a { color: inherit; }
   color: var(--rust);
   margin: 8px 0 32px;
   line-height: 1.1;
-  /* main section titles render lowercase, matching the homepage nav;
-     sources and <title>/og:title keep proper casing */
+  /* section titles render lowercase like the home nav; the source,
+     <title> and og:title keep proper casing */
   text-transform: lowercase;
 }
 
@@ -1616,14 +1096,9 @@ a { color: inherit; }
 
 .comments { margin-top: 48px; }
 
-/* The comment thread. It is ours now and lives in the page's own DOM, so it
-   inherits the palette, the typeface and the dark theme for free — there is
-   no iframe to reserve space for and no minimum height to guess at. The old
-   rule here floored a cross-origin widget at 480px, which is why a backend
-   that had quietly died still took up half a screen.
-
-   Fields and buttons borrow their shapes from #post-search and the consent
-   banner rather than inventing a third style for the same job. */
+/* The comment thread lives in the page's own DOM (comments.js), so it takes
+   the palette, font and theme for free. Fields and buttons reuse the shapes
+   of #post-search and the consent banner. */
 .comment-list {
   list-style: none;
   margin: 0 0 40px;
@@ -1637,8 +1112,7 @@ a { color: inherit; }
 
 .comment:first-child { border-top: 0; padding-top: 0; }
 
-/* A reply is set in from its parent and hung off a rule, so the relationship
-   reads without a connector line or an avatar. One level only — see
+/* A reply is indented and hung off a rule. One level only — see
    groupByParent() in comments.js. */
 .comment.is-reply {
   margin-left: 22px;
@@ -1660,8 +1134,7 @@ a { color: inherit; }
   margin-left: 8px;
 }
 
-/* Comments are stored and rendered as plain text, so the only formatting a
-   commenter has is the line break they typed. pre-wrap honours it. */
+/* Comments are plain text; pre-wrap keeps the commenter's line breaks. */
 .comment-text {
   font-size: 16px;
   line-height: 1.65;
@@ -1769,9 +1242,8 @@ a { color: inherit; }
 .comment-field input:focus-visible,
 .comment-field textarea:focus-visible { border-color: var(--rust); outline: none; }
 
-/* The honeypot. Off-screen rather than display:none — a bot that checks for
-   visibility mostly checks for that one property. Humans never see it, and
-   aria-hidden in the markup keeps it away from screen readers. */
+/* The honeypot: off-screen rather than display:none (bots check for that);
+   aria-hidden in the markup keeps it from screen readers. */
 .comment-hp {
   position: absolute;
   left: -9999px;
@@ -1819,9 +1291,9 @@ a { color: inherit; }
 }
 
 /* ==========================================================================
-   CDN image frames — show a patterned placeholder until/unless a real
-   image loads (keeps the design's washi-stripe look for missing files)
-   ========================================================================== */
+   Photo frames (.cdn-frame) — every build-cut photo sits in one.
+   Stripes = no photo (also the "missing" look, with the filename on it).
+   =========================================================================== */
 .cdn-frame {
   position: relative;
   width: 100%;
@@ -1843,18 +1315,11 @@ a { color: inherit; }
 
 .cdn-frame.missing img { display: none; }
 
-/* WAITING FOR THE PHOTO, and arriving. The stripes above are the hatching
-   that means "missing", and a frame whose photo is merely still on its way
-   should not say that — on a cold gallery that read as a wall of absent
-   pictures filling in one by one. So a frame the build could measure
-   waits in its photo's own average colour (--tone, written by
-   eleventy.config.js), and the photo fades up over it once it is here.
-
-   Held back only when JavaScript is running (.js-img, set in the <head> of
-   base.njk by the same script that adds is-loaded) — without it nothing
-   would ever say the photo had arrived, so nothing is held back and every
-   photo simply appears. The lightbox's frame keeps its own rules further
-   down; they agree with these. */
+/* While a photo loads, its frame shows the photo's average colour (--tone,
+   written by the build) instead of the stripes, and the photo fades in on
+   arrival. Photos are only held back when JS runs (.js-img and .is-loaded
+   are both set by the <head> script in base.njk). The lightbox frame has its
+   own rules below. */
 .cdn-frame[style*="--tone"]:not(.missing) {
   background: var(--tone);
 }
@@ -1881,11 +1346,8 @@ a { color: inherit; }
   white-space: nowrap;
 }
 
-/* A figure in a post carries no aspect-ratio of its own: cdnimg writes the
-   photo's own onto the element, so the frame is the shape of the picture
-   and object-fit: cover has nothing left to crop. Width is the text
-   column; height follows from the file. See the shortcode in
-   eleventy.config.js for why this stopped being 16/10. */
+/* Post figures: cdnimg writes the photo's own aspect-ratio on the frame, so
+   object-fit: cover crops nothing. Width is the text column. */
 
 /* ==========================================================================
    Blog index
@@ -1966,10 +1428,8 @@ a { color: inherit; }
   margin-bottom: 6px;
 }
 
-/* The card's title is a heading as well as a link — a reader moving by
-   headings gets the list of posts, which is what the blog index is. The
-   anchor keeps the class and all of the styling; this only undoes what an
-   h2 brings with it. */
+/* The title is an h2 (readers navigating by heading get the post list);
+   this undoes the h2's own styling. */
 .post-card-heading {
   margin: 0;
   font-weight: 400;
@@ -1993,8 +1453,8 @@ a { color: inherit; }
   line-height: 1.6;
 }
 
-/* Tag chips — on blog cards and under post titles. Plain links to
-   /blog/#tag=..., which blog.js turns into an instant filter. */
+/* Tag chips (blog cards, under post titles): links to /blog/#tag=...,
+   which blog.js turns into a filter. */
 .post-card-tags,
 .post-tags {
   display: flex;
@@ -2026,19 +1486,15 @@ a { color: inherit; }
 /* ==========================================================================
    Gallery
    ========================================================================== */
-/* Per-tree progression dropdown, under the page title. A button and a
-   listbox of our own rather than a <select>: the native popup is drawn by
-   the browser, so its highlight is the OS accent (blue in Chrome, grey in
-   Edge) and no stylesheet can reach it, and on Android it opens as a
-   full-screen dialog. gallery.js builds the options; see gallery.njk. */
+/* Per-tree dropdown under the page title: our own button + listbox rather
+   than a <select>, whose popup takes the OS accent colour and opens
+   full-screen on Android. gallery.js builds the options. */
 .gallery-filter {
   margin: -12px 0 28px;
 }
 
-/* The control sizes to whatever is chosen, but not below 28rem — enough
-   for all but the longest "Species, anno culto YYYY" and its count, so
-   picking a tree doesn't visibly resize the box each time. On a phone the
-   min is the column itself and the control simply spans it. */
+/* At least 28rem, so picking a tree rarely resizes the control; full column
+   width on phones. */
 .tree-filter {
   position: relative;
   display: inline-block;
@@ -2046,11 +1502,8 @@ a { color: inherit; }
   max-width: 100%;
 }
 
-/* The closed control, matched to #post-search on the blog — same face,
-   size, border and padding, so the two filters read as one family. The
-   chevron is an inline SVG stroked with currentColor, which is why this
-   needs no dark-theme twin (the old data-URI one did: a data-URI can't
-   reference --ink). */
+/* Matches #post-search so the two filters look alike. The chevron is an
+   inline SVG in currentColor, so it follows the theme. */
 .tree-filter-button {
   display: flex;
   align-items: center;
@@ -2071,8 +1524,7 @@ a { color: inherit; }
 .tree-filter-button:hover,
 .tree-filter-button:focus-visible { border-color: var(--rust); outline: none; }
 
-/* The closed control carries the same two parts as a menu row, laid out
-   the same way, so what it shows is what was picked, word for word. */
+/* Same two parts as a menu row, laid out the same way. */
 .tree-filter-value {
   display: flex;
   align-items: baseline;
@@ -2091,10 +1543,8 @@ a { color: inherit; }
   transform: rotate(180deg);
 }
 
-/* The open menu. Positioned against .tree-filter rather than the
-   viewport, so a page scroll carries it with the button and there is
-   nothing to reposition. It sizes to its longest option up to a cap,
-   and scrolls inside rather than running off the page. */
+/* The open menu: positioned against .tree-filter (scrolls with the button),
+   sized to its longest option up to a cap, scrolls inside. */
 .tree-filter-list {
   position: absolute;
   z-index: 20;
@@ -2138,22 +1588,17 @@ a { color: inherit; }
   color: var(--olive);
 }
 
-/* Hover and keyboard focus land on the same wash. Focus is marked by a
-   class, not :focus-visible: the script moves focus into the menu itself,
-   and browsers disagree about whether a programmatic focus is "visible".
-   The bar on the left is what separates the focused row from a merely
-   hovered one, and it is drawn against whichever ground it sits on. */
+/* Hover and keyboard focus share the wash. Focus is a class, not
+   :focus-visible — the script moves focus programmatically and browsers
+   disagree on whether that counts as visible. The left bar marks focus. */
 .tree-filter-option:hover,
 .tree-filter-option.is-active { background: var(--accent-soft); }
 
 .tree-filter-option.is-active { box-shadow: inset 2px 0 0 var(--rust); }
 
-/* The chosen row takes the accent at full strength — the job the browser's
-   own blue used to do, in the theme's colour. Paper on --rust comes to
-   5.89:1 in the light theme and 4.67:1 in the dark one, and on the hover
-   shade below to 4.85:1 and 6.22:1: all four clear AA for body text, which
-   is what the 13px count needs too. That is why the count is not faded
-   here the way it is on an unchosen row — fade it and it drops under. */
+/* The chosen row: full accent. Paper on it is 5.89:1 (light) / 4.67:1
+   (dark), and 4.85 / 6.22 on the hover shade — all AA for body text, which
+   is why the count is not faded here. */
 .tree-filter-option[aria-selected="true"] {
   background: var(--rust);
   color: var(--washi);
@@ -2168,10 +1613,8 @@ a { color: inherit; }
   box-shadow: inset 2px 0 0 var(--washi);
 }
 
-/* Phones: the control spans the column, and so does its menu. The count
-   drops to its own line under the tree rather than sharing one with it —
-   at this width the pair doesn't fit, and a deliberate second line reads
-   better than a tree name broken mid-phrase to make room. */
+/* Phones: control and menu span the column; the count drops to its own
+   line rather than breaking the tree's name. */
 @media (max-width: 520px) {
   .tree-filter { display: block; }
   .tree-filter-list { right: 0; width: auto; max-width: none; }
@@ -2182,25 +1625,19 @@ a { color: inherit; }
   .tree-filter-count { display: block; margin-top: 2px; }
 }
 
-/* Masonry, and the one thing it costs is worth writing down: CSS fills
-   these columns top to bottom, one after another, so a photo's place in
-   the markup is not its place on the page. Nothing at build time can say
-   which photos land on the first screen, because that depends on how many
-   columns fit, and one file is served to every width. EAGER_CARDS in
-   eleventy.config.js carries the measurements: what it costs, and why
-   the obvious fix for it is not one.
-
-   Row-major — a grid rather than columns — would make the two orders the
-   same and let every visible photo be marked, at the price of the ragged
-   bottom edge that makes this look like a wall of photographs rather than
-   a table of them. That was a deliberate trade, not an oversight. */
+/* Masonry via CSS columns, which fill top to bottom — so markup order is not
+   screen order and the build cannot know which photos land on the first
+   screen (see EAGER_CARDS in eleventy.config.js). A row-major grid would fix
+   that but lose the ragged "wall of photographs" bottom edge; deliberate.
+   Consequence: revealing more cards re-deals all columns, so keep batches
+   large (BATCH in gallery.js). */
 .gallery-grid {
   columns: 280px;
   column-gap: 20px;
 }
 
-/* Each card is a link to the full-size image; gallery.js upgrades the
-   click into the lightbox. */
+/* Each card links to the largest build-cut copy of its photo; gallery.js
+   turns the click into the lightbox. */
 .gallery-card {
   display: block;
   width: 100%;
@@ -2222,7 +1659,7 @@ a { color: inherit; }
   box-shadow: var(--lift-card);
 }
 
-/* filtered out by the tree dropdown (must beat display: block above) */
+/* hidden by the tree filter or the batch (must beat display: block above) */
 .gallery-card[hidden] { display: none; }
 
 .gallery-card .cdn-frame { border: none; }
@@ -2245,15 +1682,8 @@ a { color: inherit; }
   padding: 8px 0 40px;
 }
 
-/* The foot of the grid once the gallery outgrows one batch. Centred
-   under the columns rather than aligned to one of them: the grid has no
-   single edge to hang it on — which column it would sit under changes
-   with the viewport — and the middle is the one place that reads as
-   belonging to all of them.
-
-   Hidden entirely while everything fits, which for a tree's own
-   progression is nearly always: a dozen photos never reaches the batch,
-   so picking a tree makes this disappear. */
+/* "Show more", centred under the grid (it belongs to no single column).
+   Hidden while everything fits — nearly always the case for one tree. */
 .gallery-more {
   display: flex;
   flex-direction: column;
@@ -2264,8 +1694,7 @@ a { color: inherit; }
 
 .gallery-more[hidden] { display: none; }
 
-/* The same face as the comment form's submit, which is the site's one
-   other "do the thing" button. */
+/* Same face as the comment form's submit button. */
 .gallery-more-button {
   font: inherit;
   font-size: 15px;
@@ -2286,10 +1715,8 @@ a { color: inherit; }
 
 .gallery-more-button[hidden] { display: none; }
 
-/* Reads the count out loud when it changes (role="status"), so pressing
-   the button says what happened rather than leaving a screen reader to
-   discover it. Kept when the button goes, as the tally of a gallery
-   fully shown. */
+/* role="status": screen readers hear the new count. Stays as the tally when
+   the button goes. */
 .gallery-more-count {
   margin: 0;
   font-size: 13px;
@@ -2306,13 +1733,11 @@ a { color: inherit; }
   justify-content: center;
   padding: 24px;
   z-index: 50;
-  /* gallery.js implements the touch gestures (swipe to step / close);
-     the browser must not consume the moves itself */
+  /* gallery.js handles swipes (step / close); the browser must not */
   touch-action: none;
 }
 
-/* Touch devices navigate by swiping — the arrows would only cover the
-   photo. Desktop (fine pointer / hover) keeps them. */
+/* Touch devices swipe instead; the arrows would only cover the photo. */
 @media (hover: none) and (pointer: coarse) {
   .lightbox-prev,
   .lightbox-next { display: none; }
@@ -2320,8 +1745,8 @@ a { color: inherit; }
 
 .lightbox[hidden] { display: none; }
 
-/* Background page must not scroll while the lightbox is open (on mobile
-   it also keeps the URL bar — and so the viewport height — stable). */
+/* No background scroll while open (on mobile this also keeps the URL bar,
+   and so the viewport height, stable). */
 html.lightbox-open,
 html.lightbox-open body {
   overflow: hidden;
@@ -2331,11 +1756,10 @@ html.lightbox-open body {
 .lightbox-prev,
 .lightbox-next {
   position: absolute;
-  z-index: 1; /* always in front of the photo+caption card */
+  z-index: 1; /* in front of the photo+caption card */
   background: none;
   border: none;
-  /* fixed light color: the overlay behind is dark in BOTH themes, so the
-     controls must not follow the theme tokens */
+  /* fixed light colour: the overlay is dark in both themes */
   color: #f2ece0;
   cursor: pointer;
   font-family: var(--font);
@@ -2348,12 +1772,10 @@ html.lightbox-open body {
 .lightbox-prev  { left: clamp(2px, 3vw, 32px); top: 50%; transform: translateY(-50%); font-size: 40px; }
 .lightbox-next  { right: clamp(2px, 3vw, 32px); top: 50%; transform: translateY(-50%); font-size: 40px; }
 
-/* The image+caption unit always spans the viewport height minus a 5vh
-   margin top and bottom. The photo drives the width: the frame's
-   aspect-ratio (set per image from the manifest) turns the flexed height
-   into a width, `fit-content` makes the unit hug it, and the caption's
-   width:0/min-width:100% trick stretches it to match without letting
-   long text widen the unit. */
+/* Stacked lightbox (phones, narrow windows): photo above caption, together
+   at most 90% of the viewport height. gallery.js fit() sets the frame's size;
+   fit-content makes the unit hug the photo, and the caption's
+   width:0 / min-width:100% matches that width without long text widening it. */
 .lightbox-body {
   width: fit-content;
   max-width: min(94vw, 1100px);
@@ -2365,30 +1787,19 @@ html.lightbox-open body {
 }
 
 .lightbox-body .cdn-frame {
-  /* sized explicitly by gallery.js fit(); must not flex-shrink to zero
-     when a long caption overflows (the body scrolls instead) */
+  /* sized by gallery.js fit(); must not shrink when a long caption
+     overflows (the body scrolls instead) */
   flex: 0 0 auto;
   width: 100%;
   border: none;
-  background: none; /* no placeholder texture behind lightbox photos */
+  background: none; /* no stripes or tone behind lightbox photos */
 }
 
-/* THE THUMBNAIL, HELD UNDER THE PHOTO WHILE IT ARRIVES.
-   The card that was just clicked is showing a small copy of this very
-   picture, already downloaded and certainly in cache — so there is no
-   reason for the viewer to open empty. gallery.js hands that copy over as
-   --lqip and it is drawn here, blurred, until the full one loads and
-   fades over it.
-
-   It is not a spinner and deliberately so: a spinner says "wait", and what
-   there is to show instead is the right photograph, merely soft. The
-   blur is what keeps a 400px copy stretched over 1100 from reading as a
-   fault; scale(1.03) pushes the blur's own soft edge past the frame,
-   which is clipped.
-
-   With no --lqip — a card whose thumbnail had not loaded yet, which only
-   a deep link can reach — there is no background-image and this is
-   invisible, which is where it started. */
+/* While the lightbox photo loads, the card's own thumbnail (already cached;
+   gallery.js passes it as --lqip) is shown blurred underneath, then the photo
+   fades over it. scale(1.03) pushes the blur's soft edge outside the clipped
+   frame. No --lqip (thumbnail not loaded yet, e.g. a deep link): nothing
+   shows. */
 .lightbox-body .cdn-frame::before {
   content: "";
   position: absolute;
@@ -2401,9 +1812,7 @@ html.lightbox-open body {
   transform: scale(1.03);
 }
 
-/* Gone once the photo is here. Also gone if the photo never comes: the
-   frame then draws its own hatched box with the filename, and a blurred
-   ghost underneath it would only muddle that. */
+/* Hidden once the photo arrives, or if it fails (the hatched box shows). */
 .lightbox-body .cdn-frame.is-loaded::before,
 .lightbox-body .cdn-frame.missing::before { opacity: 0; }
 
@@ -2416,9 +1825,8 @@ html.lightbox-open body {
 
 .lightbox-body .cdn-frame.is-loaded img { opacity: 1; }
 
-/* The cross-fade itself is the one part that is decoration, so it is the
-   one part that asks first. Without it the swap still happens — it just
-   happens at once, which is what someone who turned motion off wants. */
+/* Only the cross-fade depends on the motion preference; the swap happens
+   either way. */
 @media (prefers-reduced-motion: no-preference) {
   .lightbox-body .cdn-frame::before,
   .lightbox-body .cdn-frame img {
@@ -2435,9 +1843,9 @@ html.lightbox-open body {
   overflow-y: auto; /* long descriptions scroll inside the caption box */
 }
 
-/* Side-by-side lightbox layout (gallery.js adds .lb-side when the photo,
-   at full viewport height, leaves room for the caption beside it):
-   photo anchored left, caption block bottom-aligned at its lower right. */
+/* Side-by-side lightbox (gallery.js adds .lb-side when the photo at full
+   height leaves room for the caption beside it): photo left, caption
+   bottom-aligned at its lower right. */
 .lightbox.lb-side {
   justify-content: center;
   align-items: center;

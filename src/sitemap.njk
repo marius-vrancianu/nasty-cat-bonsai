@@ -2,12 +2,9 @@
 permalink: /sitemap.xml
 eleventyExcludeFromCollections: true
 ---
-{#- <lastmod> only where there is a date that means something. A post has
-    the one in its front matter, and the blog index changes when the newest
-    post does. Every other page's date would be the file's time on the
-    build machine — the moment the deploy checked the repo out, so "today"
-    on every deploy — and a date that is always today teaches search
-    engines to ignore the field. Leaving it out is allowed and honest. -#}
+{#- <lastmod> only where a date means something: posts (front matter) and the
+    blog index (newest post). Other pages would get the checkout time — "today"
+    on every deploy. Sorted by URL so every build writes the same file. -#}
 <?xml version="1.0" encoding="utf-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 {%- for item in collections.all | sort(false, true, "url") %}
