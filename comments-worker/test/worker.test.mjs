@@ -149,6 +149,38 @@ ok('empty manifest is refused', (await reconcile(env)).skipped === 'manifest-emp
 manifest = ['/blog/post-a/'];
 await env.COMMENTS.put('meta:postcount', '10');
 ok('a sudden cliff is refused', (await reconcile(env)).skipped === 'manifest-cliff');
+// A real mass deletion must not be refused forever: the same drop seen on the
+// next weekly run is believed, and the run goes ahead.
+rep = await reconcile(env);
+ok('the same cliff a week later is believed', !rep.skipped, JSON.stringify(rep));
+ok('  ...and becomes the new baseline', (await env.COMMENTS.get('meta:postcount')) === '1');
+ok('  ...with no pending cliff left behind', (await env.COMMENTS.get('meta:cliff')) === null);
+// A broken build that is fixed by the next run leaves nothing behind either.
+await env.COMMENTS.put('meta:postcount', '10');
+manifest = ['/blog/post-a/'];
+ok('a new cliff is refused again', (await reconcile(env)).skipped === 'manifest-cliff');
+manifest = Array.from({ length: 10 }, (_, i) => `/blog/p${i}/`).concat('/blog/post-a/', '/blog/post-b/');
+rep = await reconcile(env);
+ok('a recovered manifest runs normally', !rep.skipped, JSON.stringify(rep));
+ok('  ...and clears the pending cliff', (await env.COMMENTS.get('meta:cliff')) === null);
+// A drop that keeps changing is still held back: only a repeat is believed.
+await env.COMMENTS.put('meta:postcount', '12');
+manifest = ['/blog/post-a/', '/blog/post-b/'];
+ok('a first drop to 2 is refused', (await reconcile(env)).skipped === 'manifest-cliff');
+manifest = ['/blog/post-a/'];
+ok('a different drop to 1 is refused too', (await reconcile(env)).skipped === 'manifest-cliff');
+// The owner's real plan: two sample posts, one real post added, then both
+// samples deleted — 3 down to 1. Held for a week, then the samples' comments
+// start their 30-day grace like any other deleted post's.
+await env.COMMENTS.put('meta:postcount', '3');
+await env.COMMENTS.delete('meta:cliff');
+manifest = ['/blog/first-real-post/'];
+ok('3 -> 1 is held for a week', (await reconcile(env)).skipped === 'manifest-cliff');
+rep = await reconcile(env);
+ok('  ...then the deleted samples are flagged', rep.orphaned && rep.orphaned.includes('/blog/post-a/'), JSON.stringify(rep));
+manifest = ['/blog/post-a/'];
+await env.COMMENTS.put('meta:postcount', '1');
+await reconcile(env);   // restore post-a for the sections below
 
 console.log('\n10. Deletion after the grace period');
 manifest = ['/blog/post-a/'];

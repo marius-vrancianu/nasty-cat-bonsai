@@ -35,7 +35,7 @@ jobs:
           # no dependencies; setup-node would not cache here anyway).
           package-manager-cache: false
 
-      # The worker's whole test suite (no dependencies): 42 checks against a fake
+      # The worker's whole test suite (no dependencies): 52 checks against a fake
       # KV and mail provider. A failure stops the deploy.
       - name: Test
         working-directory: comments-worker

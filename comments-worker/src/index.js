@@ -295,9 +295,20 @@ async function reconcile(env) {
   }
   if (!Array.isArray(live) || live.length < 1) return { skipped: "manifest-empty" };
 
-  // A cliff means a broken build far more often than it means a purge.
+  /* A sudden drop to under half the posts is far more often a broken build
+     than a purge, so it is held back once. The same count on the next run
+     is believed (a broken build is fixed or redeployed within a week), and
+     that count becomes the baseline — otherwise a real mass deletion would
+     be refused forever. Deleting still waits out the 30-day grace. */
   const lastCount = Number((await env.COMMENTS.get("meta:postcount")) || 0);
-  if (lastCount && live.length < lastCount / 2) return { skipped: "manifest-cliff" };
+  if (lastCount && live.length < lastCount / 2) {
+    const held = Number((await env.COMMENTS.get("meta:cliff")) || 0);
+    if (held !== live.length) {
+      await env.COMMENTS.put("meta:cliff", String(live.length));
+      return { skipped: "manifest-cliff" };
+    }
+  }
+  await env.COMMENTS.delete("meta:cliff");
   await env.COMMENTS.put("meta:postcount", String(live.length));
 
   const liveSet = new Set(live);
