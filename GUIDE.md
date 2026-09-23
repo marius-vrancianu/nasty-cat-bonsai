@@ -436,9 +436,10 @@ and `src/posts/what-the-cat-taught-me-about-placement.md`; delete them
 like any other post, whenever suits you — before your first real post or
 after it. The blog simply shows an empty list in between. If anyone
 (including you, testing) left a comment on them, the comments system will
-email you within a week of the deploy to say those comments are about to
-be deleted, with **Keep them** / **Delete now** buttons (6.1) — pick
-**Delete now**.
+email you to say those comments are about to be deleted, with **Keep
+them** / **Delete now** buttons (6.1) — pick **Delete now**. Expect that
+email one to two weeks after the deploy rather than one: see the note on
+deleting many posts in 6.1.
 
 ---
 
@@ -559,6 +560,12 @@ posts still exist. If one has gone, you get an email saying its comments will
 be deleted in 30 days, with **Keep them** and **Delete now** buttons. The
 delay exists because *renaming* a post looks exactly like deleting one — put
 the old name back within the month and the comments reattach on their own.
+
+**Deleting many posts at once** (more than half of them — e.g. going from 3
+posts to 1) looks to the worker exactly like a broken deploy, so it waits
+one extra week before believing it. If the next weekly check sees the same
+number of posts, it goes ahead as usual. Nothing to do on your side; the
+email just arrives a week later.
 
 Comments are stored by the worker (Cloudflare), not in GitHub. Setting it up
 the first time is **6.10**, and it is all done from a browser. The technical

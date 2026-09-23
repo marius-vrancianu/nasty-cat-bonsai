@@ -118,8 +118,8 @@ readable versions.
 - [x] Deploy the comments worker and paste its URL into `src/_data/site.js` — done
 - [ ] Replace the sample posts in `src/posts/` with real ones — delete the
       two sample `.md` files (their missing images go with them). Any test
-      comments on them trigger the worker's "post deleted" email within a
-      week; answer **Delete now**. GUIDE §3.7.
+      comments on them trigger the worker's "post deleted" email within one
+      to two weeks; answer **Delete now**. GUIDE §3.7.
 - [ ] Rewrite `src/about.md`: replace the placeholder text, and either upload
       `blog/workshop-01.webp` and `blog/maple-collection-02.webp` to
       bonsai-images or change/remove those two photo lines. GUIDE §2.
