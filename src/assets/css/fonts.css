@@ -6,7 +6,10 @@
    italic (pull quotes, *emphasis*), and bold (**strong** in posts) — each
    split into a latin and a latin-ext unicode-range subset the browser
    downloads on demand. The latin 400 file is also <link rel="preload">ed
-   in base.njk; keep that in sync if the file name ever changes. */
+   in base.njk; keep that in sync if the file name ever changes.
+
+   Not linked from any page: the build folds this file into the front of
+   main.css (see eleventy.config.js), so visitors fetch one stylesheet. */
 
 /* proza-libre-latin-400-normal */
 @font-face {

@@ -261,8 +261,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* The page settles in rather than snapping on. 0.15s, not the 0.45s it
+   was: the whole page starts at opacity 0, so every millisecond of the
+   fade is a millisecond nothing can be read — and it is what speed tools
+   count as the page appearing. At 0.15s the softness is still felt; the
+   wait is not. */
 @media (prefers-reduced-motion: no-preference) {
-  body { animation: page-fade 0.45s ease both; }
+  body { animation: page-fade 0.15s ease both; }
   @keyframes page-fade {
     from { opacity: 0; }
     to   { opacity: 1; }

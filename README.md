@@ -72,7 +72,7 @@ The blog index, post page, and RSS feed update automatically at build time.
 
 ```json
 { "file": "gallery/tree-10.webp", "species": "Chinese Elm",
-  "style": "Broom", "date": "Jul 2026", "ratio": "2000/1500",
+  "style": "Broom", "date": "Jul 2026",
   "notes": "Longer caption shown in the lightbox." }
 ```
 
@@ -81,8 +81,9 @@ The blog index, post page, and RSS feed update automatically at build time.
    makes the gallery load on networks that block `raw.githubusercontent.com`,
    and what lets search engines see the photos at all.)
 
-`ratio` is the photo's exact pixel size, `"width/height"` — the card crops
-to it. The deploy cuts each photo into the WebP sizes the grid and the
+`ratio` is optional: the deploy measures each photo and shapes its card to
+fit. Give one (`"width/height"`, e.g. `"1/1"`) only to crop a card on
+purpose. The deploy cuts each photo into the WebP sizes the grid and the
 lightbox draw; you upload one full-size file and nothing else. No waiting
 between committing `gallery.json` and deploying — the deploy reads the
 images repo's latest commit. Replacing a photo under the same name is fine:
@@ -107,7 +108,10 @@ Palette, type scale, and spacing live as CSS custom properties at the top of
 `src/assets/fonts/` (SIL Open Font License) — no visitor's browser ever
 talks to Google to fetch it. The comments in `main.css` carry the reasoning
 behind the palette, including the contrast ratio every dark-theme colour
-was solved to; they are stripped from the copy visitors download.
+was solved to; they are stripped from the copy visitors download, which is
+also where `fonts.css` is folded into it. The scripts in `src/assets/js/`
+are minified with Terser at build time the same way — the repo keeps the
+readable versions.
 
 ## Still to do before launch
 
