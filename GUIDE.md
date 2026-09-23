@@ -116,7 +116,6 @@ Each entry looks like:
   "trees": ["Acer palmatum, anno culto 2024"],
   "style": "Informal upright",
   "date": "Jul 2026",
-  "ratio": "1500/2000",
   "alt": "Japanese maple in a blue glazed pot",
   "notes": "Repotted this spring; the nebari is finally flaring."
 }
@@ -131,7 +130,7 @@ What each field does on the site:
 | `trees` | **Tree identity** — powers the "one tree over the years" dropdown at the top of the Gallery | Optional. Always a list, even for one tree: `"trees": ["Ficus benjamina, anno culto 2012"]`. Every photo of the same tree must carry the *exact same* string — **copy-paste it from another of its photos**, never retype. The convention is `Species, anno culto <year training started>`, with a leading `+` for trees no longer in the collection (shown as typed). A photo with several trees in frame (exhibitions, group shots) lists them all — `"trees": ["Ficus benjamina, anno culto 2012", "Murraya paniculata, anno culto 2021"]` — and shows up under each |
 | `style` + `date` | **Subtitle** — the small "Informal upright · Jul 2026" line | |
 | `notes` | **Description** — longer text, shown only in the lightbox (after clicking) | Optional |
-| `ratio` | Shape of the card, and of the photo in the lightbox | Your photo's **exact** pixel size, written `"width/height"` — e.g. `"1500/2000"` for a portrait 1500 × 2000 px file (Windows: right-click → Properties → Details). The card crops the photo to this shape, so a rough `"3/4"` on a photo that is really 1557 × 1800 trims its edges. Left out, the card falls back to 3/4 |
+| `ratio` | Shape of the card, and of the photo in the lightbox | **Optional — leave it out.** The deploy measures every photo and shapes its card to fit, uncropped. Only add it to frame a photo *tighter* on purpose, written `"width/height"` (e.g. `"1/1"` crops the card to a square); the card then crops the photo to that shape. Older entries carry exact pixel sizes such as `"1557/1800"` — harmless, and safe to delete |
 | `alt` | Screen-reader / SEO description of what's *in* the photo | Optional but good practice. One plain sentence describing the visible scene ("Weeping fig with exposed roots in a green oval pot, against black") — not a keyword list |
 
 **The progression dropdown.** Each unique string across the `trees` lists
@@ -560,7 +559,12 @@ two clicks.
 Those comments are **stripped from the copy visitors download** — they are
 two thirds of the file, and it is the one file that has to arrive before
 anything appears on screen. Nothing is rewritten but the comments, and only
-in the built copy; write as many as you like, the repo keeps them all.
+in the built copy; write as many as you like, the repo keeps them all. The
+deploy also folds `fonts.css` into the front of that copy, so visitors
+fetch one stylesheet rather than two, and shrinks the scripts in
+`src/assets/js/` the same way (comments out, names shortened). Edit the
+files in the repo as normal — the shrunken copies exist only on the live
+site.
 
 ### 6.3 Undo — reverting a bad commit
 

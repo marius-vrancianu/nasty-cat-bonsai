@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { HtmlBasePlugin } from "@11ty/eleventy";
 import Image from "@11ty/eleventy-img";
+import { minify } from "terser";
 import site from "./src/_data/site.js";
 
 /* ---- Thumbnails -----------------------------------------------------------
@@ -152,7 +153,16 @@ const FIGURE_QUALITY = 80;
    min(94vw, 1100px), so a phone at 390 CSS px and 3x wants ~1100, a 1x
    desktop wants up to 1100, and a 2x desktop wants 2200 and takes the top
    of the ladder. Quality 82 rather than the grid's 74 — this is the one
-   place the detail is being looked at rather than glanced past. */
+   place the detail is being looked at rather than glanced past.
+
+   THERE IS NO 900 HERE, and that is not an oversight: the grid already
+   cut a 900 for the card (THUMB_WIDTHS), and the lightbox borrows it as
+   the bottom rung of its own srcset rather than encoding a second 900 at
+   a slightly higher quality. It is only ever picked on a small screen at
+   1x or 2x, where the difference between 74 and 82 does not survive the
+   screen; it saves one file per photo (~67KB of the site and a sixth of
+   the encoding), and the card's copy is usually already in cache, which
+   makes that rung free. */
 /* The site is served from a subdirectory, and HtmlBasePlugin puts that
    prefix on href and src for us. It does not know about any other
    attribute, so the lightbox urls — which travel as data-lb-* and are
@@ -162,7 +172,7 @@ const FIGURE_QUALITY = 80;
 const PATH_PREFIX = "/nasty-cat-bonsai/";
 const withBase = (url) => PATH_PREFIX.replace(/\/$/, "") + url;
 
-const LIGHTBOX_WIDTHS = [900, 1300, 1800];
+const LIGHTBOX_WIDTHS = [1300, 1800];
 const LIGHTBOX_QUALITY = 82;
 const LIGHTBOX_SIZES = "(max-width: 700px) 96vw, 1100px";
 
@@ -246,15 +256,6 @@ const esc = (s) =>
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-/* The onerror hook every build-cut image on the site carries: it turns the
-   frame around a photo that did not arrive into the hatched box with the
-   filename written on it, rather than leaving a broken-image glyph. A
-   photo the build could not cut is marked that way at build time instead
-   (see frame() below); this covers the one that fails in the browser. */
-const missingHook = (file) =>
-  `this.parentElement.classList.add('missing');` +
-  `this.parentElement.setAttribute('data-file','${esc(file)}')`;
-
 /* One <img>, cut at build time from a photo in the images repo.
  *
  * Every image on the site that comes from bonsai-images goes through here —
@@ -271,15 +272,19 @@ const missingHook = (file) =>
  *   strict   true  -> a source the build cannot fetch fails a CI build
  *            false -> always degrade to the hatched "missing" frame
  *
- * Returns { html, width, height, src, srcset, full } — the <img> tag, the
- * shape of the largest copy cut (for a caller that has to reserve the
- * right space for it), and the urls, for a caller that wants the same
- * copies on a tag of its own; `full` is the largest copy's url. EVERYTHING
- * is null when the source could not be had: there is no picture to show,
- * and frame() draws the hatched box with the filename in its place.
+ * Returns { html, width, height, src, srcset, full, entries } — the <img>
+ * tag, the shape of the largest copy cut (for a caller that has to reserve
+ * the right space for it), and the urls, for a caller that wants the same
+ * copies on a tag of its own; `full` is the largest copy's url and
+ * `entries` every copy as { url, width }. EVERYTHING is null when the
+ * source could not be had: there is no picture to show, and frame() draws
+ * the hatched box with the filename in its place.
+ *
+ * The <img> carries no onerror of its own. One listener in the <head> of
+ * base.njk catches a failed image anywhere in a .cdn-frame and marks the
+ * frame, which is the same thing a hook on every tag used to do, once.
  */
 async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
-  const missing = missingHook(file);
   let sources;
   try {
     const metadata = await cut(file, {
@@ -292,7 +297,7 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
     const why = `Could not build a thumbnail for ${file}: ${err.message}`;
     if (strict && process.env.CI) throw new Error(why);
     console.warn(`[images] ${why} — drawing the missing-photo frame`);
-    return { html: null, width: null, height: null, src: null, srcset: null, full: null };
+    return { html: null, width: null, height: null, src: null, srcset: null, full: null, entries: null };
   }
 
   const srcset = sources.map((s) => `${s.url} ${s.width}w`).join(", ");
@@ -305,12 +310,13 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
     html:
       `<img src="${fallback.url}" srcset="${srcset}" sizes="${sizes}"` +
       ` width="${biggest.width}" height="${biggest.height}" alt="${alt}"` +
-      `${attrs} decoding="async" onerror="${missing}">`,
+      `${attrs} decoding="async">`,
     width: biggest.width,
     height: biggest.height,
     src: fallback.url,
     srcset,
     full: biggest.url,
+    entries: sources.map((s) => ({ url: s.url, width: s.width })),
   };
 }
 
@@ -318,7 +324,9 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
    placeholder, and the hatched box with the filename when there is no
    photo. When the build could not cut one, that box is decided here, in
    the markup, so it shows with or without JavaScript and no request is
-   made for a picture that is known not to exist.
+   made for a picture that is known not to exist. The filename rides on
+   every frame, so the listener in base.njk has a label to show for a
+   photo that fails later, in the browser.
 
      tag    the frame's element ("div", or "a" for a post card's thumb)
      cls    extra classes beside cdn-frame
@@ -331,7 +339,7 @@ function frame({ tag = "div", cls = "", style = "", attrs = "", img, file }) {
   const classes = ["cdn-frame", cls, missing ? "missing" : ""].filter(Boolean).join(" ");
   return (
     `<${tag} class="${classes}"` +
-    (missing ? ` data-file="${esc(file)}"` : "") +
+    ` data-file="${esc(file)}"` +
     (style ? ` style="${esc(style)}"` : "") +
     `${attrs}>${missing ? "" : img.html}</${tag}>`
   );
@@ -443,21 +451,58 @@ export default function (eleventyConfig) {
      This runs after the build rather than as a transform because the
      stylesheet is passthrough-copied, and passthrough copy does not go
      through transforms — it is a file copy, and the copy is what has to be
-     edited. */
+     edited.
+
+     ONE STYLESHEET, NOT TWO. fonts.css (the @font-face rules) is kept as
+     its own file in the repo, where it is easier to find, and folded into
+     the front of main.css here, so a page waits on one render-blocking
+     request instead of two. Both live in assets/css/, so the url()s in the
+     font rules resolve the same from either file. */
   eleventyConfig.on("eleventy.after", async ({ dir }) => {
     const cssDir = path.join(dir.output, "assets", "css");
     if (!fs.existsSync(cssDir)) return;
-    let saved = 0;
-    for (const name of fs.readdirSync(cssDir)) {
-      if (!name.endsWith(".css")) continue;
-      const file = path.join(cssDir, name);
-      const before = fs.readFileSync(file, "utf8");
-      const after = stripCssComments(before);
-      fs.writeFileSync(file, after);
-      saved += before.length - after.length;
-    }
+    const main = path.join(cssDir, "main.css");
+    const fonts = path.join(cssDir, "fonts.css");
+    const before =
+      (fs.existsSync(fonts) ? fs.readFileSync(fonts, "utf8") + "\n" : "") +
+      fs.readFileSync(main, "utf8");
+    const after = stripCssComments(before);
+    fs.writeFileSync(main, after);
+    if (fs.existsSync(fonts)) fs.rmSync(fonts);
+    const saved = before.length - after.length;
     if (saved > 0) {
       console.log(`[css] ${(saved / 1024).toFixed(1)}KB of comments left in the repo, not in the build`);
+    }
+  });
+
+  /* ---- The scripts go out minified -------------------------------------
+     The same bargain as the stylesheet above, for the same reason: the
+     scripts are written to be read — gallery.js is about half comment —
+     and a visitor's browser reads none of it. Terser strips the comments
+     and shortens the local names; the repo keeps every word. Unlike the
+     stylesheet this is a real minifier, not a comment-stripper, because a
+     script cannot be safely edited with anything less: a comment marker
+     inside a string or a regular expression looks like a comment to any
+     simpler tool.
+
+     A script Terser cannot parse fails the build rather than going out
+     half-done — it would fail in the visitor's browser just the same. */
+  eleventyConfig.on("eleventy.after", async ({ dir }) => {
+    const jsDir = path.join(dir.output, "assets", "js");
+    if (!fs.existsSync(jsDir)) return;
+    let before = 0;
+    let after = 0;
+    for (const name of fs.readdirSync(jsDir)) {
+      if (!name.endsWith(".js")) continue;
+      const file = path.join(jsDir, name);
+      const source = fs.readFileSync(file, "utf8");
+      const { code } = await minify(source, { compress: true, mangle: true });
+      fs.writeFileSync(file, code + "\n");
+      before += source.length;
+      after += code.length + 1;
+    }
+    if (before > after) {
+      console.log(`[js] ${((before - after) / 1024).toFixed(1)}KB of comments and spacing left in the repo, not in the build`);
     }
   });
 
@@ -509,6 +554,21 @@ export default function (eleventyConfig) {
   );
 
   eleventyConfig.addFilter("rfc3339", (date) => new Date(date).toISOString());
+
+  /* What the lightbox draws its photo at — said once, on the grid, rather
+     than on every card: see galleryThumb. */
+  eleventyConfig.addGlobalData("lightboxSizes", LIGHTBOX_SIZES);
+
+  /* The manifest as gallery.js needs it for the lightbox, and no more. The
+     page already carries each photo's alt text on its <img>, and a key the
+     script never reads is bytes in every card's worth of JSON — with a
+     gallery in the hundreds, that adds up to kilobytes nobody uses. */
+  const LIGHTBOX_KEYS = ["file", "species", "style", "date", "trees", "notes", "ratio"];
+  eleventyConfig.addFilter("lightboxItems", (items) =>
+    (items || []).map((item) =>
+      Object.fromEntries(LIGHTBOX_KEYS.filter((k) => item[k] != null).map((k) => [k, item[k]]))
+    )
+  );
 
   // Post tags minus Eleventy's own "posts" collection tag (which every
   // post carries via src/posts/posts.json and must never be displayed).
@@ -661,11 +721,12 @@ export default function (eleventyConfig) {
         `${item.species} bonsai, ${String(item.style || "").toLowerCase()} style`
     );
     /* The card's own thumbnail, and — carried on the same tag — what the
-       lightbox should open. It rides here
+       lightbox should open: ONE attribute, the srcset. It rides here
        rather than in #gallery-data because this is where the build
        already knows it; the script reads it off the grid image it is
-       replacing. Two attributes per card, which gzip barely notices
-       since every one of them is the same shape.
+       replacing. The sizes that go with it are the same for every card,
+       so they are said once, on the grid (data-lb-sizes in gallery.njk),
+       and the script picks its own fallback src out of the srcset.
 
        Cut as a second ladder rather than by extending the first: the
        thumbnail ladder stops at 900 on purpose, and a 3x phone asking
@@ -685,19 +746,31 @@ export default function (eleventyConfig) {
       lightboxOf(item.file),
     ]);
 
+    // The lightbox's ladder: the card's own largest copy as the bottom
+    // rung (see LIGHTBOX_WIDTHS), then the lightbox's cuts above it. A
+    // photo narrower than 1300 gets one cut at its own width, and one
+    // narrower than 900 gets the same width twice — the card's is dropped.
     // No build-cut large copy (a local build that could not fetch the
     // source): say nothing, and gallery.js falls back to the card's link.
-    const lb = large.srcset
-      ? ` data-lb-src="${esc(withBase(large.src))}"` +
-        ` data-lb-srcset="${esc(
-          large.srcset.replace(/(^|, )(\/)/g, (m, sep) => sep + withBase("/").slice(0, -1) + "/")
-        )}"` +
-        ` data-lb-sizes="${esc(LIGHTBOX_SIZES)}"`
-      : "";
+    let lb = "";
+    if (large.entries && img.entries) {
+      const rung = img.entries[img.entries.length - 1];
+      const ladder = [rung, ...large.entries].filter(
+        (e, i, all) => i === all.length - 1 || e.width < all[i + 1].width
+      );
+      lb = ` data-lb-srcset="${esc(
+        ladder.map((e) => `${withBase(e.url)} ${e.width}w`).join(", ")
+      )}"`;
+    }
 
-    // The card's frame is shaped by the manifest's `ratio`.
+    /* The card's shape: the manifest's `ratio` when it gives one, which
+       still wins so a photo can be framed tighter on purpose — otherwise
+       the photo's own, measured off the copy just cut. `ratio` used to be
+       required and typed in by hand as pixel sizes; nothing needs it now. */
+    const shape =
+      item.ratio || (img.width && img.height ? `${img.width}/${img.height}` : "3/4");
     return frame({
-      style: `aspect-ratio: ${item.ratio || "3/4"}`,
+      style: `aspect-ratio: ${shape}`,
       img: { html: img.html && img.html.replace("<img ", `<img${lb} `) },
       file: item.file,
     });

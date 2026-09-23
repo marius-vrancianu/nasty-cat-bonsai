@@ -79,11 +79,25 @@
      tab" and a visitor without JavaScript both still get it. If the build
      could not cut a copy there are no data-lb-* to read and this falls
      back to that same original, which is what it always used. */
+  /* The lightbox's copies of one card, as the build left them: the srcset on
+     the card's <img>, and the sizes said once for the whole grid. The src a
+     browser without srcset would take is picked here — the middle rung, so
+     that if it is ever the one fetched it is not the heaviest. */
+  var LB_SIZES = grid.getAttribute("data-lb-sizes") || "";
+
+  function lightboxSource(card) {
+    var g = card.querySelector("img");
+    var srcset = g && g.getAttribute("data-lb-srcset");
+    if (!srcset) return null;
+    var urls = srcset.split(",").map(function (c) { return c.trim().split(/\s+/)[0]; });
+    return { srcset: srcset, sizes: LB_SIZES, src: urls[Math.floor((urls.length - 1) / 2)] };
+  }
+
   function frame(item, card) {
     var f = el("div", "cdn-frame");
     var gridImg = card.querySelector("img");
     var img = el("img");
-    var d = gridImg && gridImg.dataset;
+    var lb = lightboxSource(card);
 
     /* The card's own thumbnail, stretched and blurred under the photo
        until it lands. currentSrc rather than src: that is the candidate
@@ -97,12 +111,12 @@
       f.style.setProperty("--lqip", 'url("' + thumb.replace(/"/g, "%22") + '")');
     }
 
-    if (d && d.lbSrcset) {
+    if (lb) {
       // sizes before srcset before src: the browser picks its candidate
       // as soon as it has srcset, and needs sizes in hand to pick well.
-      img.sizes = d.lbSizes || "";
-      img.srcset = d.lbSrcset;
-      img.src = d.lbSrc;
+      img.sizes = lb.sizes;
+      img.srcset = lb.srcset;
+      img.src = lb.src;
     } else {
       img.src = card.href;
     }
@@ -140,12 +154,12 @@
     [1, -1].forEach(function (delta) {
       var n = visible[(pos + delta + visible.length) % visible.length];
       if (n === i) return;
-      var g = cards[n].querySelector("img");
+      var lb = lightboxSource(cards[n]);
       var pre = new Image();
-      if (g && g.dataset.lbSrcset) {
-        pre.sizes = g.dataset.lbSizes || "";
-        pre.srcset = g.dataset.lbSrcset;
-        pre.src = g.dataset.lbSrc;
+      if (lb) {
+        pre.sizes = lb.sizes;
+        pre.srcset = lb.srcset;
+        pre.src = lb.src;
       } else {
         pre.src = cards[n].href;
       }
@@ -203,10 +217,15 @@
   box.appendChild(nextBtn);
   document.body.appendChild(box);
 
-  // Parse a manifest ratio like "3/4" or "1592/2000" into width/height.
-  function ratioOf(item) {
-    var parts = String(item.ratio || "3/4").split("/");
+  // The photo's shape as width/height: the manifest's ratio ("3/4",
+  // "1592/2000") when it gives one, otherwise the size the build wrote on
+  // the card's <img>, which is the photo's own. `ratio` is optional now.
+  function ratioOf(i) {
+    var parts = String(items[i].ratio || "").split("/");
     var r = parseFloat(parts[0]) / parseFloat(parts[1]);
+    if (isFinite(r) && r > 0) return r;
+    var g = cards[i].querySelector("img");
+    r = g ? g.getAttribute("width") / g.getAttribute("height") : NaN;
     return isFinite(r) && r > 0 ? r : 0.75;
   }
 
@@ -248,7 +267,7 @@
     if (current === null) return;
     var f = body.firstChild;
     var cap = body.lastChild;
-    var r = ratioOf(items[current]);
+    var r = ratioOf(current);
     var vw = window.innerWidth;
     var vh = window.innerHeight;
     lastVW = vw;
