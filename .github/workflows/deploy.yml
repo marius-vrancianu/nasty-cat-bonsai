@@ -28,34 +28,23 @@ jobs:
           cache: npm
       - run: npm ci
 
-      # The photos themselves, and gallery.json, straight from the images
-      # repo: one git clone of its latest commit, rather than one download
-      # per photo from raw.githubusercontent.com. That host limits anonymous
-      # downloads and serves through a cache of its own; a clone is neither.
-      # See "Where the photos come from" in eleventy.config.js. Public repo,
-      # so the workflow's own token is enough.
+      # The photos and gallery.json from the images repo: one clone of its latest
+      # commit (no per-photo downloads from raw.githubusercontent.com, which
+      # rate-limits and caches). Public repo, so the default token is enough. See
+      # "Where the photos come from" in eleventy.config.js.
       - name: Check out the photos
         uses: actions/checkout@v7
         with:
           repository: marius-vrancianu/bonsai-images
           path: .images
 
-      # The copies the build cuts from those photos (see cdnImg in
-      # eleventy.config.js). Encoding is the slow part — measured at 0.13s
-      # per photo — so this directory survives between runs: eleventy-img
-      # names each copy after a hash of the photo that made it, and skips
-      # any it finds already here. A new photo costs one encoding; one it
-      # has seen costs nothing.
-      #
-      # The key is this run and the restore-key is the bare prefix — the
-      # rolling-cache pattern: each run restores the newest cache that
-      # exists and saves a fresh one, so the cache follows the gallery
-      # rather than pinning to one state of it. The build deletes the copies
-      # of photos no page shows any more, so what is saved is always exactly
-      # the current gallery. GitHub drops a cache nobody has used for a
-      # week; the next run then encodes everything once, which is slow but
-      # harmless. Deleting the cache in the Actions tab is the reset button,
-      # at the same price.
+      # The copies the build cuts (see cdnImg in eleventy.config.js). Encoding is
+      # the slow part, so this survives between runs; copies are named after a hash
+      # of their source, so a build only encodes new photos. Rolling cache: each
+      # run restores the newest and saves a fresh one. The build prunes copies no
+      # page uses, so the cache is always the current gallery. GitHub drops caches
+      # unused for a week (next run re-encodes everything once); deleting the cache
+      # in the Actions tab is the reset button.
       - name: Keep the cut copies of the photos between runs
         uses: actions/cache@v6
         with:

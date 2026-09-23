@@ -6,10 +6,9 @@ permalink: /blog/
 <div class="blog-index">
   <h1 class="page-title">Blog</h1>
 
-  {#- Full-text search over the posts. blog.js unhides the box and lazily
-      fetches /search.json on the first keystroke; without JS the list
-      simply shows every post. The hidden anchor exists so the script can
-      read the index's URL with the path prefix already applied. #}
+  {#- Full-text search: blog.js reveals the box and fetches /search.json on the
+      first keystroke; without JS every post is listed. The hidden anchor gives
+      the script the index URL with the path prefix applied. #}
   <div class="blog-search" hidden>
     <input id="post-search" type="search" placeholder="Search posts…" aria-label="Search posts">
     <a id="search-index-url" href="/search.json" hidden aria-hidden="true" tabindex="-1"></a>

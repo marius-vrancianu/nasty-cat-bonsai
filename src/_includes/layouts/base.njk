@@ -3,39 +3,19 @@
 <head>
   <meta charset="utf-8">
   <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}</script>
-  {#- Publishes one physical pixel as --device-px, in CSS pixels, for the
-      hairline rules on the home page. A 1px box is snapped to the device
-      grid by rounding both of its edges, so wherever a CSS pixel is not a
-      whole number of physical ones — any browser zoom off 100%, or a 1.5x
-      display — the same declaration lands on 0, 1 or 2 physical pixels
-      depending only on where the box happens to fall. Measured at 90%
-      zoom, one of the three nav rules vanished outright and another
-      rendered faint; at 110% and 125% they came out unevenly 1px and 2px.
-      Rounding the ratio to a whole number of physical pixels first makes
-      the snap exact, so the line is the same weight at every zoom and is
-      the 1px it has always been at 100%. Inline and before the stylesheet
-      so no rule is ever painted at the wrong weight; without it the CSS
-      fallback is a plain 1px. #}
+  {#- Sets --device-px: one device pixel, in CSS px, rounded to a whole number
+      of device pixels, so the narrow home layout's brush underlines (7 device
+      px) keep the same weight at any zoom — a plain px width snaps unevenly
+      when a CSS pixel is not a whole number of device pixels. Inline, before
+      the stylesheet, so nothing paints at the wrong weight; CSS falls back to
+      1px. #}
   <script>(function(){var r=document.documentElement;function s(){var d=window.devicePixelRatio||1;r.style.setProperty("--device-px",(Math.round(d)||1)/d+"px")}s();addEventListener("resize",s)})()</script>
-  {#- Every photo's frame learns, as it happens, whether its photo arrived.
-      Load and error events do not bubble, but they can be caught on the
-      way down, so one listener here — before any <img> is parsed — sees
-      every picture on the page:
-
-        load    the frame gets is-loaded, and the photo fades up over the
-                colour the frame was waiting in (see toneOf in
-                eleventy.config.js, and .cdn-frame in main.css)
-        error   the frame becomes the hatched box with its filename on it,
-                rather than a broken-image glyph (the frame already carries
-                the filename as data-file)
-
-      And once the page is parsed, any photo already complete is marked too
-      — belt and braces, since a photo held back and never released would
-      be a photo that is simply not there.
-
-      The js-img class is what lets the stylesheet hold a photo back until
-      its load arrives; without JavaScript nothing is held back, and every
-      photo simply appears. #}
+  {#- One capturing listener sees every image's load/error (they do not
+      bubble, but can be caught on the way down), before any <img> is parsed:
+        load   frame gets is-loaded; the photo fades in over its --tone
+        error  frame gets .missing: hatched box + data-file label
+      After parsing, already-complete photos are marked too, so none can stay
+      hidden. js-img lets the CSS hold photos back only when this script runs. #}
   <script>(function(d){d.documentElement.classList.add("js-img");function f(e){var t=e.target,p=t&&t.tagName==="IMG"&&t.parentElement;if(p&&p.classList.contains("cdn-frame"))p.classList.add(e.type==="load"?"is-loaded":"missing")}d.addEventListener("load",f,true);d.addEventListener("error",f,true);d.addEventListener("DOMContentLoaded",function(){[].forEach.call(d.querySelectorAll(".cdn-frame img"),function(i){if(i.complete&&i.naturalWidth)i.parentElement.classList.add("is-loaded")})})})(document)</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {#- Tints mobile browser chrome to match the paper. theme.js swaps the
@@ -44,10 +24,9 @@
   <title>{% if title %}{{ title }} — {{ site.name }}{% else %}{{ site.name }}{% endif %}</title>
   <meta name="description" content="{{ description or site.description }}">
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
-  {#- Share-preview cards (Open Graph + Twitter). Posts use their thumb
-      image and excerpt; every other page falls back to the hero and the
-      site description. All URLs must be absolute — scrapers don't
-      resolve relative paths. #}
+  {#- Share-preview cards (Open Graph + Twitter). Posts use a copy of their
+      thumb and their excerpt (ogImage shortcode); other pages use the hero and
+      the site description. URLs must be absolute. #}
   {%- set isPost = tags and "posts" in tags %}
   <meta property="og:site_name" content="{{ site.name }}">
   <meta property="og:type" content="{{ "article" if isPost else "website" }}">
@@ -65,16 +44,12 @@
   <meta property="article:published_time" content="{{ page.date | rfc3339 }}">
   {%- endif %}
   <meta name="twitter:card" content="summary_large_image">
-  {#- No preconnect to any image host. Every picture the site shows — the
-      grid, the lightbox, a card's own link, a post's share image — is a
-      build-cut copy served from this origin, down the connection the page
-      already has open. Nothing else is asked for until a visitor accepts
-      analytics. #}
+  {#- No preconnect: every image is served from this origin (build-cut copies),
+      and nothing third-party loads until analytics are accepted. #}
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-  {#- The body face, fetched in parallel with the CSS instead of after it —
-      shortens the flash of fallback Georgia on first visit. `crossorigin`
-      is required on font preloads even same-origin, or the browser
-      refetches the file. #}
+  {#- Preload the body font in parallel with the CSS (shorter flash of
+      fallback Georgia). `crossorigin` is required even same-origin, or the
+      browser fetches it twice. #}
   <link rel="preload" href="/assets/fonts/proza-libre-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/main.css">
   <link rel="alternate" type="application/atom+xml" title="{{ site.name }}" href="/feed.xml">

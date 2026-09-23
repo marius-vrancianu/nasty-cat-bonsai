@@ -1,15 +1,14 @@
-/* Proza Libre, self-hosted (SIL Open Font License — see ../fonts/LICENSE).
-   Same woff2 files Google Fonts serves, via the @fontsource/proza-libre
-   package, so no visitor data ever reaches Google for font delivery.
+/* Proza Libre, self-hosted (SIL Open Font License — see ../fonts/LICENSE):
+   the woff2 files from the @fontsource/proza-libre package, so nothing is
+   fetched from Google.
 
-   Only the faces the design actually uses are declared: regular (400),
-   italic (pull quotes, *emphasis*), and bold (**strong** in posts) — each
-   split into a latin and a latin-ext unicode-range subset the browser
-   downloads on demand. The latin 400 file is also <link rel="preload">ed
-   in base.njk; keep that in sync if the file name ever changes.
+   Only the faces in use: 400, 400 italic (quotes, emphasis) and 700 (bold in
+   posts), each split into latin and latin-ext subsets the browser downloads
+   on demand. The latin 400 file is also preloaded in base.njk — keep the name
+   in sync.
 
-   Not linked from any page: the build folds this file into the front of
-   main.css (see eleventy.config.js), so visitors fetch one stylesheet. */
+   Not linked by any page: the build folds this file into the front of
+   main.css (eleventy.config.js), so visitors fetch one stylesheet. */
 
 /* proza-libre-latin-400-normal */
 @font-face {

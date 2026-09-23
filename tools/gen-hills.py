@@ -1,163 +1,64 @@
 #!/usr/bin/env python3
 """Generate the three hill silhouettes behind the home page.
 
-    python3 tools/gen-hills.py
+    python3 tools/gen-hills.py           # write the SVGs and main.css's block
+    python3 tools/gen-hills.py --check   # verify they match; change nothing
 
-Writes src/assets/img/hill-1.svg, hill-2.svg and hill-3.svg, and prints the
-handful of figures main.css has to agree with. Edit the tables below and
-re-run rather than touching the SVGs by hand.
+Writes src/assets/img/hill-1.svg, hill-2.svg, hill-3.svg and the generated
+block of figures in main.css (between the >>> / <<< markers). Edit the tables
+below and re-run; never edit the SVGs or that block by hand.
 
-WHY A SCRIPT AT ALL
+WHY A SCRIPT: the three hills are one drawing cut into three files and must
+register exactly (hill 2's head clearing hill 3's flank is the whole depth
+cue) at every scale. Hand-kept SVGs drift.
 
-The three hills are one drawing cut into three files. They have to register
-with each other exactly — hill 2's head only clears hill 3's right flank over
-its last 130 units of rise, and that crossing is the whole depth cue — and
-they have to keep registering when the group is scaled to a window, to a
-phone, or to a strip at the foot of an inner page. Hand-kept SVGs drift;
-this doesn't.
+ONE SHARED FRAME. Every file has the SAME viewBox — the group's bounding box
+(VB_W x VB_H), symmetric about hill 3's summit — with its hill drawn in
+place, so any subset stacks with no per-file offsets and "centre the image"
+= "put the tallest tip on the centre line".
 
-ONE SHARED FRAME
+WHAT THE FILES CONTAIN: one flat-filled <path>, no colour. They are CSS
+masks over boxes painted in each hill's OPAQUE tone (main.css owns colours),
+so one file serves both themes and a nearer hill hides a further one.
 
-Every file carries the SAME viewBox, the group's whole bounding box
-(VB_W x VB_H), with each hill drawn where it belongs inside it. Nothing but
-the path differs between the files. That is what makes the group composable:
-any subset of the three, dropped into boxes of the same size and position,
-lands correctly with no per-file offsets to maintain, and a footer that
-wants only the near hill costs one file and one rule.
+HOW A HILL IS WRITTEN: a summit height, a position (`at`, units from the
+centre), a ground level, and two lists of (slope, rise) segments — up the
+left flank foot first, down the right flank summit first. Straight segments
+only; a ridge reads from where its slope breaks. Slopes rather than points,
+because the drawing is only ever scaled and cropped, never stretched, so a
+slope is what survives every window. Three rules, taken from the reference:
 
-The frame is symmetric about the tallest hill's tip (hill 3's, at the exact
-horizontal middle), so "centre the image" and "put the tallest tip on the
-window's centre line" are the same instruction. The empty width that
-symmetry leaves on one side costs nothing: a viewBox is four numbers.
+  POINTY HEADS  the last segment into a summit is the steepest of its flank
+                (~2x the one below): a peak, not a dome.
+  FLAT BODIES   everything else between 0.10 and 0.40; wide, long hills.
+  EASING OUT    outermost segments taper (0.22, 0.10, flat) so the outline
+                settles onto its ground and meets the CSS continuation
+                without a visible corner.
 
-WHAT THE FILES CONTAIN
+INFINITE GROUND: each outline leaves the frame horizontally at its own
+ground level, and the stylesheet continues it to both window edges with a
+second mask layer, so the group fits any window width without stretching.
 
-One <path>, filled flat, no gradients, no filters, no colour. They are used
-as CSS masks over a box painted in that hill's tone — the same device the
-brush rules use — so one file serves both themes and the stylesheet owns the
-colour. What the file carries is a silhouette.
+SHAPE HERE, PLACEMENT IN CSS. One drawing serves both layouts; where and how
+big each hill is drawn is main.css's job, using the generated figures
+(--hN-summit, --hN-peak, ...) so the stylesheet never restates a number.
+How to ask for changes:
+  - shape ("hill 2's head pointier"): a line in the tables below.
+  - a hill against the page ("summit on the gallery link"): one rule in
+    main.css per layout — a hill FEATURE onto a page LANDMARK.
+  - a hill against another hill ("180 units clear of hill 3"): here, in
+    `at` and the slopes; only the frame shares coordinates.
+  Asking for both kinds at once can conflict at some window size — say
+  which wins.
 
-The three tones are OPAQUE, not three alphas over the paper. That is what
-keeps a nearer hill from letting a further one show through it: with alpha,
-two hills at two thirds made a third tone everywhere they crossed, and an
-overlap you can see reads as cellophane rather than as distance. main.css
-carries the flat values and the mix each one comes from.
-
-HOW A HILL IS WRITTEN: SLOPES, NOT POINTS
-
-Each hill is a summit height, a place to put it, and two lists of
-(slope, rise) segments — one up the left flank, foot first, one down the
-right, summit first. The generator turns those into vertices. Nothing here
-is a curve or a rounded corner: a ridge is read from where its slope BREAKS,
-so the segments are straight and the breaks do the work.
-
-Slopes rather than coordinates because slope is the thing that is actually
-being judged, and because it is the one quantity that survives every
-resizing: the drawing is never stretched, only scaled and cropped, so a
-segment written at 0.34 here is drawn at 34 pixels of rise per 100 across,
-in a phone's band and in a wide window alike. Written as points, changing a
-hill's width silently re-pitches every slope in it.
-
-Three rules the numbers follow, all of them taken off the reference trace
-rather than invented:
-
-  POINTY HEADS. The LAST segment into a summit is the steepest of its
-  flank, by a factor of two or so against the one below it (0.62 against
-  0.40 on hill 3, 0.52 against 0.24 on hill 2). A summit approached by
-  easing off reads as a dome; one approached by steepening reads as a peak.
-
-  FLAT BODIES. Everything that is not that final pull sits between 0.10 and
-  0.40. Flanks are long and the hills are wide for their height — hill 3
-  runs 6.5 times its own height end to end. This is most of what separates
-  these from the cones they replaced, which ran to 1.26.
-
-  EASING OUT. Each flank's outermost segments taper — 0.22, then 0.10, then
-  the flat — so the outline settles onto its ground rather than meeting it
-  at a corner. That also makes the join with the stylesheet's continuation
-  (see INFINITE GROUND) invisible, since there is almost no angle left to
-  break at the frame's edge.
-
-ONE GENERATOR, NOT TWO
-
-There is no separate wide and narrow generator, and there should not be: the
-SVG is the same drawing in both layouts, and cutting it in two would put the
-same ridge in two files for the drift between them to open up — which is the
-exact thing this script exists to prevent. What DOES differ between the
-layouts is where each hill is put and how big it is drawn, and that is the
-stylesheet's job, not this file's. The split that matters is shape here,
-placement there.
-
-The seam between the two used to be six numbers copied by hand into
-main.css. They are now WRITTEN there, into the marked block this script
-maintains (see CSS_PATH below), so the stylesheet can say
-
-    --h: calc((var(--hills-h) - var(--stroke)) / var(--h2-summit))
-
-and mean it, instead of restating 0.70 and hoping. Re-running this script is
-what keeps them in step; nothing else has to.
-
-HOW TO ASK FOR A CHANGE
-
-Three kinds, and they cost very different amounts.
-
-  SHAPE — "hill 2's head pointier", "flatten hill 1's tail", "another break
-  in that flank". One line in the table below, both layouts at once, and the
-  asserts catch a broken one. Cheapest thing here. Say it in slopes if you
-  can ("that last pull nearer 0.7") but "pointier" is fine; slope is what it
-  turns into.
-
-  PLACEMENT AGAINST THE PAGE — "hill 3's summit on the foot of the gallery
-  link", "hill 1's ground a stroke over the footer icons", "a sixth in from
-  the right". One rule in main.css, per layout. This is the vocabulary that
-  works: one FEATURE of one hill (summit, ground, heel, toe) onto one
-  LANDMARK the page already has (a window edge or fraction of it, the
-  picture's mat, an element's edge). Both halves are things that exist, so
-  the rule can be written once and stay true at every size.
-
-  PLACEMENT AGAINST ANOTHER HILL — "hill 2's head 180 units clear of hill
-  3's flank". Also cheap, but it belongs HERE, in `at` and the slopes, not
-  in the stylesheet: the frame is the only place the three hills share a
-  coordinate system. The stylesheet only ever sees one hill at a time.
-
-  What is expensive is asking for both at once — "a sixth in from the right
-  AND 180 clear of hill 3" — because the two can disagree at some window
-  size and something has to give. Say which one wins.
-
-INFINITE GROUND
-
-Each hill's outline leaves the frame's left and right edges HORIZONTAL, at
-that hill's own ground level, and the path runs flat along those levels all
-the way to both edges. So the drawing can be continued sideways forever by
-a flat band at the same height — which is exactly what the stylesheet adds
-as a second mask layer, letting the group sit in a window of any width
-without stretching and without a seam. The ground levels are printed below
-as fractions of the frame's height; they are the only numbers the CSS needs
-from the geometry.
-
-WHAT IS ACTUALLY SEEN
-
-Worth knowing before spending effort on a flank, because it is much less
-than half the drawing.
-
-The wide layout centres the frame on the window but then covers everything
-left of the picture's mat, which sits at 0.8914 of the window's HEIGHT. In
-frame units either side of the centre, that leaves
-
-    from  1783 - 1000 * (width / height)   to   1000 * (width / height)
-
-so a 16:9 window shows +5 to +1778 and a 16:10 one +183 to +1600: the right
-side of the frame and almost nothing else. Only past an aspect of about
-1.78 does the centre clear the picture at all — which is the one thing to
-know about this composition, since hill 3's summit sits exactly on that
-centre and is therefore behind the picture on most laptops.
-
-The narrow layout puts the centre on the window's left edge and shows 0 to
-about +1940, so it is the same side of the frame again.
-
-Neither ever shows hill 1's summit, at -625, nor hill 3's left flank. What
-both show is hill 3's head and long right flank, hill 2's head clearing it
-around +1120, and hill 1's flank underneath — so that is where the segments
-are spent, and why hill 1's right flank has six of them and its left three.
+WHAT IS ACTUALLY SEEN is much less than the drawing. Wide layout: the frame
+is centred but the picture covers everything left of 0.8914 x the window
+height, leaving frame units from 1783 - 1000*(w/h) to 1000*(w/h) either side
+of the centre (16:9 shows +5..+1778), so hill 3's summit is behind the
+picture on most laptops. Narrow layout: each hill is placed separately
+(main.css), and the window again sees mostly the right-hand side of the
+frame. Neither shows hill 1's summit or hill 3's left flank — segments are
+spent where they are seen, except hill 1's left flank (see its entry).
 """
 
 import os
@@ -177,30 +78,22 @@ MARK_B = "/* <<< end of the generated figures */"
 
 # --------------------------------------------------------------------------
 # The shared frame. 1000 units tall = the group's height = the tallest hill.
-# The width is symmetric about x = VB_W/2, which is hill 3's summit, and is
-# set by the furthest-reaching foot in the set — hill 1's left one, which is
-# the long gentle flank the wide layout looks at, at CENTRE - 4815.
-# Changing it is safe: the stylesheet reads every position out of the
-# generated figures, which are all relative to a hill's own height, so a
-# wider or narrower frame moves nothing on the page. It was 7700 until hill
-# 1's left flank was lengthened and no longer fitted.
+# Symmetric about x = VB_W/2 (hill 3's summit); its width is set by the
+# furthest-reaching foot, hill 1's left one at CENTRE - 4815. Changing it is
+# safe: the stylesheet reads every position from the generated figures.
 # --------------------------------------------------------------------------
 VB_H = 1000
 VB_W = 10400
 CENTRE = VB_W / 2  # 5200 — hill 3's summit, and the group's anchor point
 
 # --------------------------------------------------------------------------
-# The narrow layout's window, stated in the terms hill 1's tail is cut to.
-# These two are the only figures in this file that come from the STYLESHEET
-# rather than from the drawing, and they are here because the tail below is
-# solved from them rather than typed in.
+# The narrow layout's window — the only figures here taken from the
+# STYLESHEET, because hill 1's tail is solved from them.
 #
-# NARROW_FOOT is main.css's --foot in the narrow layout: how far the footer
-# row's top sits above the page's own foot. The stylesheet draws this hill at
-# --foot / its ground, so that number and this one have to agree — if --foot
-# moves and this does not, the break in the flank stops landing on the
-# window's middle. tools/check-hills.mjs asserts that it does land there, so
-# the two cannot drift for long.
+# NARROW_FOOT is main.css's --foot below 439px (the footer row's top above
+# the page's foot). The stylesheet draws hill 1 at --foot / its ground, so the
+# two must agree, or the break in its flank stops landing on the window's
+# middle; tools/check-hills.mjs asserts that it does.
 # --------------------------------------------------------------------------
 NARROW_FOOT = 84     # px, = main.css's --foot under 439px wide
 NARROW_PHONE = 393   # px, the window the break is exact on
@@ -241,68 +134,29 @@ H1_TAIL = [(p, p * _run) for p in H1_TAIL_PITCH]
 H1_UP_OUTER = (0.06, H1_SUMMIT - H1_GROUND - sum(r for _, r in H1_UP_INNER))
 
 HILLS = {
-    # Near, front, full strength. Its summit sits at half hill 2's distance
-    # from the centre, on the other side — the only thing fixing it, and the
-    # reason `at` is -625 against hill 2's +1250. It is still never on screen:
-    # the wide layout's picture covers everything left of +5, and the narrow
-    # one starts at the centre.
+    # Near, front, full strength. Summit at -625 (half hill 2's distance from
+    # the centre, other side); never on screen. Its job is the long right flank
+    # that runs under the other two and carries the footer row: six segments,
+    # 0.34 at its steepest easing to 0.055, still descending where the window
+    # ends so it never reads as a plinth.
     #
-    # What this hill is for is the long right flank that runs under the other
-    # two and carries the footer row, so that flank gets six segments. It is
-    # the flattest of the three by some way — 0.34 at its steepest descent,
-    # easing to 0.055 — and it is still descending where either window ends,
-    # which is what keeps it from reading as a plinth.
+    # THE LEFT FLANK IS THE WIDE LAYOUT'S HORIZON: four segments, ~4400 units,
+    # written for SHORT, WIDE windows where the whole frame is on screen (a
+    # shorter flank left the footer icons on a flat plinth). Its closing 0.06
+    # matches the right tail's pitch, so the hill reads as one shape.
     #
-    # THE LEFT FLANK IS THE WIDE LAYOUT'S HORIZON, and it is four segments
-    # and some 4400 units long — nearly twice the run it had. On a
-    # window of ordinary proportions none of that shows: the summit is behind
-    # the picture and the flank leaves the left edge 1150 units out. It is
-    # written for the SHORT, WIDE window, where the band is a couple of
-    # hundred pixels tall and the whole frame is on screen at once. There the
-    # old three-segment flank reached its foot a fifth of the way across and
-    # left the rest of the window a flat plinth with the footer icons sitting
-    # on it; this one is still descending when it runs off the left edge.
+    # THE TAIL IS CUT TO THE NARROW LAYOUT'S WINDOW. There the toe is pinned to
+    # the window's right edge; the last segment (0.055) reaches the middle of a
+    # NARROW_PHONE window, and the one before it (4x that pitch) the left edge.
+    # Both runs are half a window = NARROW_PHONE * ground / (2 * NARROW_FOOT)
+    # units. Exact at 393px, "about the middle" either side.
     #
-    # The closing 0.06 is the same pitch as the tail on the other side, which
-    # is what makes the hill read as one long shape rather than as a peak with
-    # two different hills hung off it. The 0.44 nearest the summit is
-    # untouched — see POINTY HEADS. Nothing on this side is visible in the
-    # narrow layout, which starts at the summit and looks right.
-    #
-    # THE TAIL IS CUT TO THE NARROW LAYOUT'S WINDOW. There, this hill's toe is
-    # pinned to the window's right edge, so a run measured back from the toe
-    # is a run measured back from that edge. The last segment reaches the
-    # middle of a NARROW_PHONE window at 0.055; the one before it reaches that
-    # window's left edge at FOUR TIMES that pitch. Both runs are therefore
-    # half a window, and the window is 2 * NARROW_FOOT / ground wide in units
-    # because that is what the stylesheet draws this hill at.
-    #
-    # It is exact at NARROW_PHONE and drifts either side, since the window's
-    # width in units follows the viewport while the break does not. It cannot
-    # be otherwise — the drawing is one shape and the window is not — and
-    # either side of 393 it still reads as "about the middle", which is what
-    # it is for.
-    #
-    # WHAT PAYS FOR THE TAIL is the ground, and that is why the ground is
-    # solved for rather than chosen. Quadrupling a pitch costs fall, the fall
-    # budget is summit - ground, and the obvious place to take it from — the
-    # 0.13 segment above — is precisely the stretch the WIDE layout is looking
-    # at: shortening it drags the steepened part left into view and changes a
-    # layout that is finished. Lowering the ground grows the budget instead,
-    # and the equation above is that trade written down. It lands near 168,
-    # which leaves the 0.13 running past +1778, where a 16:9 window ends; the
-    # steepening begins just off the edge of it.
-    #
-    # This is also the reason --foot's value is copied into this file. When
-    # --foot went from 102 to 84 — the footer row's top padding moving into
-    # the band — every one of these numbers moved with it, and a table of
-    # literals would have gone quietly stale.
-    #
-    # Beyond about 2100px at 1080 tall the window does reach past the break
-    # and the steepened segment comes into view, sitting roughly 20px lower at
-    # the far right than the 0.13 would have. Nothing can prevent that: the
-    # narrow layout defines that stretch of flank and an ultrawide window can
-    # see it.
+    # WHAT PAYS FOR THE TAIL is the ground, which is therefore solved, not
+    # chosen: the steeper pitch costs fall, and taking it from the 0.13 segment
+    # above would pull the steepening into the wide layout's view. Lowering the
+    # ground (to ~168) keeps the 0.13 running past +1778, the edge of a 16:9
+    # window. Past ~2100px wide at 1080 tall the steepened stretch does come
+    # into view — unavoidable, since both layouts share this flank.
     "hill-1.svg": dict(
         note="near, front",
         summit=H1_SUMMIT, at=-625, ground=H1_GROUND,

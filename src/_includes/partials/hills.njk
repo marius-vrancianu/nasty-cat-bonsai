@@ -1,34 +1,17 @@
-{#- The backdrop: the celestial body, three hill silhouettes cut from one
-    drawing by tools/gen-hills.py, and the torii gate standing on the near
-    hill.
-
-    ORDER IS DEPTH here, and it is the whole of how the pieces relate:
-
-      the orb    furthest back, behind everything
-      hill 3, 2  the far and middle hills
-      the gate   in front of both, behind the near hill
+{#- The home backdrop. ORDER IS DEPTH:
+      orb        furthest back
+      hill 3, 2  far and middle hills
+      torii      in front of those, behind the near hill
       hill 1     nearest, painting over the gate's feet
+    The hills share one viewBox and are placed by the `.hill` rule in main.css;
+    the orb and gate are boxes placed on their own (hence no `hill` class).
 
-    The three hills share one viewBox, so they need no offsets of their own:
-    the stylesheet places the box and every hill lands where it belongs
-    inside it. The orb and the gate are not placed that way — each is a
-    bounded object with a box, which is why neither carries a `hill` class
-    and neither picks up their placement rule.
-
-    THE ORB IS ALSO THE THEME SWITCH, where the including page asks for it.
-    It ships DISABLED and aria-hidden and theme.js removes both, which is the
-    same bargain the icon toggle makes with its `hidden`: without JavaScript
-    there is nothing for a control to do, so it stays what it was, a drawing
-    of a sun. A focusable button that does nothing is worse than no button.
-
-    That is also why aria-hidden is on each decorative child rather than on
-    the box around them — a focusable element inside an aria-hidden subtree is
-    hidden from a screen reader while still taking a tab stop, which is the
-    one arrangement worse than either.
-
-    Dropping any of these is a matter of deleting its line, which is how this
-    is meant to be reused at the foot of an inner page. Leave `orbToggles`
-    unset there and the orb is decoration again. #}
+    With orbToggles set (index.njk) the orb is the theme switch: it ships
+    disabled + aria-hidden and theme.js enables it, so without JS it is just a
+    drawing. aria-hidden is on each decorative child, not the wrapper, because
+    a focusable element inside an aria-hidden subtree still takes a tab stop.
+    Reusable elsewhere by dropping lines; without orbToggles the orb is only
+    decoration. #}
 <div class="hills">
   {%- if orbToggles %}
   <button class="orb" type="button" data-theme-toggle disabled aria-hidden="true"></button>

@@ -1,10 +1,8 @@
-/* Build-time gallery data. Reads gallery.json from the bonsai-images
-   repo while the site is being built — from the checkout the workflows
-   make (IMAGES_DIR, see eleventy.config.js), or over the network for a
-   local preview — so the Gallery page is rendered as
-   static HTML: no runtime dependency on raw.githubusercontent.com (which
-   some corporate networks block) and the photo list is indexable by
-   search engines. The manifest format is documented in GUIDE.md §1. */
+/* Gallery data: gallery.json from bonsai-images, read at build time — from
+   the workflows' checkout (IMAGES_DIR) or over the network for a local
+   preview — so the Gallery page is static HTML: indexable, and no visitor
+   depends on raw.githubusercontent.com (blocked on some networks). Format:
+   GUIDE.md §1. */
 import fs from "node:fs";
 import path from "node:path";
 import Fetch from "@11ty/eleventy-fetch";

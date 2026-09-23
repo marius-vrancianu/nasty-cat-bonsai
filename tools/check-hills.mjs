@@ -1,41 +1,21 @@
-/* Check the home page's hill backdrop against the rules it is supposed to keep.
- *
- *     node tools/check-hills.mjs            # needs _site, so run a build first
- *     node tools/check-hills.mjs --quiet    # only failures
- *
- * Playwright is NOT a dependency of this site — adding it would make the
- * optional local preview in GUIDE.md section 6.8 a far bigger download for
- * the owner, who never runs this. Install it just for a run:
- *
- *     npm i --no-save playwright && npx playwright install chromium
- *
- * WHY THIS EXISTS
- *
- * The backdrop is placed against landmarks the page computes at runtime — the
- * foot of a link, the top of the footer row, the picture's mat — and the
- * stylesheet cannot measure any of them. So a handful of figures in main.css
- * were measured off the live page instead, and nothing about CSS will tell
- * you when one of them drifts. One already did: the 439px breakpoint read 430
- * for two rounds and was nine pixels wrong, silently, in a thoroughly
- * commented rule.
- *
- * Most of them are gone now — the narrow layout is given its link height and
- * sizes the type into it, rather than measuring the type — but --foot is
- * still a measurement of the page, and gen-hills.py holds a copy of it to cut
- * the near hill's tail with. That copy went stale the moment --foot moved,
- * and the run below is what said so.
- *
- * These are the same measurements that were being written by hand and thrown
- * away every time the backdrop changed. Kept, they take about twenty seconds.
- *
- * WHAT IT DOES
- *
- * Renders the page at a spread of sizes in both themes, reads the layout back
- * out of the DOM, and scans the pixels for the three hill tones — the tones
- * come from the stylesheet's own computed values, so re-colouring the hills
- * does not break the check. Then it asserts the rules the design is built on,
- * named as the design states them rather than as numbers.
- */
+/* Checks the home page's hill backdrop against the rules it is built on.
+
+       node tools/check-hills.mjs            # needs _site: build first
+       node tools/check-hills.mjs --quiet    # only failures
+
+   Playwright is NOT a site dependency (it would bloat the owner's optional
+   local preview), so install it just for a run:
+
+       npm i --no-save playwright && npx playwright install chromium
+
+   WHY: the backdrop is placed against landmarks the browser lays out at
+   runtime (a link's foot, the footer row's top, the picture's mat), which CSS
+   cannot measure, and a few figures in main.css — --foot above all, which
+   gen-hills.py also copies — are hand-measured stand-ins that drift silently.
+
+   WHAT: renders the page at a spread of sizes in both themes, reads the
+   layout from the DOM, scans the pixels for the three hill tones (taken from
+   the stylesheet's computed values), and asserts the design's rules by name. */
 
 import http from "node:http";
 import fs from "node:fs";
@@ -299,42 +279,23 @@ async function main() {
       const page = await ctx.newPage();
       await page.goto(url, { waitUntil: "networkidle" });
 
-      /* The consent banner covers the whole lower page until it is answered,
-         and pre-seeding its localStorage key does NOT dismiss it — the script
-         only reads that key on a later visit. It has to be clicked, and
-         forgetting to cost an hour once. */
+      /* Dismiss the consent banner by clicking (pre-seeding localStorage does not
+         hide it on this visit); it covers the lower page. */
       const decline = page.locator(".consent-banner button", { hasText: /decline/i }).first();
       if (await decline.count()) await decline.click({ force: true }).catch(() => {});
-      /* And then get the pointer off the page. The banner's Decline button
-         sits at (176, 798) on a 393px phone, and once the banner goes that
-         point is on top of the RSS icon — so the click leaves it in :hover and
-         it renders --olive while its neighbours render --home-social. It looks
-         exactly like a colour bug in the footer and is not one; it does not
-         happen in the wide layout only because the same button's centre lands
-         on the picture there. */
+      /* Then move the pointer away: after the click it can rest on a footer icon,
+         whose :hover colour looks exactly like a colour bug. */
       await page.mouse.move(0, 0);
       await page.waitForTimeout(250);
 
       const L = await page.evaluate(readLayout);
 
-      /* Measurements come from the page as composed; the PIXEL scan gets the
-         picture and the nav hidden first. Two reasons. The photograph carries
-         greys within a level or two of the far hill's tone, so scanning the
-         composed page finds the cat and calls it a mountain. And the picture
-         covers the frame's centre on any window squarer than about 1.78 : 1,
-         which would mean the tallest summit — the thing the whole composition
-         is anchored to — could only be checked on a minority of screens.
-         Hidden, it can be checked on all of them: the rule is about where the
-         hill is DRAWN, not about how much of it a reader can see.
-
-         THE GATE GOES TOO, and for a third reason: it is painted in the near
-         hill's own colour, so every column it stands in would report the
-         gate's roof as the hill's ridge and quietly break half the rules
-         below. Hidden, P.tops[0] is the hill and nothing else — which is also
-         exactly what the gate's own rule needs to know.
-
-         `visibility: hidden` and not `display: none`, so nothing reflows and
-         the hills stay exactly where the measurements above found them. */
+      /* Layout is measured on the composed page; for the PIXEL scan the picture,
+         nav and gate are hidden (visibility, so nothing reflows):
+           - the photo has greys close to the far hill's tone;
+           - the picture covers the frame's centre on windows squarer than ~1.78:1,
+             and the rules are about where hills are DRAWN, not what is visible;
+           - the gate is painted in the near hill's colour and would read as ridge. */
       await page.evaluate(() => {
         for (const sel of [".hero-frame", ".home-nav", ".theme-toggle",
                            ".consent-banner", ".torii"])
@@ -633,16 +594,9 @@ async function main() {
           `left ${Math.abs(left).toFixed(3)} vs right ${Math.abs(right).toFixed(3)} ` +
           `= ${ratio.toFixed(2)}x`);
 
-        /* And the break belongs on the WINDOW'S MIDDLE — on the phone the
-           drawing is cut for, at least, which is 393px wide. It drifts either
-           side of that by design (the drawing is one shape, the window is
-           not), so this is asserted where it is meant to be exact and noted
-           where it is not.
-
-           This is the rule that caught gen-hills.py's copy of --foot going
-           stale: --foot moved from 102 to 84, the hill was drawn 100px
-           shorter, and the break slid from the middle of the phone to 41% of
-           it — with every other rule still passing. */
+        /* The break belongs on the window's middle — exactly at 393px (the phone
+           the drawing is cut for; NARROW_PHONE in gen-hills.py), drifting either
+           side by design. This catches gen-hills.py's copy of --foot going stale. */
         if (size.w === 393)
           rule(tag, theme, "on a 393px phone the break is on the window's middle",
             near(brk, size.w / 2, 2), `${brk.toFixed(1)} vs ${size.w / 2}`);
@@ -657,14 +611,8 @@ async function main() {
           P.tops[0].every((y) => y !== null && y <= L.social.top + 1),
           `lowest ${Math.max(...P.tops[0].filter((y) => y !== null))} vs row ${L.social.top}`);
 
-        /* BOTH HILLS BEHIND ARE OUT IN THE OPEN, at every size — this used to
-           be conditional, and the condition was the bug: on a real phone the
-           page had no room left and the checks quietly skipped rather than
-           failed. The band is now reserved in the flow (see --band-gap in
-           main.css), so there is no size at which either summit is buried and
-           no reason to ask whether it is.
-
-           12px is the point past which a summit is a shape rather than a few
+        /* Both far hills are out in the open at every size (the band is reserved
+           in the flow — --band-gap). 12px: past that a summit is a shape, not a few
            antialiased pixels the scan cannot place. */
         const galleryMid = (L.gallery.top + L.gallery.bottom) / 2;
         const want = [null, { col: sixth * 5, y: L.links.bottom + L.stroke },
@@ -684,23 +632,14 @@ async function main() {
          a real click at the disc's centre reaches the button even where the
          gate covers it — which is the whole of the hit area this page relies
          on, and not something a synthetic .click() would prove. */
-      /* An orb with no size cannot be pressed, and at 768x1024 there is one:
-         the gate sizes the orb and there is no gap beside the menu to put a
-         gate in. That window has no theme switch on this page at all — which
-         is not the orb failing but the WIDE LAYOUT being used outside its
-         range. It wants a landscape window: the nav starts 89.14dvh from the
-         left, so on anything narrower than that the nav, the footer row and
-         half the picture are already off the right-hand edge. A tablet held
-         in portrait lands there. Worth fixing, and not by patching the orb. */
+      /* At 768x1024 there is no gate and so no orb (no gap beside the menu): the
+         WIDE layout is out of its range there — the nav starts 89.14dvh from the
+         left, so on a portrait tablet the nav and half the picture are off screen.
+         A known gap in the layout, not an orb bug. */
       if (L.orbControl && orb) {
-        /* PUT THE PAGE BACK FIRST. The scan above hides the picture and the
-           nav to read the hills, and `visibility: hidden` takes an element
-           out of hit-testing as well as out of sight — so pressing the orb
-           against that DOM proved only that the handler runs, not that a
-           finger can reach it. It could not: the nav is a full-width box in
-           the narrow layout and every point of the orb answered
-           `div.home-links`, which is why the sun did nothing on a phone while
-           passing here 30 times out of 30. */
+        /* Restore the page first: `visibility: hidden` also removes elements from
+           hit-testing, so pressing the orb on the scan's DOM would prove nothing
+           about whether a finger can reach it. */
         await page.evaluate(() => {
           for (const sel of [".hero-frame", ".home-nav", ".theme-toggle",
                              ".consent-banner", ".torii"])
@@ -708,8 +647,7 @@ async function main() {
         });
         await page.waitForTimeout(60);
 
-        /* And ask what is actually on top of it, which is the rule that would
-           have caught that directly. Five points, so a partial cover shows. */
+        /* And check what is actually on top of it, at five points. */
         const cover = await page.evaluate(() => {
           const e = document.querySelector(".orb");
           e.scrollIntoView({ block: "center" });
@@ -734,9 +672,7 @@ async function main() {
                    w: innerWidth, h: innerHeight };
         });
         if (box.x > 0 && box.x < box.w && box.y > 0 && box.y < box.h) {
-          /* A finger in the narrow layout, a mouse in the wide one — the two
-             hit-test the same way, but only one of them is what a phone
-             sends, and this bug was reported from a phone. */
+          /* Tap in the narrow layout, click in the wide one — what each device sends. */
           if (wide) await page.mouse.click(box.x, box.y);
           else await page.touchscreen.tap(box.x, box.y);
           await page.waitForTimeout(120);

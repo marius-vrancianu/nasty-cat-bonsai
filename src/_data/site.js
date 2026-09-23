@@ -24,18 +24,13 @@ export default {
     apiUrl: "https://nasty-cat-comments.marius-v-vrancianu.workers.dev",
   },
   images: {
-    // Manifest listing ONLY the images that belong in the gallery, for a
-    // local preview (raw.githubusercontent.com updates within minutes of a
-    // push). The workflows read gallery.json from their checkout instead.
+    // The gallery manifest, for a local preview (the workflows read
+    // gallery.json from their checkout).
     manifest:
       "https://raw.githubusercontent.com/marius-vrancianu/bonsai-images/main/gallery.json",
-    // Where a LOCAL PREVIEW reads the photos from, to cut every copy the
-    // pages draw. The workflows do not use it: they check out bonsai-images
-    // and point IMAGES_DIR at it (see "Where the photos come from" in
-    // eleventy.config.js). Nobody's browser ever sees this host — every
-    // picture a visitor gets is a copy served from the site itself — so
-    // raw.githubusercontent.com being blocked on some corporate networks
-    // does not matter here.
+    // Where a LOCAL PREVIEW reads photos from (the workflows use a checkout
+    // via IMAGES_DIR instead; see eleventy.config.js). Visitors never see this
+    // host — they get copies served from the site.
     source: "https://raw.githubusercontent.com/marius-vrancianu/bonsai-images/main/",
   },
 };

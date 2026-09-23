@@ -2,21 +2,13 @@
 permalink: /comments-posts.json
 eleventyExcludeFromCollections: true
 ---
-{#- Every post that currently exists, and nothing else.
+{#- Every post that exists — a contract with the comments worker, which reads
+    it weekly and deletes comments of posts that have gone (after a 30-day
+    grace period and an email: a renamed post looks like a deleted one). Kept
+    separate from search.json, which is large and belongs to search.
 
-    The comments worker fetches this once a week and deletes the stored
-    comments of any post that has dropped off it — after a 30-day grace
-    period and a warning email, because a renamed post looks exactly like a
-    deleted one from the other end.
-
-    Deliberately its own file rather than a read of search.json: that one
-    carries the full text of every post (wasteful to fetch weekly) and its
-    shape belongs to the search feature. This is a contract with the worker,
-    so it should be free to stay this boring.
-
-    These paths are NOT run through HtmlBasePlugin — it only rewrites href
-    and src in HTML — so they match the data-post attribute the widget
-    sends, which is the same raw page.url. Keep it that way. -#}
+    Raw page.url values, not run through HtmlBasePlugin (it only rewrites
+    HTML), so they match the data-post value comments.js sends. Keep it so. -#}
 [
 {%- for post in collections.posts %}
   {{ post.url | dump | safe }}{{ "," if not loop.last }}
