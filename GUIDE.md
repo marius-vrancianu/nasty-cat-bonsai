@@ -82,6 +82,11 @@ never appears, no matter where it's uploaded. That's the whole system.
   2000 px buys nothing: it only makes deploys slower and the images repo
   bigger. Phone photos straight off the camera are 5–10× bigger than
   needed.
+- **Optional: strip the location.** A phone photo carries the GPS position
+  it was taken at, and the `bonsai-images` repo is public, so an original
+  there can reveal it (the site's own copies never do). To strip it:
+  Photoshop *Export As* with Metadata *None*, or on Windows right-click →
+  Properties → Details → *Remove Properties and Personal Information*.
 - **Name:** lowercase, no spaces, descriptive: `maple-repot-2026.webp`,
   `tree-10.webp`. **Never reuse a name that already exists** (see 1.4 why).
 
