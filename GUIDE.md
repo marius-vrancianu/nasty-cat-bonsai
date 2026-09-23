@@ -70,6 +70,12 @@ never appears, no matter where it's uploaded. That's the whole system.
   the `bonsai-images` repo smaller, which makes deploys a little quicker
   as it grows. To convert/compress for free, use <https://squoosh.app> in
   your browser: drag the photo in, pick WebP, quality ~75, save.
+- **Not HEIC.** iPhones save photos as `.heic` by default, and the deploy
+  cannot read that format: a `.heic` in the gallery fails the deploy, and
+  in a post or on the About page it shows as the hatched "missing" box.
+  Either set the phone to shoot JPEG (iPhone: Settings → Camera → Formats →
+  **Most Compatible**), or convert before uploading — on Windows, open it
+  in Photos → ⋯ → **Save as** → JPEG.
 - **Size:** resize so the longest side is **1600–2000 px**. Every copy the
   site shows is cut from this file, and the largest one the viewer uses is
   1800 px wide — so under 1600 px starts to show on big screens, and over
@@ -268,6 +274,23 @@ entirely if not wanted).
 
 After editing, **deploy** (section 5) to publish.
 
+**Replacing the sample text with your own.** The page you see today is a
+placeholder. When you write the real one:
+
+- Replace everything **between** the `# About` heading and the closing
+  `</div>` with your text. Keep the header block at the very top (between
+  the two `---` lines), the `<div class="prose">` line and the `</div>`
+  at the bottom — they give the page its title, its address and its
+  layout.
+- The placeholder has two photo lines, `blog/workshop-01.webp` and
+  `blog/maple-collection-02.webp`, which is why the page shows two hatched
+  boxes today. For each, either upload a photo **under that exact name**
+  to `bonsai-images/blog/`, or change the line to your own photo's name,
+  or delete the line. A page with no photos at all is fine.
+- Photos go in exactly as described above: full size, into `blog/`, no
+  resizing by hand. The deploy makes the copies the page shows, and
+  measures each photo so it appears uncropped at its own shape.
+
 ---
 
 ## 3. Blog posts
@@ -379,7 +402,8 @@ Same as the About page — upload to `bonsai-images/blog/`, then:
 ```
 
 Upload the full-size file; the deploy makes the smaller copies the page
-actually uses, exactly as it does for `thumb:` above. The three parts are
+actually uses, exactly as it does for `thumb:` above. Same format rules as gallery photos (1.1): JPEG, WebP or PNG — not
+HEIC. The three parts are
 the filename, the alt text (what a screen reader reads, and what shows if
 the picture fails), and an optional caption printed under the photo.
 
@@ -402,6 +426,19 @@ New post or edit → commit → **deploy** (section 5). To fix a typo later:
 edit the file (move A), commit, deploy again. To unpublish a post: delete
 the file (open it → click the **trash icon** next to the pencil → commit)
 and deploy.
+
+To fix a photo in a post, upload the corrected file to `bonsai-images/blog/`
+under the **same name** — it replaces the old one — and deploy. Nothing in
+the post needs to change.
+
+**Removing the two sample posts.** They are `src/posts/notes-on-repotting-the-autumn-maple.md`
+and `src/posts/what-the-cat-taught-me-about-placement.md`; delete them
+like any other post, whenever suits you — before your first real post or
+after it. The blog simply shows an empty list in between. If anyone
+(including you, testing) left a comment on them, the comments system will
+email you within a week of the deploy to say those comments are about to
+be deleted, with **Keep them** / **Delete now** buttons (6.1) — pick
+**Delete now**.
 
 ---
 
@@ -427,7 +464,8 @@ and deploy.
 | About / privacy text | **Yes** |
 | `gallery.json` in `bonsai-images` | **Yes** — straight away, no waiting needed |
 | Design (CSS), templates, social links | **Yes** |
-| Only uploaded an image file | No — it shows up once `gallery.json` or a post references it *and* that change is deployed |
+| Uploaded a **new** image file | No — it shows up once `gallery.json` or a post references it *and* that change is deployed |
+| **Replaced** an image under the same name | **Yes** — the site keeps showing the old picture until the next deploy |
 
 **The button, click by click:**
 
@@ -459,7 +497,7 @@ a temporary GitHub hiccup — it happens now and then; just run the workflow
 again (it has never failed twice in a row here). Any other error: it will
 almost always be a typo in a file you just edited (a broken front-matter
 `---` block, or a stray comma in `gallery.json` — the error message names
-the gallery manifest in that case) — recheck your last commit, or see 6.3
+the gallery manifest in that case, and the line and column of the mistake) — recheck your last commit, or see 6.3
 to undo it. A failed deploy never breaks the live site; the previous
 version stays up until a deploy succeeds.
 
