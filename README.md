@@ -72,9 +72,16 @@ The blog index, post page, and RSS feed update automatically at build time.
 
 ```json
 { "file": "gallery/tree-10.webp", "species": "Chinese Elm",
+  "trees": ["Ulmus parvifolia, anno culto 2019"],
   "style": "Broom", "date": "Jul 2026",
   "notes": "Longer caption shown in the lightbox." }
 ```
+
+   `trees` is optional and always a list. Each unique string in it becomes
+   an option in the Gallery's "one tree over the years" dropdown (sorted
+   alphabetically, `+`-prefixed lost trees last), so every photo of the
+   same tree must carry the *exact* same string — copy-paste it, never
+   retype. Group shots list every tree in frame. See [GUIDE.md](GUIDE.md) §1.3.
 
 3. Deploy. The photo list is baked into the page while the site builds, so
    gallery edits go live with the next deploy — not before. (This is what

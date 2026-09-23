@@ -152,6 +152,19 @@ reflected in the URL (`…/gallery/#tree=…`), so you can share a link
 straight to one tree's history. Photos without a `trees` field simply
 never match a dropdown option — fine while you're catching up on tagging.
 
+- **Order of the options:** alphabetical (after "All trees"), with the
+  `+`-marked trees no longer in the collection grouped at the end. You
+  don't sort anything yourself; where an entry sits in this file only
+  decides the order of the *photos*.
+- **Spelling is identity.** Two strings that differ by one capital letter,
+  a space or a comma are two different trees, and both appear as options.
+  If a tree shows up twice in the dropdown, that's the cause.
+- **No tags, no dropdown.** If no photo has a `trees` field, the dropdown
+  stays hidden and the Gallery just shows everything.
+- **It updates on deploy.** The options are built from the manifest baked
+  into the page, so a new tree string appears only after the next deploy
+  (section 5), like any other `gallery.json` edit.
+
 The dropdown always searches the **whole** gallery, however many photos
 are on screen (see 1.6) — it never sees only part of it.
 
