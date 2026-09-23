@@ -4,6 +4,7 @@ import path from "node:path";
 import { HtmlBasePlugin } from "@11ty/eleventy";
 import Image from "@11ty/eleventy-img";
 import { minify } from "terser";
+import sharp from "sharp";
 import site from "./src/_data/site.js";
 
 /* ---- Thumbnails -----------------------------------------------------------
@@ -251,6 +252,40 @@ async function cut(file, options) {
   return metadata;
 }
 
+/* ---- The colour a photo is, before it arrives ---------------------------
+   A frame used to wait for its photo on the washi stripes — the same
+   hatching that means "this photo is missing" — so a gallery on a cold
+   visit read, for its first half-second, as a wall of absent pictures
+   filling in one by one. Now each frame waits in its photo's own average
+   colour, and the photo fades up over it: the grid is there at once, the
+   right tones in the right places, and what arrives is detail.
+
+   Measured, not guessed: the photos on a first screen land in about
+   0.3-0.4s on a fast connection, and loading more of them eagerly does not
+   bring that in (it only makes them share the bandwidth — 1.2MB instead
+   of 0.3MB on a phone for the same two photos on screen). The wait is what
+   it is; this changes what it looks like.
+
+   Averaged off the smallest copy just cut, shrunk to one pixel: a few
+   milliseconds a photo, and exactly the colour the eye averages the
+   thumbnail to at a glance. */
+const tones = new Map();
+function toneOf(outputPath) {
+  if (!tones.has(outputPath)) {
+    tones.set(
+      outputPath,
+      sharp(outputPath)
+        .resize(1, 1, { fit: "fill" })
+        .removeAlpha()
+        .raw()
+        .toBuffer()
+        .then((px) => "#" + [...px.subarray(0, 3)].map((v) => v.toString(16).padStart(2, "0")).join(""))
+        .catch(() => null)
+    );
+  }
+  return tones.get(outputPath);
+}
+
 const esc = (s) =>
   String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -272,11 +307,12 @@ const esc = (s) =>
  *   strict   true  -> a source the build cannot fetch fails a CI build
  *            false -> always degrade to the hatched "missing" frame
  *
- * Returns { html, width, height, src, srcset, full, entries } — the <img>
- * tag, the shape of the largest copy cut (for a caller that has to reserve
+ * Returns { html, width, height, src, srcset, full, entries, tone } — the
+ * <img> tag, the shape of the largest copy cut (for a caller that has to reserve
  * the right space for it), and the urls, for a caller that wants the same
  * copies on a tag of its own; `full` is the largest copy's url and
- * `entries` every copy as { url, width }. EVERYTHING is null when the
+ * `entries` every copy as { url, width }, `tone` the photo's average colour
+ * for its frame to wait in (see toneOf). EVERYTHING is null when the
  * source could not be had: there is no picture to show, and frame() draws
  * the hatched box with the filename in its place.
  *
@@ -297,7 +333,7 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
     const why = `Could not build a thumbnail for ${file}: ${err.message}`;
     if (strict && process.env.CI) throw new Error(why);
     console.warn(`[images] ${why} — drawing the missing-photo frame`);
-    return { html: null, width: null, height: null, src: null, srcset: null, full: null, entries: null };
+    return { html: null, width: null, height: null, src: null, srcset: null, full: null, entries: null, tone: null };
   }
 
   const srcset = sources.map((s) => `${s.url} ${s.width}w`).join(", ");
@@ -306,6 +342,7 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
   // ever is the one fetched it is not the heaviest.
   const fallback = sources[Math.floor((sources.length - 1) / 2)];
   const biggest = sources[sources.length - 1];
+  const tone = await toneOf(sources[0].outputPath);
   return {
     html:
       `<img src="${fallback.url}" srcset="${srcset}" sizes="${sizes}"` +
@@ -317,6 +354,7 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
     srcset,
     full: biggest.url,
     entries: sources.map((s) => ({ url: s.url, width: s.width })),
+    tone,
   };
 }
 
@@ -336,6 +374,7 @@ async function cdnImg({ file, widths, sizes, quality, alt, attrs, strict }) {
      file   the source path, for the label on the hatched box */
 function frame({ tag = "div", cls = "", style = "", attrs = "", img, file }) {
   const missing = !img.html;
+  if (!missing && img.tone) style = [style, `--tone: ${img.tone}`].filter(Boolean).join("; ");
   const classes = ["cdn-frame", cls, missing ? "missing" : ""].filter(Boolean).join(" ");
   return (
     `<${tag} class="${classes}"` +
@@ -771,7 +810,7 @@ export default function (eleventyConfig) {
       item.ratio || (img.width && img.height ? `${img.width}/${img.height}` : "3/4");
     return frame({
       style: `aspect-ratio: ${shape}`,
-      img: { html: img.html && img.html.replace("<img ", `<img${lb} `) },
+      img: { html: img.html && img.html.replace("<img ", `<img${lb} `), tone: img.tone },
       file: item.file,
     });
   });

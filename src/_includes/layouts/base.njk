@@ -17,13 +17,26 @@
       so no rule is ever painted at the wrong weight; without it the CSS
       fallback is a plain 1px. #}
   <script>(function(){var r=document.documentElement;function s(){var d=window.devicePixelRatio||1;r.style.setProperty("--device-px",(Math.round(d)||1)/d+"px")}s();addEventListener("resize",s)})()</script>
-  {#- A photo that fails to load, anywhere on the site, becomes the hatched
-      box with its filename on it rather than a broken-image glyph. Error
-      events do not bubble, but they can be caught on the way down, so one
-      listener here — before any <img> is parsed — does for every picture
-      what an onerror on each tag used to. The frame already carries the
-      filename (data-file, see frame() in eleventy.config.js). #}
-  <script>document.addEventListener("error",function(e){var t=e.target,f=t&&t.tagName==="IMG"&&t.parentElement;if(f&&f.classList.contains("cdn-frame"))f.classList.add("missing")},true)</script>
+  {#- Every photo's frame learns, as it happens, whether its photo arrived.
+      Load and error events do not bubble, but they can be caught on the
+      way down, so one listener here — before any <img> is parsed — sees
+      every picture on the page:
+
+        load    the frame gets is-loaded, and the photo fades up over the
+                colour the frame was waiting in (see toneOf in
+                eleventy.config.js, and .cdn-frame in main.css)
+        error   the frame becomes the hatched box with its filename on it,
+                rather than a broken-image glyph (the frame already carries
+                the filename as data-file)
+
+      And once the page is parsed, any photo already complete is marked too
+      — belt and braces, since a photo held back and never released would
+      be a photo that is simply not there.
+
+      The js-img class is what lets the stylesheet hold a photo back until
+      its load arrives; without JavaScript nothing is held back, and every
+      photo simply appears. #}
+  <script>(function(d){d.documentElement.classList.add("js-img");function f(e){var t=e.target,p=t&&t.tagName==="IMG"&&t.parentElement;if(p&&p.classList.contains("cdn-frame"))p.classList.add(e.type==="load"?"is-loaded":"missing")}d.addEventListener("load",f,true);d.addEventListener("error",f,true);d.addEventListener("DOMContentLoaded",function(){[].forEach.call(d.querySelectorAll(".cdn-frame img"),function(i){if(i.complete&&i.naturalWidth)i.parentElement.classList.add("is-loaded")})})})(document)</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {#- Tints mobile browser chrome to match the paper. theme.js swaps the
       value when the visitor toggles dark mode (values mirror --washi). #}

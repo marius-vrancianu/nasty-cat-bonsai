@@ -253,6 +253,14 @@ html, body {
   padding: 0;
 }
 
+/* No grey-blue flash on tap. Phone browsers paint their own translucent
+   box over whatever link or button is touched, sized to its whole box —
+   on a gallery card, a slab over the photo that then shows through the
+   lightbox opening on top of it. Every control here already answers a
+   touch in its own way (the lightbox opens, a menu drops, a page loads),
+   so the browser's extra one is only noise. */
+html { -webkit-tap-highlight-color: transparent; }
+
 body {
   background: var(--washi);
   color: var(--ink);
@@ -1834,6 +1842,29 @@ a { color: inherit; }
 }
 
 .cdn-frame.missing img { display: none; }
+
+/* WAITING FOR THE PHOTO, and arriving. The stripes above are the hatching
+   that means "missing", and a frame whose photo is merely still on its way
+   should not say that — on a cold gallery that read as a wall of absent
+   pictures filling in one by one. So a frame the build could measure
+   waits in its photo's own average colour (--tone, written by
+   eleventy.config.js), and the photo fades up over it once it is here.
+
+   Held back only when JavaScript is running (.js-img, set in the <head> of
+   base.njk by the same script that adds is-loaded) — without it nothing
+   would ever say the photo had arrived, so nothing is held back and every
+   photo simply appears. The lightbox's frame keeps its own rules further
+   down; they agree with these. */
+.cdn-frame[style*="--tone"]:not(.missing) {
+  background: var(--tone);
+}
+
+.js-img .cdn-frame img { opacity: 0; }
+.js-img .cdn-frame.is-loaded img { opacity: 1; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .cdn-frame img { transition: opacity 0.35s ease; }
+}
 
 .cdn-frame.missing::after {
   content: attr(data-file);
