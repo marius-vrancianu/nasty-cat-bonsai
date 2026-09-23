@@ -27,10 +27,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
+          # No dependency cache in a job that holds the deploy secrets — the
+          # worker has no dependencies to cache anyway. setup-node would not
+          # start one here on its own (it only does for a package.json that
+          # names its package manager), so this just says so out loud.
+          package-manager-cache: false
 
       # The worker has no dependencies, so this is the whole test suite:
       # 42 checks against a fake KV and a fake mail provider. A failure here
@@ -39,8 +44,12 @@ jobs:
         working-directory: comments-worker
         run: npm test
 
+      # wrangler-action v4 installs Wrangler 4 (v3 installed Wrangler 3).
+      # Checked before the switch: `wrangler deploy --dry-run` bundles this
+      # worker to the same code under both, with the same KV binding and
+      # vars — Wrangler 4 only reformats the output.
       - name: Deploy
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           workingDirectory: comments-worker

@@ -21,8 +21,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -35,7 +35,7 @@ jobs:
       # See "Where the photos come from" in eleventy.config.js. Public repo,
       # so the workflow's own token is enough.
       - name: Check out the photos
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: marius-vrancianu/bonsai-images
           path: .images
@@ -57,7 +57,7 @@ jobs:
       # harmless. Deleting the cache in the Actions tab is the reset button,
       # at the same price.
       - name: Keep the cut copies of the photos between runs
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: _site/assets/photos
           key: photo-copies-${{ github.run_id }}
@@ -66,13 +66,13 @@ jobs:
       - run: npm run build
         env:
           IMAGES_DIR: .images
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
         with:
           # Auto-enables Pages (source: GitHub Actions) on first run.
           # If this step fails with a permissions error, enable it once by
           # hand: Settings → Pages → Source → "GitHub Actions".
           enablement: true
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -84,4 +84,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
